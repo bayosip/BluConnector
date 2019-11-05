@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">All of The Lights</string>
+    <string name="app_instructions">Press Button to Connect to System.</string>
+    <string name="disconnect_button_text">Disconnect</string>
+    <string name="speak_now">Speak now:</string>
+    <string name="voice_control">Voice Control</string>
+    <string name="speak">Speak</string>
+    <string name="disconnect_warning">Are you sure you want to disconnect?</string>
+    <string name="confirm">SELECT</string>
+    <string name="cancel">CANCEL</string>
+</resources>
