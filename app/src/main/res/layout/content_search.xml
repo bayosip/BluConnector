@@ -8,36 +8,61 @@
     android:padding="@dimen/activity_horizontal_margin"
     android:background="@color/colorFragments"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_main"
-    tools:context="inc.osips.bleproject.view.activities.BLE_ScannerActivity">
+    tools:showIn="@layout/activity_scanner"
+    tools:context="inc.osips.bleproject.view.activities.DeviceScannerActivity">
 
-    <TextView
-        android:text="@string/app_instructions"
-        android:textColor="@color/textColor"
-        android:textStyle="bold"
-        android:textSize="@dimen/title_size_small"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/layoutSearch"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:weightSum="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewConnectInstruct"
+            android:text="@string/app_instructions"
+            android:textColor="@color/textColor"
+            android:textStyle="bold"
+            android:textSize="@dimen/title_size_small"
+            android:layout_gravity="center"
+            android:layout_weight="0.25"/>
+
+        <at.markushi.ui.CircleButton
+            android:id="@+id/buttonConnect"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:layout_weight="0.5"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:elevation="5dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_bluetooth_searching_24dp"
+            app:cb_color="@color/title_color"
+            app:cb_pressedRingWidth="8dip" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutDiscoveredDevices"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="vertical"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.05"
-        android:id="@+id/textViewConnectInstruct" />
+        app:layout_constraintTop_toBottomOf="@id/layoutSearch"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0">
 
-    <at.markushi.ui.CircleButton
-        android:scaleType="fitXY"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:id="@+id/buttonConnect"
-        android:elevation="7dp"
-        android:background="@drawable/button_circle"
-        android:src="@drawable/ic_bluetooth_searching_24dp"
-        app:cb_color="@color/title_color"
-        app:cb_pressedRingWidth="8dip"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        />
+        <include layout="@layout/discovered_devices" />
+
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

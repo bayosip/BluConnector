@@ -8,90 +8,63 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.wifi.p2p.WifiP2pConfig;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.util.Log;
 
-import inc.osips.bleproject.App;
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
+import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
+import inc.osips.bleproject.model.DeviceConnectionFactory;
 import inc.osips.bleproject.model.ble_comms.services.BleGattService;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
-import inc.osips.bleproject.view.activities.BLE_ScannerActivity;
-import inc.osips.bleproject.view.activities.ControllerActivity;
+import inc.osips.bleproject.view.activities.DeviceScannerActivity;
 
 public class RemoteControllerPresenter extends VoiceControlPresenter {
 
-    private volatile BleGattService gattService;
-    private BluetoothDevice device;
+    private WirelessDeviceConnector deviceConnector;
     private Activity activity;
-    private boolean mBound = false;
-
-    private ServiceConnection mConnection;
 
 
-    public RemoteControllerPresenter(final ControllerViewInterface viewInterface, BluetoothDevice device) {
+
+    public RemoteControllerPresenter(final ControllerViewInterface viewInterface, String type,
+                                     Parcelable device) {
         super(viewInterface);
-        this.device =  device;
         activity = viewInterface.getControlContext();
-
-        /*
-         * Defines callbacks for service binding, passed to bindService()
-         */
-        mConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName className,
-                                           IBinder service) {
-                Log.i(TAG, "binding services");
-                BleGattService.BTLeServiceBinder binder = (BleGattService.BTLeServiceBinder) service;
-                gattService = binder.getService();
-                mBound = true;
-                if (Build.VERSION.SDK_INT >= 21) {
-                    ConnectToBleDevice();
-                } else {
-                    GeneralUtil.message("API too low for App!");
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName arg0) {
-                mBound = false;
-                Log.i(TAG, "Service Disconnected");
-                unregisterBleMsgReceiver();
-                GeneralUtil.transitionActivity(viewInterface.getControlContext(), BLE_ScannerActivity.class);
-            }
-        };
+        DeviceConnectionFactory factory = new DeviceConnectionFactory(viewInterface);
+        deviceConnector = factory.establishConnectionWithDeviceOf("", device);
     }
+
 
     public void bindBleService(){
         Log.i(TAG, "starting service");
         Intent intent = new Intent(activity, BleGattService.class);
-        activity.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        activity.bindService(intent, deviceConnector.getConnection(), Context.BIND_AUTO_CREATE);
     }
 
 
     public void unbindBleService(){
-        if (mBound) {
-            mBound = false;
-            activity.unbindService(mConnection);
+        if (deviceConnector.isConnected()) {
+            activity.unbindService(deviceConnector.getConnection());
         }
     }
 
-    public void sendInstructionsToDevice(String instuctions){
-        gattService.writeLEDInstructions(instuctions);
-    }
 
     public void registerBleMsgReceiver(){
         activity.registerReceiver(ctrlUpdateReceiver, commsUpdateIntentFilter());
-        if (gattService != null) {
-            final boolean result = gattService.connect(device);
+        /*if (gattService != null) {
+            final boolean result = gattService.connect(bleDevice);
             Log.i(TAG, "Connect request result=" + result);
-        }
+        }*/
     }
 
     public void unregisterBleMsgReceiver(){
         activity.unregisterReceiver(ctrlUpdateReceiver);
         stopListening();
-        GeneralUtil.transitionActivity(viewInterface.getControlContext(), BLE_ScannerActivity.class);
+        GeneralUtil.transitionActivity(viewInterface.getControlContext(), DeviceScannerActivity.class);
     }
 
     private final BroadcastReceiver ctrlUpdateReceiver = new BroadcastReceiver() {
@@ -106,10 +79,16 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     Log.i(TAG, "Service Disconnected");
                     GeneralUtil.message("Device Disconnected");
                     //if (App.getCurrentActivity() instanceof ControllerActivity)
-                    GeneralUtil.transitionActivity(activity, BLE_ScannerActivity.class);
+                    GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
                     break;
                 case BleGattService.ACTION_DATA_AVAILABLE:
                     // This is called after a Notify completes
+                    break;
+                case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
+                    break;
+                case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
+                    break;
+                case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
                     break;
             }
         }
@@ -130,26 +109,13 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         intentFilter.addAction(BleGattService.ACTION_CONNECTED);
         intentFilter.addAction(BleGattService.ACTION_DISCONNECTED);
         intentFilter.addAction(BleGattService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
         return intentFilter;
     }
 
-    //API 21 and Above
-    private void ConnectToBleDevice() {
-        if (makeConnectionBLE()) {
-            return;
-        } else {
-            GeneralUtil.message("Cannot Connect to Device");
-            GeneralUtil.transitionActivity(viewInterface.getControlContext(),
-                    BLE_ScannerActivity.class);
-        }
-    }
+    public void sendInstructionsToDevice(String instruct) {
 
-
-    public boolean makeConnectionBLE() {
-        if (!gattService.initialize()) {
-            Log.e(TAG, "Unable to initialize Bluetooth");
-            GeneralUtil.transitionActivity(viewInterface.getControlContext(), BLE_ScannerActivity.class);
-        }
-        return gattService.connect(device);
     }
 }

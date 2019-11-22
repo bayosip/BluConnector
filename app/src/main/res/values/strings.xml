@@ -8,4 +8,6 @@
     <string name="disconnect_warning">Are you sure you want to disconnect?</string>
     <string name="confirm">SELECT</string>
     <string name="cancel">CANCEL</string>
+    <string name="enable_wifi_msg">Please Enable WiFi To Continue.</string>
+    <string name="enable_wifi_title">Enable WiFi?</string>
 </resources>

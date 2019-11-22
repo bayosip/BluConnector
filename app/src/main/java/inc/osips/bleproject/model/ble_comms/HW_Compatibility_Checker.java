@@ -1,6 +1,5 @@
 package inc.osips.bleproject.model.ble_comms;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
@@ -35,7 +34,7 @@ public class HW_Compatibility_Checker {
     public static void requestUserBluetooth(PresenterInterface presenter) {
 
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        presenter.getScanningAcativity().startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT );
+        presenter.getScanningActivity().startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT );
     }
 
 

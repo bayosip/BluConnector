@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model;
+package inc.osips.bleproject.model.ble_comms;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
@@ -9,7 +9,6 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
 
@@ -18,12 +17,11 @@ import java.util.List;
 import java.util.UUID;
 
 import inc.osips.bleproject.interfaces.PresenterInterface;
-import inc.osips.bleproject.interfaces.Scanner;
-import inc.osips.bleproject.model.ble_comms.HW_Compatibility_Checker;
+import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class Scan_n_Connection implements Scanner{
+public class BLE_Scanner implements WirelessConnectionScanner {
 
     private BluetoothAdapter bleAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
@@ -31,22 +29,21 @@ public class Scan_n_Connection implements Scanner{
     private ScanSettings settings;
     private List<ScanFilter> filters;
 
-    private boolean scanState;
+    private boolean scanState = false;
     private String deviceName = "Osi_p BLE-LED Controller";
     private final String baseUUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-    private Bundle extras;
+
     private ParcelUuid uuidParcel;
     private PresenterInterface pInterface;
     //UUID uuid;
 
-    public Scan_n_Connection(PresenterInterface presenter){
+    public BLE_Scanner(PresenterInterface presenter){
         pInterface = presenter;
         // dbAdapter = new DatabaseAdapter(ma.getApplicationContext());
-        final BluetoothManager manager = (BluetoothManager) pInterface.getScanningAcativity()
+        final BluetoothManager manager = (BluetoothManager) pInterface.getScanningActivity()
                                                         .getSystemService(Context.BLUETOOTH_SERVICE);
 
         bleAdapter = manager.getAdapter();
-        extras = new Bundle();
         uuidParcel = new ParcelUuid(UUID.fromString(baseUUID));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -69,7 +66,8 @@ public class Scan_n_Connection implements Scanner{
     }
 
     public void onStop() {
-        scanStop();
+        if (isScanning())
+            scanStop();
     }
 
     private void scanForBLEDevices(Boolean yes) {
@@ -123,5 +121,10 @@ public class Scan_n_Connection implements Scanner{
 
     public BluetoothDevice getBLEDevice (){
         return this.bleDevice;
+    }
+
+    @Override
+    public void showDiscoveredDevices() {
+
     }
 }

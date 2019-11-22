@@ -15,7 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import inc.osips.bleproject.interfaces.FragmentListner;
+import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.interfaces.SpeechInitCallBack;
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
@@ -29,7 +29,7 @@ import android.widget.TextView;
 public class VoiceControlFragment extends Fragment implements SpeechInitCallBack {
     private ImageButton buttonSpeak;
     private TextView interpretedText;
-    private FragmentListner fragListner;
+    private ControlFragmentListener fragListner;
     private PopupWindow vcPopUp;
     private LayoutInflater layoutInflater;
     private ImageView micImage;
@@ -41,7 +41,7 @@ public class VoiceControlFragment extends Fragment implements SpeechInitCallBack
     public void onAttach(Context context) {
         super.onAttach(context);
         try {
-            fragListner = (FragmentListner) context;
+            fragListner = (ControlFragmentListener) context;
         } catch (ClassCastException e) {
             throw new ClassCastException(context.toString());
         }

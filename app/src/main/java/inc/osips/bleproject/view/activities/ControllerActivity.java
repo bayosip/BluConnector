@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanResult;
 import android.content.DialogInterface;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Build;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
@@ -13,6 +14,8 @@ import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,7 +26,7 @@ import java.util.List;
 
 import inc.osips.bleproject.App;
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
-import inc.osips.bleproject.interfaces.FragmentListner;
+import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.model.utilities.Constants;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
@@ -32,9 +35,10 @@ import inc.osips.bleproject.view.fragments.ButtonControlFragment;
 import inc.osips.bleproject.view.fragments.ControlAdapter;
 import inc.osips.bleproject.view.fragments.VoiceControlFragment;
 
-public class ControllerActivity extends AppCompatActivity implements FragmentListner, ControllerViewInterface {
+public class ControllerActivity extends AppCompatActivity implements ControlFragmentListener, ControllerViewInterface {
 
-    private BluetoothDevice device;
+    private BluetoothDevice bleDevice;
+    private WifiP2pDevice p2pDevice;
     private ScanResult result;
     private VoiceControlFragment voiceFrag;
     private ButtonControlFragment manualFrag;
@@ -45,6 +49,7 @@ public class ControllerActivity extends AppCompatActivity implements FragmentLis
     private Button disconnectButton;
     private RemoteControllerPresenter presenter;
     private List<Fragment> fragList;
+    private String commType;
 
     private static final String TAG = ControllerActivity.class.getSimpleName();
     private String deviceName;
@@ -68,22 +73,28 @@ public class ControllerActivity extends AppCompatActivity implements FragmentLis
         fragList.add(manualFrag);
         fragList.add(voiceFrag);
         mPagerAdapter = new ControlAdapter(getSupportFragmentManager(), getApplicationContext(), fragList);
+        Bundle data = getIntent().getBundleExtra(Constants.DEVICE_DATA);
+        commType = data.getString(Constants.COMM_TYPE, Constants.ERROR);
 
-
+        if (!commType.equals(Constants.ERROR)){
+            Parcelable p = data.getParcelable(Constants.DEVICE_DATA);
+            if (p instanceof ScanResult || p instanceof BluetoothDevice)
+                commType = Constants.BLE;
+            else if (p instanceof WifiP2pDevice)
+                commType = Constants.WIFI;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            result = getIntent().getExtras()
-                    .getParcelable(Constants.DEVICE_DATA);
+            result = data.getParcelable(Constants.DEVICE_DATA);
 
-            device = result.getDevice();
-            deviceName = device.getName();
+            bleDevice = result.getDevice();
+            deviceName = bleDevice.getName();
             GeneralUtil.message(deviceName);
         } else {
-            device = getIntent().getExtras()
-                    .getParcelable(Constants.DEVICE_DATA);
-            Log.i(TAG + "result", device.toString());
-            deviceName = device.getName();
+            bleDevice = data.getParcelable(Constants.DEVICE_DATA);
+            deviceName = bleDevice.getName();
         }
-        presenter = new RemoteControllerPresenter(this, device);
+        Log.i(TAG + "result", bleDevice.toString());
+        presenter = new RemoteControllerPresenter(this, commType, bleDevice);
     }
 
     @Override
@@ -144,6 +155,7 @@ public class ControllerActivity extends AppCompatActivity implements FragmentLis
     protected void onStart() {
         super.onStart();
         // Bind to LocalService
+
         presenter.bindBleService();
     }
 
@@ -151,9 +163,9 @@ public class ControllerActivity extends AppCompatActivity implements FragmentLis
     protected void onDestroy() {
         super.onDestroy();
         // Unbind from the service
-        if (device != null) {
+        if (bleDevice != null) {
             presenter.unbindBleService();
-            device = null;
+            bleDevice = null;
         }
     }
 

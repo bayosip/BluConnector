@@ -21,7 +21,7 @@ public class ErrorActivity extends AppCompatActivity {
         restartApp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                GeneralUtil.transitionActivity(ErrorActivity.this, BLE_ScannerActivity.class);
+                GeneralUtil.transitionActivity(ErrorActivity.this, DeviceScannerActivity.class);
             }
         });
     }

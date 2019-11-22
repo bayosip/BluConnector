@@ -20,7 +20,7 @@ import com.skydoves.colorpickerview.ColorPickerDialog;
 import com.skydoves.colorpickerview.ColorPickerView;
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
-import inc.osips.bleproject.interfaces.FragmentListner;
+import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
 import inc.osips.bleproject.view.activities.ControllerActivity;
@@ -29,7 +29,7 @@ import inc.osips.bleproject.view.custom_views.CustomColorFlag;
 public class ButtonControlFragment extends Fragment {
 
     private ImageButton colorWheel, buttonOnOff, buttonDark, buttonBright, buttonBack, buttonNext;
-    private FragmentListner fragListner;
+    private ControlFragmentListener fragListner;
     private Context context;
     private String instruct;
 
@@ -47,7 +47,7 @@ public class ButtonControlFragment extends Fragment {
         super.onAttach(context);
         try {
             this.context = context;
-            fragListner = (FragmentListner) context;
+            fragListner = (ControlFragmentListener) context;
         } catch (ClassCastException e) {
             throw new ClassCastException(context.toString());
         }

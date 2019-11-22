@@ -1,15 +1,21 @@
 package inc.osips.bleproject.model.utilities;
 
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import androidx.core.content.ContextCompat;
+
+import android.net.wifi.p2p.WifiP2pManager;
+import android.os.IBinder;
 import android.util.Log;
 
 import java.util.Iterator;
 import java.util.List;
 
 import inc.osips.bleproject.model.ble_comms.services.BleGattService;
+import inc.osips.bleproject.view.activities.DeviceScannerActivity;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 
@@ -17,6 +23,7 @@ public class ServiceUtil {
 
 
     private static Intent serviceIntent;
+    private static BroadcastReceiver commsUpdateReceiver;
 
     public static Intent getServiceIntent() {
         return serviceIntent;
@@ -92,5 +99,46 @@ public class ServiceUtil {
         }
 
         return true; // App is in background or foreground
+    }
+
+    public static BroadcastReceiver getCommsUpdateReceiver(final Activity activity){
+
+        if(commsUpdateReceiver==null) {
+            commsUpdateReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    final String action = intent.getAction();
+                    switch (action) {
+                        case BleGattService.ACTION_CONNECTED:
+                            // No need to do anything here. Service discovery is started by the service.
+                            break;
+                        case BleGattService.ACTION_DISCONNECTED:
+                            Log.i(activity.getClass().getSimpleName(), "Service Disconnected");
+                            GeneralUtil.message("Device Disconnected");
+                            //if (App.getCurrentActivity() instanceof ControllerActivity)
+                            GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
+                            break;
+                        case BleGattService.ACTION_DATA_AVAILABLE:
+                            // This is called after a Notify completes
+                            break;
+                        case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
+                            break;
+                        case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
+                            break;
+                        case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
+                            break;
+                        case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
+                            break;
+                    }
+                }
+
+                @Override
+                public IBinder peekService(Context myContext, Intent service) {
+                    return super.peekService(myContext, service);
+                }
+            };
+        }
+
+        return commsUpdateReceiver;
     }
 }

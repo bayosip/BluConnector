@@ -15,15 +15,15 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.FloatRange;
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.widget.AppCompatImageButton;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
+
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import inc.osips.bleproject.R;
  * Created by GIGAMOLE on 29.04.2016.
  */
 @SuppressWarnings("unused")
-public class PulseView extends AppCompatImageButton {
+public class PulseView extends View {
 
     // Default pulse variables
     private final static int DEFAULT_PULSE_COUNT = 5;
@@ -213,7 +213,6 @@ public class PulseView extends AppCompatImageButton {
     public float getPulseAlpha() {
         return mPulseAlpha;
     }
-
 
     public void setPulseAlpha(@FloatRange(from = MIN_ALPHA, to = MAX_ALPHA) final float pulseAlpha) {
         mPulseAlpha = Math.max(MIN_ALPHA, Math.min(pulseAlpha, MAX_ALPHA));
