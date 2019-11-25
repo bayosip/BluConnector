@@ -37,9 +37,6 @@ import inc.osips.bleproject.view.fragments.VoiceControlFragment;
 
 public class ControllerActivity extends AppCompatActivity implements ControlFragmentListener, ControllerViewInterface {
 
-    private BluetoothDevice bleDevice;
-    private WifiP2pDevice p2pDevice;
-    private ScanResult result;
     private VoiceControlFragment voiceFrag;
     private ButtonControlFragment manualFrag;
     private ViewPager pager;
@@ -76,25 +73,16 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         Bundle data = getIntent().getBundleExtra(Constants.DEVICE_DATA);
         commType = data.getString(Constants.COMM_TYPE, Constants.ERROR);
 
-        if (!commType.equals(Constants.ERROR)){
-            Parcelable p = data.getParcelable(Constants.DEVICE_DATA);
-            if (p instanceof ScanResult || p instanceof BluetoothDevice)
-                commType = Constants.BLE;
-            else if (p instanceof WifiP2pDevice)
-                commType = Constants.WIFI;
+        try {
+            if (!commType.equals(Constants.ERROR)) {
+                Parcelable parcelDevice = data.getParcelable(Constants.DEVICE_DATA);
+                if (parcelDevice != null)
+                    presenter = new RemoteControllerPresenter(this, commType, parcelDevice);
+                else throw new Exception("No device to connect with!");
+            }else throw new Exception("No device to connect with!");
+        }catch (Exception e){
+            GeneralUtil.message(e.getMessage());
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            result = data.getParcelable(Constants.DEVICE_DATA);
-
-            bleDevice = result.getDevice();
-            deviceName = bleDevice.getName();
-            GeneralUtil.message(deviceName);
-        } else {
-            bleDevice = data.getParcelable(Constants.DEVICE_DATA);
-            deviceName = bleDevice.getName();
-        }
-        Log.i(TAG + "result", bleDevice.toString());
-        presenter = new RemoteControllerPresenter(this, commType, bleDevice);
     }
 
     @Override
@@ -163,10 +151,8 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     protected void onDestroy() {
         super.onDestroy();
         // Unbind from the service
-        if (bleDevice != null) {
-            presenter.unbindBleService();
-            bleDevice = null;
-        }
+        presenter.unbindBleService();
+
     }
 
     @Override

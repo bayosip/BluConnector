@@ -43,7 +43,7 @@ public class DeviceScannerActivity extends AppCompatActivity implements ScannerV
     private Button sendMessage;
     private EditText msgBox;
     private String type;
-    private int flag =0;
+    private boolean isFirstScan = true;
     private List<Devices> remoteDevices;
 
     private static final String DEVICE_DATA = "Device Data";
@@ -79,6 +79,8 @@ public class DeviceScannerActivity extends AppCompatActivity implements ScannerV
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(!isFirstScan)
+                    resizeForSearch();
                 presenter.shouldStartScan();
             }
         });
@@ -166,6 +168,7 @@ public class DeviceScannerActivity extends AppCompatActivity implements ScannerV
                 presenter.stopScanner();
                 if (!ringProgressDialog.isShowing()) {
                     if(devices.size()> 0){
+                        isFirstScan =false;
                         resizeForIncomingListOfDevice();
                         remoteDevices.clear();
                         remoteDevices.addAll(devices);

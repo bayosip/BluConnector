@@ -90,7 +90,7 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
             scanner.onStop();
             Bundle data = new Bundle();
             data.putString(Constants.COMM_TYPE, Constants.BLE);
-            data.putParcelable(Constants.DEVICE_DATA, result);
+            data.putParcelable(Constants.DEVICE_DATA, result.getDevice());
             if(!(App.getCurrentActivity() instanceof ControllerActivity))
                 viewInterface.goToDeviceControlView(data);
         }

@@ -2,6 +2,7 @@ package inc.osips.bleproject.presenter;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,6 +21,7 @@ import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
 import inc.osips.bleproject.model.DeviceConnectionFactory;
 import inc.osips.bleproject.model.ble_comms.services.BleGattService;
+import inc.osips.bleproject.model.utilities.Constants;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
 import inc.osips.bleproject.view.activities.DeviceScannerActivity;
 
@@ -27,7 +29,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
 
     private WirelessDeviceConnector deviceConnector;
     private Activity activity;
-
+    private String deviceName;
 
 
     public RemoteControllerPresenter(final ControllerViewInterface viewInterface, String type,
@@ -35,19 +37,25 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         super(viewInterface);
         activity = viewInterface.getControlContext();
         DeviceConnectionFactory factory = new DeviceConnectionFactory(viewInterface);
-        deviceConnector = factory.establishConnectionWithDeviceOf("", device);
-    }
 
+        deviceConnector = factory.establishConnectionWithDeviceOf(type, device);
+
+    }
 
     public void bindBleService(){
         Log.i(TAG, "starting service");
         Intent intent = new Intent(activity, BleGattService.class);
-        activity.bindService(intent, deviceConnector.getConnection(), Context.BIND_AUTO_CREATE);
+        if (deviceConnector !=null){
+            activity.bindService(intent, deviceConnector.getConnection(), Context.BIND_AUTO_CREATE);
+        }
     }
 
+    public String getDeviceName() {
+        return deviceName;
+    }
 
     public void unbindBleService(){
-        if (deviceConnector.isConnected()) {
+        if (deviceConnector!=null && deviceConnector.isConnected()) {
             activity.unbindService(deviceConnector.getConnection());
         }
     }

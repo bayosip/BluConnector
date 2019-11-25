@@ -7,7 +7,6 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Parcelable;
-import android.util.Log;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
@@ -22,37 +21,11 @@ public class BleConnection implements WirelessDeviceConnector {
     private Activity activity;
 
     private boolean mBound = false;
-    private ServiceConnection mConnection;
 
-    public BleConnection(ControllerViewInterface viewInterface, Parcelable device) {
-        this.bleDevice = (BluetoothDevice) device;
+
+    public BleConnection(ControllerViewInterface viewInterface, Parcelable bleDevice) {
+        this.bleDevice = (BluetoothDevice) bleDevice;
         activity = viewInterface.getControlContext();
-
-        /*
-         * Defines callbacks for service binding, passed to bindService()
-         */
-        mConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName className,
-                                           IBinder service) {
-                //Log.i(TAG, "binding services");
-                BleGattService.BTLeServiceBinder binder = (BleGattService.BTLeServiceBinder) service;
-                gattService = binder.getService();
-                mBound = true;
-                if (Build.VERSION.SDK_INT >= 21) {
-                    ConnectToBleDevice();
-                } else {
-                    GeneralUtil.message("API too low for App!");
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName arg0) {
-                mBound = false;
-                //Log.i(TAG, "Service Disconnected");
-                GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
-            }
-        };
     }
 
     @Override
@@ -78,8 +51,8 @@ public class BleConnection implements WirelessDeviceConnector {
 
 
     private boolean makeConnectionBLE() {
-        if (!gattService.initialize()) {
-            //Log.e(TAG, "Unable to initialize Bluetooth");
+        if (!gattService.init()) {
+            //Log.e(TAG, "Unable to init Bluetooth");
             GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
         }
         if (gattService != null) {
@@ -93,4 +66,31 @@ public class BleConnection implements WirelessDeviceConnector {
     public void sendInstructionsToDevice(String instuctions) {
         gattService.writeLEDInstructions(instuctions);
     }
+
+    private ServiceConnection mConnection =
+            /*
+             * Defines callbacks for service binding, passed to bindService()
+             */
+        new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName className,
+                                               IBinder service) {
+                    //Log.i(TAG, "binding services");
+                    BleGattService.BTLeServiceBinder binder = (BleGattService.BTLeServiceBinder) service;
+                    gattService = binder.getService();
+                    mBound = true;
+                    if (Build.VERSION.SDK_INT >= 21) {
+                        ConnectToBleDevice();
+                    } else {
+                        GeneralUtil.message("API too low for App!");
+                    }
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName arg0) {
+                    mBound = false;
+                    //Log.i(TAG, "Service Disconnected");
+                    GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
+                }
+            };
 }

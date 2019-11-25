@@ -205,14 +205,14 @@ public class BleGattService extends Service {
      * Initialize a reference to the local Bluetooth adapter.
      * @return Return true if the initialization is successful.
      */
-    public boolean initialize() {
+    public boolean init() {
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
         Log.i(TAG, "Initialising BLE");
         if (bManager == null) {
             bManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             if (bManager == null) {
-                Log.e(TAG, "Unable to initialize BluetoothManager.");
+                Log.e(TAG, "Unable to init BluetoothManager.");
                 return false;
             }
         }
