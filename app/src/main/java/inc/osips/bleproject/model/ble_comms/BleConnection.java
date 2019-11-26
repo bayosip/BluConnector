@@ -29,7 +29,7 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public ServiceConnection getConnection() {
+    public ServiceConnection getServiceConnection() {
         return mConnection;
     }
 
@@ -51,11 +51,8 @@ public class BleConnection implements WirelessDeviceConnector {
 
 
     private boolean makeConnectionBLE() {
-        if (!gattService.init()) {
-            //Log.e(TAG, "Unable to init Bluetooth");
-            GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
-        }
-        if (gattService != null) {
+
+        if (gattService != null && !gattService.init()) {
             final boolean result = gattService.connect(bleDevice);
             return result;
         }

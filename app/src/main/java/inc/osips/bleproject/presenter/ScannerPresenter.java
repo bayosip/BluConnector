@@ -129,6 +129,12 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
             final String action = intent.getAction();
             switch (action) {
                 case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
+
+                case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
+                    scanner.showDiscoveredDevices();
+                    scanner.onStop();
+                    break;
+                case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
                     switch (state){
                         case WifiP2pManager.WIFI_P2P_STATE_ENABLED:
@@ -139,12 +145,6 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
                                     "Please turn on to use this feature");
                             break;
                     }
-                    break;
-                case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
-                    scanner.showDiscoveredDevices();
-                    scanner.onStop();
-                    break;
-                case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     break;
                 case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
                     break;

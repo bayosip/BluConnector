@@ -14,7 +14,10 @@ import android.os.Looper;
 
 import androidx.annotation.Nullable;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 import inc.osips.bleproject.model.utilities.GeneralUtil;
 
@@ -27,6 +30,11 @@ public class P2pDataTransferService extends Service {
     private final Binder serviceBinder = new P2pServiceBinder();
     private Intent serviceIntent;
     private boolean isP2pConnected = false;
+    private Thread serviceThread;
+    private Socket socket = new Socket();
+    private String hostAddress;
+    private static final int TIME_OUT = 3000;
+    private static final int PORT = 8888;
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -44,11 +52,15 @@ public class P2pDataTransferService extends Service {
     }
 
 
-    public void init(){
+    public boolean init(){
         p2pManager = (WifiP2pManager) getApplicationContext()
                 .getSystemService(Context.WIFI_P2P_SERVICE);
 
         p2pChannel = p2pManager.initialize(getApplicationContext(), Looper.getMainLooper(), null);
+
+        if (p2pManager!=null && p2pChannel!= null)return true;
+
+        return false;
     }
 
     public boolean connect(final WifiP2pDevice p2pDevice){
@@ -72,22 +84,40 @@ public class P2pDataTransferService extends Service {
         return  isP2pConnected;
     }
 
+    public void writeLEDInstructions(String instruct) {
+
+    }
+
     private void disconnect() {
 
     }
 
-    private void establishConnection(Intent intent){
+    public void establishConnection(Intent intent){
         if (p2pManager !=null){
             NetworkInfo info = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
 
-            if(info.isConnected()){
+            if(info!=null && info.isConnected()){
                 p2pManager.requestConnectionInfo(p2pChannel, new WifiP2pManager.ConnectionInfoListener() {
                     @Override
                     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
                         final InetAddress hostAddress = wifiP2pInfo.groupOwnerAddress;
+                        if (wifiP2pInfo.groupFormed) {
+                            serviceThread = new Thread(){
+                                @Override
+                                public void run() {
+                                    try {
+                                        socket.connect(new InetSocketAddress(hostAddress, PORT), TIME_OUT);
+
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            };
+                            serviceThread.start();
+                        }
                     }
                 });
-            }
+            }else GeneralUtil.message("Wifi Device is Not Connected!");
         }
     }
 
@@ -98,4 +128,6 @@ public class P2pDataTransferService extends Service {
             return P2pDataTransferService.this;
         }
     }
+
+
 }

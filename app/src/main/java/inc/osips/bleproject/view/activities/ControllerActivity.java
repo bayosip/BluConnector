@@ -106,6 +106,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
             }
         });
         myDeviceName = findViewById(R.id.textViewDeviceName);
+        myDeviceName.setText(presenter.getDeviceName());
         pager = findViewById(R.id.contentFragment);
         pager.setAdapter(mPagerAdapter);
     }
@@ -189,7 +190,6 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     public void startListening() {
         presenter.initSpeech();
     }
-
 
     @Override
     public Activity getFragmentactivity() {
