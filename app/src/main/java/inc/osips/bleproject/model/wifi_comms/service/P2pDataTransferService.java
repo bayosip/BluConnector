@@ -9,12 +9,16 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Message;
 
 import androidx.annotation.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -33,8 +37,11 @@ public class P2pDataTransferService extends Service {
     private Thread serviceThread;
     private Socket socket = new Socket();
     private String hostAddress;
-    private static final int TIME_OUT = 3000;
-    private static final int PORT = 8888;
+    private int TIME_OUT = 3000; //default time out for connection
+    private int PORT = 8888; // default port number
+    private static final int MESSAGE_READ=1;
+    private SendReceive sendReceive;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -85,7 +92,7 @@ public class P2pDataTransferService extends Service {
     }
 
     public void writeLEDInstructions(String instruct) {
-
+        sendReceive.write(instruct.getBytes());
     }
 
     private void disconnect() {
@@ -107,7 +114,8 @@ public class P2pDataTransferService extends Service {
                                 public void run() {
                                     try {
                                         socket.connect(new InetSocketAddress(hostAddress, PORT), TIME_OUT);
-
+                                        sendReceive = new SendReceive(socket);
+                                        sendReceive.start();
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -118,6 +126,65 @@ public class P2pDataTransferService extends Service {
                     }
                 });
             }else GeneralUtil.message("Wifi Device is Not Connected!");
+        }
+    }
+
+    Handler handler=new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch (msg.what)
+            {
+                case MESSAGE_READ:
+                    byte[] readBuff= (byte[]) msg.obj;
+                    String tempMsg=new String(readBuff,0,msg.arg1);
+                    break;
+            }
+            return true;
+        }
+    });
+
+    private class SendReceive extends Thread{
+        private Socket socket;
+        private InputStream inputStream;
+        private OutputStream outputStream;
+
+        public SendReceive(Socket skt)
+        {
+            socket=skt;
+            try {
+                inputStream=socket.getInputStream();
+                outputStream=socket.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            byte[] buffer=new byte[1024];
+            int bytes;
+
+            while (socket!=null)
+            {
+                try {
+                    bytes=inputStream.read(buffer);
+                    if(bytes>0)
+                    {
+                        handler.obtainMessage(MESSAGE_READ,bytes,-1,buffer).sendToTarget();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void write(byte[] bytes)
+        {
+            try {
+                outputStream.write(bytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
