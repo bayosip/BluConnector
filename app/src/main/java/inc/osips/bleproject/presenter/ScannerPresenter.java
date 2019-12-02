@@ -1,5 +1,6 @@
 package inc.osips.bleproject.presenter;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanCallback;
@@ -37,8 +38,12 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
 
     public ScannerPresenter(ScannerViewInterface viewInterface, String commsType) {
         this.viewInterface = viewInterface;
-        DeviceScannerFactory factory = new DeviceScannerFactory(this);
-        scanner = factory.getRemoteConnectionScannerOfType(commsType);
+        DeviceScannerFactory factory = new DeviceScannerFactory(viewInterface.getCurrentActivity());
+        DeviceScannerFactory.Builder builder = factory.getRemoteDeviceBuilderScannerOfType(commsType);
+
+        if (builder!=null)
+            scanner = builder.setmScanCallback(this).
+                    setmWifiPeerListListener(this).build();
         devices = new LinkedList<>();
     }
 
@@ -61,17 +66,6 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
 
 
     @Override
-    public ScanCallback getScanCallBack() {
-        return this;
-    }
-
-    @Override
-    public WifiP2pManager.PeerListListener getPeerListListener() {
-        return this;
-    }
-
-
-    @Override
     public void registerBroadCastReceiver(Activity activity) {
         activity.registerReceiver(wifiReceiver, commsUpdateIntentFilter());
     }
@@ -81,47 +75,48 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
         activity.unregisterReceiver(wifiReceiver);
     }
 
+    @TargetApi(21)
     @Override
     public void onScanResult(int callbackType, final ScanResult result) {
         Log.i("callbackType", String.valueOf(callbackType));
         Log.i("result", result.toString());
         final int RSSI = result.getRssi();
-        if (RSSI>=-105) {
+        /*if (RSSI>=-105) {
             scanner.onStop();
             Bundle data = new Bundle();
             data.putString(Constants.COMM_TYPE, Constants.BLE);
             data.putParcelable(Constants.DEVICE_DATA, result.getDevice());
             if(!(App.getCurrentActivity() instanceof ControllerActivity))
                 viewInterface.goToDeviceControlView(data);
-        }
+        }*/
     }
 
+    @TargetApi(21)
     @Override
     public void onBatchScanResults(List<ScanResult> results) {
         for (ScanResult sr : results) {
             Log.i("ScanResult - Results", sr.toString());
+            int RSSI = sr.getRssi();
+            BluetoothDevice ble = sr.getDevice();
+            if (RSSI>=-105) {
+                Devices device = new Devices(ble.getName(),
+                        ble.getAddress(), sr.getRssi(), ble);
+                devices.add(device);
+            }
             //ToastMakers.message(scannerActivity.getApplicationContext(), sr.toString());
+        }
+
+        if (devices.size() ==0){
+            viewInterface.progressFromScan(devices);
         }
     }
 
+    @TargetApi(21)
     @Override
     public void onScanFailed(int errorCode) {
         Log.e("Scan Failed", "Error Code: " + errorCode);
     }
 
-    @Override
-    public void onLeScan(BluetoothDevice device, int rssi, byte[] bytes) {
-        final int RSSI = rssi;
-        if (RSSI >= -105){
-            scanner.onStop();
-            Bundle data = new Bundle();
-            data.putString(Constants.COMM_TYPE, Constants.BLE);
-            data.putParcelable(Constants.DEVICE_DATA, device);
-            if(!(App.getCurrentActivity() instanceof ControllerActivity)) {
-                viewInterface.goToDeviceControlView(data);
-            }
-        }
-    }
 
     private final BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
         @Override

@@ -15,17 +15,19 @@ import inc.osips.bleproject.model.utilities.GeneralUtil;
 
 public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.ActionListener {
 
-
-    private PresenterInterface pInterface;
-    private static WifiManager wifiManager;
+    private WifiManager wifiManager;
     private WifiP2pManager p2pManager;
     private WifiP2pManager.Channel p2pChannel;
     private Activity activity;
     private boolean scanState = false;
+    private WifiP2pManager.PeerListListener mPeerListListener;
 
-    public Wifi_Scanner(PresenterInterface pInterface) {
-        this.pInterface = pInterface;
-        this.activity = pInterface.getScanningActivity();
+
+    public Wifi_Scanner (Activity activity, WifiP2pManager
+            .PeerListListener mPeerListListener){
+        this.activity = activity;
+        this.mPeerListListener =mPeerListListener;
+
         initialisePrequisites();
 
         if(!wifiManager.isWifiEnabled())
@@ -83,7 +85,7 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
     public void showDiscoveredDevices() {
         scanState = false;
         if (p2pManager!=null){
-            p2pManager.requestPeers(p2pChannel, pInterface.getPeerListListener());
+            p2pManager.requestPeers(p2pChannel, mPeerListListener);
         }
     }
 
@@ -100,5 +102,15 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
     @Override
     public void onFailure(int i) {
         GeneralUtil.message("Wifi Peer Discovery Failed To Start!");
+    }
+
+    public static class Builder{
+
+        private Activity activity;
+        private boolean scanState = false;
+        private WifiP2pManager.PeerListListener mPeerListListener;
+        public Builder() {
+        }
+
     }
 }

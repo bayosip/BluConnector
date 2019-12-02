@@ -8,11 +8,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pManager;
 
-public interface PresenterInterface extends BluetoothAdapter.LeScanCallback {
+public interface PresenterInterface {
 
     Activity getScanningActivity();
-    ScanCallback getScanCallBack();
-    WifiP2pManager.PeerListListener getPeerListListener();
     void registerBroadCastReceiver(Activity activity);
     void unregisterBroadCastReceiver(Activity activity);
 }

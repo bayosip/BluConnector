@@ -3,6 +3,7 @@ package inc.osips.bleproject.model.ble_comms;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
@@ -31,6 +32,11 @@ public class BleConnection implements WirelessDeviceConnector {
     @Override
     public ServiceConnection getServiceConnection() {
         return mConnection;
+    }
+
+    @Override
+    public void connectToDeviceWithDeviceInfoFrom(Intent intent) {
+
     }
 
     @Override
