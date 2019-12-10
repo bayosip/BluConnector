@@ -30,7 +30,7 @@ public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHo
     @NonNull
     @Override
     public DevicesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.device_list_item,parent);
+        View view = LayoutInflater.from(context).inflate(R.layout.device_list_item,parent, false);
         DevicesViewHolder holder =  new DevicesViewHolder(view);
         holder.setListener(itemListener);
         return holder;

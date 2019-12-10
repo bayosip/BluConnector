@@ -23,7 +23,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true">
-        <activity android:name=".view.activities.CommsChooser"
+        <activity android:name=".view.activities.Home"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Splash">
             <intent-filter>
@@ -48,7 +48,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".view.activities.DeviceScannerActivity"
+            android:name=".view.fragments.home_fragments.DeviceScannerFragment"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Splash">
         </activity>

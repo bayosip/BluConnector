@@ -2,10 +2,10 @@ package inc.osips.bleproject.view.activities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanResult;
+import android.app.Dialog;
 import android.content.DialogInterface;
-import android.net.wifi.p2p.WifiP2pDevice;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
@@ -16,9 +16,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.LinkedList;
@@ -28,12 +29,14 @@ import inc.osips.bleproject.App;
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.R;
+import inc.osips.bleproject.model.UUID_IP_TextWatcher;
 import inc.osips.bleproject.model.utilities.Constants;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.model.utilities.ServiceUtil;
 import inc.osips.bleproject.presenter.RemoteControllerPresenter;
-import inc.osips.bleproject.view.fragments.ButtonControlFragment;
-import inc.osips.bleproject.view.fragments.ControlAdapter;
-import inc.osips.bleproject.view.fragments.VoiceControlFragment;
+import inc.osips.bleproject.view.fragments.control_fragments.ButtonControlFragment;
+import inc.osips.bleproject.view.fragments.control_fragments.ControlAdapter;
+import inc.osips.bleproject.view.fragments.control_fragments.VoiceControlFragment;
 
 public class ControllerActivity extends AppCompatActivity implements ControlFragmentListener, ControllerViewInterface {
 
@@ -47,19 +50,18 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     private RemoteControllerPresenter presenter;
     private List<Fragment> fragList;
     private String commType;
+    private Dialog uuidPopUp;
 
     private static final String TAG = ControllerActivity.class.getSimpleName();
-    private String deviceName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_controller);
         initialisePrequisite();
+        initialiseWidgets();
 
-        initiateWidgets();
-
-        myDeviceName.setText(deviceName);
+        myDeviceName.setText(presenter.getDeviceName());
     }
 
     private void initialisePrequisite() {
@@ -76,8 +78,9 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         try {
             if (!commType.equals(Constants.ERROR)) {
                 Parcelable parcelDevice = data.getParcelable(Constants.DEVICE_DATA);
-                if (parcelDevice != null)
+                if (parcelDevice != null) {
                     presenter = new RemoteControllerPresenter(this, commType, parcelDevice);
+                }
                 else throw new Exception("No device to connect with!");
             }else throw new Exception("No device to connect with!");
         }catch (Exception e){
@@ -85,8 +88,39 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         }
     }
 
+    public void getUUIDFromPopUp(){
+
+        uuidPopUp = new Dialog(this);
+        uuidPopUp.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        uuidPopUp.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        uuidPopUp.setContentView(R.layout.enter_uuid_ip_dialog);
+        uuidPopUp.setOwnerActivity(this);
+        uuidPopUp.setCancelable(false);
+
+        Button enterUUID = uuidPopUp.findViewById(R.id.buttonUUID);
+        final EditText baseUUID =  uuidPopUp.findViewById(R.id.editTextBaseUUID);
+        baseUUID.addTextChangedListener(new UUID_IP_TextWatcher(baseUUID, commType));
+
+        enterUUID.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String str = baseUUID.getText().toString();
+                presenter.setBaseUuidOfBLEDeviceAndConnect(str);
+                //uuidPopUp.dismiss();
+            }
+        });
+
+        uuidPopUp.show();
+    }
+
     @Override
-    public void initiateWidgets() {
+    public void removeUUIDPopUp(){
+        if (uuidPopUp!=null){
+            uuidPopUp.dismiss();
+        }
+    }
+
+    public void initialiseWidgets() {
         ctrlToolBar = findViewById(R.id.appbar_controller);
         setSupportActionBar(ctrlToolBar);
         ActionBar bar = getSupportActionBar();
@@ -126,6 +160,9 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
                 .setTitle("Notice").setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                if (!ServiceUtil.isServiceBLEAlreadyRunningAPI16(ControllerActivity.this)){
+                    getUUIDFromPopUp();
+                }
                 dialog.dismiss();
             }
         }).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -137,15 +174,12 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         });
         alertDialog.show();
 
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         // Bind to LocalService
-
-        presenter.bindBleService();
     }
 
     @Override
@@ -159,13 +193,16 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     @Override
     protected void onPause() {
         super.onPause();
-        presenter.unregisterBleMsgReceiver();
+        removeUUIDPopUp();
+        if(presenter!=null && ServiceUtil.isServiceBLEAlreadyRunningAPI16(this))
+            presenter.unregisterBleMsgReceiver();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        presenter.registerBleMsgReceiver();
+        if(presenter!=null && ServiceUtil.isServiceBLEAlreadyRunningAPI16(this))
+            presenter.registerRemoteMsgReceiver();
     }
 
     /*
@@ -224,5 +261,12 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
 
         stopListening();
         voiceFrag.closePopUp();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        removeUUIDPopUp();
+        tryToDisconnectFromDevice();
     }
 }

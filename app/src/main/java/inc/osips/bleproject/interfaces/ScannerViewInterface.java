@@ -9,7 +9,6 @@ import inc.osips.bleproject.model.Devices;
 
 public interface ScannerViewInterface extends AppActivity{
 
-    void launchRingDialog();
     void goToDeviceControlView(final Bundle data);
     void progressFromScan(final List<Devices> devices);
 }

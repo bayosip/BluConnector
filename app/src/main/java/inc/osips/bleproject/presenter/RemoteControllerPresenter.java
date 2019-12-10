@@ -2,7 +2,6 @@ package inc.osips.bleproject.presenter;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,37 +16,56 @@ import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
 import inc.osips.bleproject.model.DeviceConnectionFactory;
 import inc.osips.bleproject.model.ble_comms.services.BleGattService;
+import inc.osips.bleproject.model.utilities.Constants;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
-import inc.osips.bleproject.view.activities.DeviceScannerActivity;
+import inc.osips.bleproject.model.utilities.ServiceUtil;
+import inc.osips.bleproject.view.activities.Home;
 
 public class RemoteControllerPresenter extends VoiceControlPresenter {
 
     private WirelessDeviceConnector deviceConnector;
     private Activity activity;
     private String deviceName;
-
+    private DeviceConnectionFactory.Builder builder;
 
     public RemoteControllerPresenter(final ControllerViewInterface viewInterface, String type,
                                      Parcelable device) {
         super(viewInterface);
         activity = viewInterface.getControlContext();
-        DeviceConnectionFactory factory = new DeviceConnectionFactory(viewInterface);
+        DeviceConnectionFactory factory = new DeviceConnectionFactory(viewInterface.getControlContext());
 
-        deviceConnector = factory.establishConnectionWithDeviceOf(type, device);
+         builder = factory.establishConnectionWithDeviceOf(type, device);
 
-        if (device instanceof ScanResult){
-            this.deviceName = ((ScanResult) device).getDevice().getName();
-        }else if (device instanceof BluetoothDevice){
+        if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)){
+            Log.i("Connection type", builder.getDeviceType());
             this.deviceName = ((BluetoothDevice) device).getName();
-        }else if (device instanceof WifiP2pDevice)
+            viewInterface.getUUIDFromPopUp();
+        }else if (device instanceof WifiP2pDevice && type.equalsIgnoreCase(Constants.WIFI)) {
+            Log.i("Connection", builder.getDeviceType());
+            if (builder !=null){
+                deviceConnector = builder.build();
+                if(!ServiceUtil.isServiceBLEAlreadyRunningAPI16(viewInterface.getControlContext()))
+                    bindBleService();
+            }
             this.deviceName = ((WifiP2pDevice) device).deviceName;
+        }
     }
 
-    public void bindBleService(){
+    public void setBaseUuidOfBLEDeviceAndConnect(String uuid){
+        if (builder !=null){//"6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+            String str = uuid.toLowerCase();
+            deviceConnector = builder.setDeviceUniqueID(str).build();
+            if(!ServiceUtil.isServiceBLEAlreadyRunningAPI16(viewInterface.getControlContext()))
+                bindBleService();
+        }
+    }
+
+    private void bindBleService(){
         Log.i(TAG, "starting service");
         Intent intent = new Intent(activity, BleGattService.class);
-        if (deviceConnector !=null){
+        if (deviceConnector !=null && !ServiceUtil.isServiceBLEAlreadyRunningAPI16(activity)){
             activity.bindService(intent, deviceConnector.getServiceConnection(), Context.BIND_AUTO_CREATE);
+            registerRemoteMsgReceiver();
         }
     }
 
@@ -56,45 +74,46 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     }
 
     public void unbindBleService(){
-        if (deviceConnector!=null && deviceConnector.isConnected()) {
+        if (deviceConnector!=null && deviceConnector.isConnected() &&
+                ServiceUtil.isServiceBLEAlreadyRunningAPI16(viewInterface.getControlContext())) {
             activity.unbindService(deviceConnector.getServiceConnection());
+            deviceConnector = null;
         }
     }
 
 
-    public void registerBleMsgReceiver(){
+    public void registerRemoteMsgReceiver(){
         activity.registerReceiver(ctrlUpdateReceiver, commsUpdateIntentFilter());
-        /*if (gattService != null) {
-            final boolean result = gattService.connect(bleDevice);
-            Log.i(TAG, "Connect request result=" + result);
-        }*/
     }
 
     public void unregisterBleMsgReceiver(){
         activity.unregisterReceiver(ctrlUpdateReceiver);
         stopListening();
-        GeneralUtil.transitionActivity(viewInterface.getControlContext(), DeviceScannerActivity.class);
     }
 
     private final BroadcastReceiver ctrlUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "Action Received");
             final String action = intent.getAction();
+            Log.w(TAG, action);
             switch (action) {
                 case BleGattService.ACTION_CONNECTED:
                     // No need to do anything here. Service discovery is started by the service.
+                    Log.i(TAG, "Connected to GATT server.");
                     break;
                 case BleGattService.ACTION_DISCONNECTED:
                     Log.i(TAG, "Service Disconnected");
                     GeneralUtil.message("Device Disconnected");
                     //if (App.getCurrentActivity() instanceof ControllerActivity)
-                    GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
+                    GeneralUtil.transitionActivity(activity, Home.class);
+                    break;
+                case BleGattService.ACTION_BLE_SERVICES_DISCOVERED:
+                    Log.w("BLE", "services discovered");
+                    viewInterface.removeUUIDPopUp();
                     break;
                 case BleGattService.ACTION_DATA_AVAILABLE:
                     // This is called after a Notify completes
-                    break;
-                case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
-                    deviceConnector.connectToDeviceWithDeviceInfoFrom(intent);
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
@@ -105,9 +124,15 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                         case WifiP2pManager.WIFI_P2P_STATE_DISABLED:
                             GeneralUtil.message("Wifi has been turned off, " +
                                     "Please turn on to use this feature");
+                            GeneralUtil.transitionActivity(activity, Home.class);
                             break;
                     }
                     break;
+                case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
+                    if (deviceConnector!= null)
+                        deviceConnector.connectToDeviceWithDeviceInfoFrom(intent);
+                    break;
+
                 case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
                     break;
             }
@@ -128,6 +153,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BleGattService.ACTION_CONNECTED);
         intentFilter.addAction(BleGattService.ACTION_DISCONNECTED);
+        intentFilter.addAction(BleGattService.ACTION_BLE_SERVICES_DISCOVERED);
         intentFilter.addAction(BleGattService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);

@@ -8,11 +8,10 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.IBinder;
 import android.os.Parcelable;
 
-import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
 import inc.osips.bleproject.model.wifi_comms.service.P2pDataTransferService;
-import inc.osips.bleproject.view.activities.DeviceScannerActivity;
+import inc.osips.bleproject.view.fragments.home_fragments.DeviceScannerFragment;
 
 public class WifiConnection implements WirelessDeviceConnector {
 
@@ -23,9 +22,9 @@ public class WifiConnection implements WirelessDeviceConnector {
     private boolean isConnected = false, mBound = false;
 
 
-    public WifiConnection(ControllerViewInterface viewInterface, final Parcelable p2pDevice) {
+    public WifiConnection(Activity activity, final Parcelable p2pDevice) {
         this.p2pDevice = (WifiP2pDevice) p2pDevice;
-        this.activity =viewInterface.getControlContext();
+        this.activity = activity;
     }
 
 
@@ -62,7 +61,7 @@ public class WifiConnection implements WirelessDeviceConnector {
                 @Override
                 public void onServiceDisconnected(ComponentName componentName) {
                     mBound = false;
-                    GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
+                    GeneralUtil.transitionActivity(activity, DeviceScannerFragment.class);
                 }
             };
 
@@ -72,7 +71,7 @@ public class WifiConnection implements WirelessDeviceConnector {
         } else {
             GeneralUtil.message("Cannot Connect to Device");
             GeneralUtil.transitionActivity(activity,
-                    DeviceScannerActivity.class);
+                    DeviceScannerFragment.class);
         }
     }
 

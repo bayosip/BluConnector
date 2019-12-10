@@ -1,4 +1,4 @@
-package inc.osips.bleproject.view.fragments;
+package inc.osips.bleproject.view.fragments.control_fragments;
 
 import android.content.Context;
 

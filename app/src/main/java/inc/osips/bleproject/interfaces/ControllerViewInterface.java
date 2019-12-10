@@ -7,5 +7,7 @@ public interface ControllerViewInterface {
 
     Activity getControlContext();
     void processInstructions (final String commands);
+    void getUUIDFromPopUp();
+    void removeUUIDPopUp();
 
 }

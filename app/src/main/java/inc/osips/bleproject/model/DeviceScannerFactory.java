@@ -1,14 +1,12 @@
 package inc.osips.bleproject.model;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanCallback;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
-import inc.osips.bleproject.interfaces.PresenterInterface;
 import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
 import inc.osips.bleproject.model.ble_comms.BLE_Scanner;
 import inc.osips.bleproject.model.utilities.Constants;
@@ -18,6 +16,7 @@ public class DeviceScannerFactory {
 
 
     private Activity activity;
+    public static final String SCANNING_STOPPED = "device_scanning stopped";
 
     public DeviceScannerFactory(Activity activity) {
         this.activity = activity;
@@ -28,11 +27,11 @@ public class DeviceScannerFactory {
         if(TextUtils.isEmpty(connectionType))return null;
 
         else if (connectionType.equals(Constants.BLE)){
-            return new BLEBuilder(activity);
+            return new BLEScanBuilder(activity);
         }
 
         else if (connectionType.equals(Constants.WIFI)){
-            return new WifiBuilder(activity);
+            return new WifiScanBuilder(activity);
         }
 
         else return null;
@@ -48,13 +47,15 @@ public class DeviceScannerFactory {
         abstract public WirelessConnectionScanner build();
         abstract public Builder setmScanCallback(@Nullable ScanCallback mScanCallback);
         abstract public Builder setmWifiPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener);
+        abstract public Builder setDeviceUniqueID(@Nullable String UUID_IP);
     }
 
 
-    private class BLEBuilder extends Builder {
+    private class BLEScanBuilder extends Builder {
         private ScanCallback mScanCallback;
+        private String baseUUID = null;
 
-        private BLEBuilder(Activity activity) {
+        private BLEScanBuilder(Activity activity) {
             super(activity);
         }
 
@@ -65,25 +66,39 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public Builder setmWifiPeerListListener(WifiP2pManager.PeerListListener mPeerListListener) {
+        public Builder setmWifiPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener) {
+            return this;
+        }
+
+        @Override
+        public Builder setDeviceUniqueID(@Nullable String UUID_IP) {
+            this.baseUUID = UUID_IP;
             return this;
         }
 
         public WirelessConnectionScanner build(){
-            return new BLE_Scanner(activity, mScanCallback);
+            return new BLE_Scanner(activity, mScanCallback, baseUUID);
         }
     }
 
-    private static class WifiBuilder extends Builder{
+    private class WifiScanBuilder extends Builder{
 
         private WifiP2pManager.PeerListListener mPeerListListener;
+        private String address = null;
 
-        private WifiBuilder(Activity activity) {
+        private WifiScanBuilder(Activity activity) {
             super(activity);
         }
 
+        @Override
         public Builder setmWifiPeerListListener(WifiP2pManager.PeerListListener mPeerListListener) {
             this.mPeerListListener = mPeerListListener;
+            return this;
+        }
+
+        @Override
+        public Builder setDeviceUniqueID(@Nullable String UUID_IP) {
+            this.address = UUID_IP;
             return this;
         }
 
@@ -93,7 +108,7 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public Builder setmScanCallback(ScanCallback mScanCallback) {
+        public Builder setmScanCallback(@Nullable ScanCallback mScanCallback) {
             return this;
         }
     }

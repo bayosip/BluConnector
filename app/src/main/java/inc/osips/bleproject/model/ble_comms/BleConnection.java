@@ -8,25 +8,28 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.text.TextUtils;
+import android.util.Log;
 
-import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
 import inc.osips.bleproject.model.ble_comms.services.BleGattService;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
-import inc.osips.bleproject.view.activities.DeviceScannerActivity;
+import inc.osips.bleproject.view.activities.Home;
 
 public class BleConnection implements WirelessDeviceConnector {
 
     private volatile BleGattService gattService;
     private BluetoothDevice bleDevice;
     private Activity activity;
+    private String baseUUID;
 
     private boolean mBound = false;
 
-
-    public BleConnection(ControllerViewInterface viewInterface, Parcelable bleDevice) {
+    public BleConnection(Activity activity, Parcelable bleDevice, String baseUUID) {
+        Log.w("Connection+", baseUUID);
+        this.baseUUID = baseUUID;
         this.bleDevice = (BluetoothDevice) bleDevice;
-        activity = viewInterface.getControlContext();
+        this.activity = activity;
     }
 
     @Override
@@ -45,24 +48,30 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     //API 21 and Above
-    private void ConnectToBleDevice() {
+    private void ConnectToBleDevice(){
         if (makeConnectionBLE()) {
             return;
         } else {
             GeneralUtil.message("Cannot Connect to Device");
             GeneralUtil.transitionActivity(activity,
-                    DeviceScannerActivity.class);
+                    Home.class);
         }
     }
 
 
     private boolean makeConnectionBLE() {
 
-        if (gattService != null && !gattService.init()) {
-            final boolean result = gattService.connect(bleDevice);
-            return result;
+        if (gattService != null){
+            if(gattService.init() && !TextUtils.isEmpty(baseUUID)){
+                final boolean result = gattService.connect(bleDevice, baseUUID);
+                return result;
+            }
+            return false;
         }
-        else return false;
+        else{
+            Log.w("BLe", "no uuid");
+            return false;
+        }
     }
 
     @Override
@@ -93,7 +102,8 @@ public class BleConnection implements WirelessDeviceConnector {
                 public void onServiceDisconnected(ComponentName arg0) {
                     mBound = false;
                     //Log.i(TAG, "Service Disconnected");
-                    GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
+                    GeneralUtil.transitionActivity(activity, Home.class);
                 }
             };
+
 }

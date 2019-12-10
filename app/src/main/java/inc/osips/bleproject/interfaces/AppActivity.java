@@ -4,6 +4,4 @@ import android.app.Activity;
 
 public interface AppActivity {
    Activity getCurrentActivity();
-   void initiateWidgets();
-
 }

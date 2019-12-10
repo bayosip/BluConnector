@@ -51,7 +51,7 @@ public class App extends Application {
 
     @Override
     public void onTerminate() {
-        if(ServiceUtil.isServiceAlreadyRunningAPI16(context)){
+        if(ServiceUtil.isServiceBLEAlreadyRunningAPI16(context)){
             ServiceUtil.stopService(this);
         }
         super.onTerminate();

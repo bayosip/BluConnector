@@ -15,7 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import inc.osips.bleproject.model.ble_comms.services.BleGattService;
-import inc.osips.bleproject.view.activities.DeviceScannerActivity;
+import inc.osips.bleproject.model.wifi_comms.service.P2pDataTransferService;
+import inc.osips.bleproject.view.fragments.home_fragments.DeviceScannerFragment;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 
@@ -67,11 +68,22 @@ public class ServiceUtil {
     }
 
     @SuppressWarnings("deprecation")
-    public static Boolean isServiceAlreadyRunningAPI16(Context activity) {
+    public static Boolean isServiceBLEAlreadyRunningAPI16(Context activity) {
         ActivityManager activityManager = (ActivityManager) activity.getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo serviceInfo : activityManager
                 .getRunningServices(Integer.MAX_VALUE)) {
             if (BleGattService.class.getName().equalsIgnoreCase(serviceInfo.service.getClassName()))
+                return true;
+        }
+        return false;
+    }
+
+    @SuppressWarnings("deprecation")
+    public static Boolean isServiceWiFiAlreadyRunningAPI16(Context activity) {
+        ActivityManager activityManager = (ActivityManager) activity.getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo serviceInfo : activityManager
+                .getRunningServices(Integer.MAX_VALUE)) {
+            if (P2pDataTransferService.class.getName().equalsIgnoreCase(serviceInfo.service.getClassName()))
                 return true;
         }
         return false;
@@ -116,7 +128,7 @@ public class ServiceUtil {
                             Log.i(activity.getClass().getSimpleName(), "Service Disconnected");
                             GeneralUtil.message("Device Disconnected");
                             //if (App.getCurrentActivity() instanceof ControllerActivity)
-                            GeneralUtil.transitionActivity(activity, DeviceScannerActivity.class);
+                            GeneralUtil.transitionActivity(activity, DeviceScannerFragment.class);
                             break;
                         case BleGattService.ACTION_DATA_AVAILABLE:
                             // This is called after a Notify completes

@@ -12,21 +12,18 @@ import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.Bundle;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import inc.osips.bleproject.App;
 import inc.osips.bleproject.interfaces.PresenterInterface;
 import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
 import inc.osips.bleproject.interfaces.ScannerViewInterface;
 import inc.osips.bleproject.model.Devices;
 import inc.osips.bleproject.model.DeviceScannerFactory;
-import inc.osips.bleproject.model.utilities.Constants;
 import inc.osips.bleproject.model.utilities.GeneralUtil;
-import inc.osips.bleproject.view.activities.ControllerActivity;
 
 public class ScannerPresenter extends ScanCallback implements PresenterInterface, WifiP2pManager
         .PeerListListener{
@@ -34,6 +31,7 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
     private WirelessConnectionScanner scanner;
     private ScannerViewInterface viewInterface;
     private List<Devices> devices;
+    private List<String> deviceAddresses;
 
 
     public ScannerPresenter(ScannerViewInterface viewInterface, String commsType) {
@@ -44,12 +42,12 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
         if (builder!=null)
             scanner = builder.setmScanCallback(this).
                     setmWifiPeerListListener(this).build();
+        deviceAddresses = new ArrayList<>();
         devices = new LinkedList<>();
     }
 
-    public void shouldStartScan(){
-        if(!scanner.isScanning())
-            viewInterface.launchRingDialog();
+    public boolean shouldStartScan(){
+        return scanner.isScanning();
     }
 
     public Activity getScanningActivity(){
@@ -67,12 +65,12 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
 
     @Override
     public void registerBroadCastReceiver(Activity activity) {
-        activity.registerReceiver(wifiReceiver, commsUpdateIntentFilter());
+        activity.registerReceiver(commsReceiver, commsUpdateIntentFilter());
     }
 
     @Override
     public void unregisterBroadCastReceiver(Activity activity) {
-        activity.unregisterReceiver(wifiReceiver);
+        activity.unregisterReceiver(commsReceiver);
     }
 
     @TargetApi(21)
@@ -81,33 +79,20 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
         Log.i("callbackType", String.valueOf(callbackType));
         Log.i("result", result.toString());
         final int RSSI = result.getRssi();
-        /*if (RSSI>=-105) {
-            scanner.onStop();
-            Bundle data = new Bundle();
-            data.putString(Constants.COMM_TYPE, Constants.BLE);
-            data.putParcelable(Constants.DEVICE_DATA, result.getDevice());
-            if(!(App.getCurrentActivity() instanceof ControllerActivity))
-                viewInterface.goToDeviceControlView(data);
-        }*/
+        BluetoothDevice ble = result.getDevice();
+        if (RSSI>=-105 && !deviceAddresses.contains(ble.getAddress())) {
+            Devices device = new Devices(ble.getName(),
+                    ble.getAddress(), result.getRssi(), ble);
+            devices.add(device);
+            deviceAddresses.add(ble.getAddress());
+        }
     }
 
     @TargetApi(21)
     @Override
     public void onBatchScanResults(List<ScanResult> results) {
         for (ScanResult sr : results) {
-            Log.i("ScanResult - Results", sr.toString());
-            int RSSI = sr.getRssi();
-            BluetoothDevice ble = sr.getDevice();
-            if (RSSI>=-105) {
-                Devices device = new Devices(ble.getName(),
-                        ble.getAddress(), sr.getRssi(), ble);
-                devices.add(device);
-            }
-            //ToastMakers.message(scannerActivity.getApplicationContext(), sr.toString());
-        }
-
-        if (devices.size() ==0){
-            viewInterface.progressFromScan(devices);
+            Log.w("ScanResult - Results", sr.toString());
         }
     }
 
@@ -118,16 +103,16 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
     }
 
 
-    private final BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver commsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             switch (action) {
-                case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
-
-                case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
-                    scanner.showDiscoveredDevices();
-                    scanner.onStop();
+                case DeviceScannerFactory.SCANNING_STOPPED:
+                    Log.w("BLe", "broadcast");
+                    if (devices.size() >0){
+                        viewInterface.progressFromScan(devices);
+                    }
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
@@ -139,10 +124,17 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
                             GeneralUtil.message("Wifi has been turned off, " +
                                     "Please turn on to use this feature");
                             break;
+                         default:
+                             break;
                     }
                     break;
-                case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
+                case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
+                    if (scanner !=null) {
+                        scanner.showDiscoveredDevices();
+                        scanner.onStop();
+                    }
                     break;
+
             }
         }
     };
@@ -154,6 +146,7 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
      */
     private IntentFilter commsUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DeviceScannerFactory.SCANNING_STOPPED);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -169,7 +162,7 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
             devices.add(device);
         }
 
-        if (devices.size() ==0){
+        if (devices.size() >0){
             viewInterface.progressFromScan(devices);
         }
     }
