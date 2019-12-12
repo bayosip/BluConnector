@@ -11,9 +11,13 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelUuid;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +25,13 @@ import java.util.UUID;
 
 import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
 import inc.osips.bleproject.model.remote_comms.DeviceScannerFactory;
+import inc.osips.bleproject.model.remote_comms.Util;
 import inc.osips.bleproject.utilities.GeneralUtil;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BLE_Scanner implements WirelessConnectionScanner {
 
+    private long SCAN_TIME = 6000; //default scan time
     private BluetoothAdapter bleAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
     private Activity activity;
@@ -34,18 +40,20 @@ public class BLE_Scanner implements WirelessConnectionScanner {
     private ScanCallback mScanCallback;
     private boolean scanState = false;
     private String deviceName = null;//"Osi_p BLE-LED Controller";
-    private String baseUUID;//"6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-    private ScanSettings settings;
+    private final static String TAG = "BLE Device Scanner";
 
+    private ScanSettings settings;
+    //"6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 
     private ParcelUuid uuidParcel = null;
     //UUID uuid;
 
-    public BLE_Scanner(Activity activity, ScanCallback mScanCallback, String baseUUID){
+    public BLE_Scanner(Activity activity, ScanCallback mScanCallback, String baseUUID, long scantime){
+
+        if (scantime >=1000)SCAN_TIME = scantime;
 
         this.activity = activity;
         this.mScanCallback = mScanCallback;
-        this.baseUUID = baseUUID;
         final BluetoothManager manager = (BluetoothManager) activity
                 .getSystemService(Context.BLUETOOTH_SERVICE);
 
@@ -79,7 +87,6 @@ public class BLE_Scanner implements WirelessConnectionScanner {
     public void onStop() {
         if (scanState) {
             scanStop();
-            scanState = false;
         }
     }
 
@@ -87,7 +94,7 @@ public class BLE_Scanner implements WirelessConnectionScanner {
         if (!scanState) {
             ScanFilter myDevice = new ScanFilter.Builder()
                     .setServiceUuid(uuidParcel).build();
-            Log.d("Device UUID ", uuidParcel.toString());
+            Log.d(TAG, uuidParcel.toString());
             filters = new ArrayList<>();
 
             if (myDevice !=null){
@@ -99,12 +106,12 @@ public class BLE_Scanner implements WirelessConnectionScanner {
                 filters.add(myDevice);
             }
             //start scan for 15s, the stop
-            GeneralUtil.getHandler().postDelayed(new Runnable() {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     scanStop();
                 }
-            }, 6000);
+            }, SCAN_TIME);
 
             scanState = true;
 
@@ -123,7 +130,7 @@ public class BLE_Scanner implements WirelessConnectionScanner {
                 public void run() {
                     scanStop();
                 }
-            }, 6000);
+            }, SCAN_TIME);
 
             scanState = true;
 
@@ -135,11 +142,11 @@ public class BLE_Scanner implements WirelessConnectionScanner {
     }
 
     private void scanStop() {
-        GeneralUtil.message("Scanning Stopped!");
+        Util.message(activity,"Scanning Stopped!");
 
         if (scanState) {
             scanState = false;
-            Log.w("BLE", "scanning stopped");
+            Log.w(TAG, "scanning stopped");
             if(bluetoothLeScanner != null)
                 bluetoothLeScanner.stopScan(mScanCallback);
 

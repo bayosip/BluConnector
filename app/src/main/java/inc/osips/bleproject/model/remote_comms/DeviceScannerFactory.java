@@ -38,7 +38,8 @@ public class DeviceScannerFactory {
     }
 
     abstract public static class Builder{
-        Activity activity;
+        protected Activity activity;
+        protected long milliSecs = 0;
 
         private Builder(Activity activity) {
             this.activity = activity;
@@ -48,12 +49,14 @@ public class DeviceScannerFactory {
         abstract public Builder setmScanCallback(@Nullable ScanCallback mScanCallback);
         abstract public Builder setmWifiPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener);
         abstract public Builder setDeviceUniqueID(@Nullable String UUID_IP);
+        abstract public Builder setScanTime(long milliSecs);
     }
 
 
     private class BLEScanBuilder extends Builder {
         private ScanCallback mScanCallback;
         private String baseUUID = null;
+
 
         private BLEScanBuilder(Activity activity) {
             super(activity);
@@ -76,8 +79,14 @@ public class DeviceScannerFactory {
             return this;
         }
 
+        @Override
+        public Builder setScanTime(long milliSecs) {
+            this.milliSecs = milliSecs;
+            return this;
+        }
+
         public WirelessConnectionScanner build(){
-            return new BLE_Scanner(activity, mScanCallback, baseUUID);
+            return new BLE_Scanner(activity, mScanCallback, baseUUID, milliSecs);
         }
     }
 
@@ -103,8 +112,14 @@ public class DeviceScannerFactory {
         }
 
         @Override
+        public Builder setScanTime(long milliSecs) {
+            this.milliSecs = milliSecs;
+            return this;
+        }
+
+        @Override
         public WirelessConnectionScanner build(){
-            return new Wifi_Scanner(activity, mPeerListListener);
+            return new Wifi_Scanner(activity, mPeerListListener, milliSecs);
         }
 
         @Override
