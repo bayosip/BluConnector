@@ -8,7 +8,7 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 
 import java.util.List;
 
-import inc.osips.bleproject.model.utilities.Constants;
+import inc.osips.bleproject.utilities.Constants;
 
 public class ControlAdapter extends FragmentStatePagerAdapter {
 

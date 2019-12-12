@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.wifi_comms;
+package inc.osips.bleproject.model.remote_comms.wifi_comms;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -9,8 +9,11 @@ import android.os.IBinder;
 import android.os.Parcelable;
 
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
-import inc.osips.bleproject.model.wifi_comms.service.P2pDataTransferService;
+import inc.osips.bleproject.model.remote_comms.DeviceConnectionFactory;
+import inc.osips.bleproject.model.remote_comms.Util;
+import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.bleproject.model.remote_comms.wifi_comms.service.P2pDataTransferService;
+import inc.osips.bleproject.view.activities.Home;
 import inc.osips.bleproject.view.fragments.home_fragments.DeviceScannerFragment;
 
 public class WifiConnection implements WirelessDeviceConnector {
@@ -20,6 +23,7 @@ public class WifiConnection implements WirelessDeviceConnector {
     private Activity activity;
     private P2pDataTransferService p2pService;
     private boolean isConnected = false, mBound = false;
+    private static final String TAG = "WiFi Connectionm";
 
 
     public WifiConnection(Activity activity, final Parcelable p2pDevice) {
@@ -61,7 +65,8 @@ public class WifiConnection implements WirelessDeviceConnector {
                 @Override
                 public void onServiceDisconnected(ComponentName componentName) {
                     mBound = false;
-                    GeneralUtil.transitionActivity(activity, DeviceScannerFragment.class);
+
+                    activity.sendBroadcast(new Intent(DeviceConnectionFactory.DEVICE_CONNECTION_SERVICE_STOPPED));
                 }
             };
 
@@ -69,9 +74,9 @@ public class WifiConnection implements WirelessDeviceConnector {
         if (makeConnectionWifi()) {
             return;
         } else {
-            GeneralUtil.message("Cannot Connect to Device");
-            GeneralUtil.transitionActivity(activity,
-                    DeviceScannerFragment.class);
+            Util.message(activity,"Cannot Connect to Device");
+
+            activity.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
         }
     }
 

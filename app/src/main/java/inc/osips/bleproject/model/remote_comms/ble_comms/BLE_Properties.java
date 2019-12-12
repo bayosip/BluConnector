@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.ble_comms;
+package inc.osips.bleproject.model.remote_comms.ble_comms;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 

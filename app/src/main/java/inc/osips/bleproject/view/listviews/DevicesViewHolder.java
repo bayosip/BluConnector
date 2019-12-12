@@ -12,8 +12,8 @@ import java.util.List;
 
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.interfaces.OnDiscoveredDevicesClickListener;
-import inc.osips.bleproject.model.Devices;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.model.remote_comms.Devices;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 

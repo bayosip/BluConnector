@@ -1,11 +1,10 @@
 package inc.osips.bleproject.interfaces;
 
 import android.os.Bundle;
-import android.os.Parcelable;
 
 import java.util.List;
 
-import inc.osips.bleproject.model.Devices;
+import inc.osips.bleproject.model.remote_comms.Devices;
 
 public interface ScannerViewInterface extends AppActivity{
 

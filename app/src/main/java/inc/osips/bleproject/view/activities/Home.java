@@ -4,26 +4,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import at.markushi.ui.CircleButton;
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.interfaces.OnDiscoveredDevicesClickListener;
 import inc.osips.bleproject.interfaces.ScannerViewInterface;
-import inc.osips.bleproject.model.Devices;
-import inc.osips.bleproject.model.utilities.Constants;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.model.remote_comms.Devices;
+import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.presenter.ScannerPresenter;
 import inc.osips.bleproject.view.fragments.home_fragments.CommChooserFragment;
 import inc.osips.bleproject.view.fragments.home_fragments.DeviceScannerFragment;
-import inc.osips.bleproject.view.listviews.DevicesViewHolderAdapter;
 
 public class Home extends AppCompatActivity implements ScannerViewInterface {
 

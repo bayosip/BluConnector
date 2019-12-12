@@ -1,8 +1,6 @@
-package inc.osips.bleproject.model;
+package inc.osips.bleproject.model.remote_comms;
 
 import android.app.Activity;
-import android.bluetooth.le.ScanCallback;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -10,20 +8,16 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.UUID;
-
-import inc.osips.bleproject.interfaces.ControllerViewInterface;
-import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
-import inc.osips.bleproject.model.ble_comms.BLE_Scanner;
-import inc.osips.bleproject.model.ble_comms.BleConnection;
-import inc.osips.bleproject.model.utilities.Constants;
-import inc.osips.bleproject.model.wifi_comms.WifiConnection;
-import inc.osips.bleproject.model.wifi_comms.Wifi_Scanner;
+import inc.osips.bleproject.model.remote_comms.ble_comms.BleConnection;
+import inc.osips.bleproject.utilities.Constants;
+import inc.osips.bleproject.model.remote_comms.wifi_comms.WifiConnection;
 
 public class DeviceConnectionFactory {
 
     private Activity activity;
+    public final static String FAILED_DEVICE_CONNECTION = "device_connection_failed";
+    public final static String DEVICE_CONNECTION_SERVICE_STOPPED = "connection_service_stopped";
 
     public DeviceConnectionFactory(Activity activity) {
         this.activity = activity;

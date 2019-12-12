@@ -43,7 +43,7 @@
             android:theme="@style/AppTheme.Splash" />
 
         <service
-            android:name=".model.ble_comms.services.BleGattService"
+            android:name=".model.remote_comms.ble_comms.services.BleGattService"
             android:enabled="true"
             android:exported="false" />
 

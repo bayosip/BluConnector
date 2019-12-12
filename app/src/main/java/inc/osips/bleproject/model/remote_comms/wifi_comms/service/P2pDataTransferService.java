@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.wifi_comms.service;
+package inc.osips.bleproject.model.remote_comms.wifi_comms.service;
 
 import android.app.Service;
 import android.content.Context;
@@ -23,7 +23,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class P2pDataTransferService extends Service {
 

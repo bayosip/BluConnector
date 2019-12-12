@@ -1,7 +1,6 @@
 package inc.osips.bleproject.view.listviews;
 
 import android.content.Context;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,7 @@ import java.util.List;
 
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.interfaces.OnDiscoveredDevicesClickListener;
-import inc.osips.bleproject.model.Devices;
+import inc.osips.bleproject.model.remote_comms.Devices;
 
 public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHolder> {
 

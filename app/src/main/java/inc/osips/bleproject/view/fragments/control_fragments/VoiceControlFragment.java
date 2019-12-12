@@ -18,7 +18,7 @@ import android.view.ViewGroup;
 import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.interfaces.SpeechInitCallBack;
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 import android.widget.ImageButton;
 import android.widget.ImageView;

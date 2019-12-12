@@ -6,7 +6,7 @@ import android.os.Bundle;
 
 import inc.osips.bleproject.App;
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.model.utilities.ServiceUtil;
+import inc.osips.bleproject.utilities.ServiceUtil;
 
 public class AppFinish extends AppCompatActivity {
 

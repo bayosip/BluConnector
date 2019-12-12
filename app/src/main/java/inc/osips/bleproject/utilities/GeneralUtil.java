@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.utilities;
+package inc.osips.bleproject.utilities;
 
 import android.app.Activity;
 import android.content.Context;

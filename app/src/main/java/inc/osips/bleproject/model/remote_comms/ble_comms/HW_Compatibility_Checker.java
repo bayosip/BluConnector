@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.ble_comms;
+package inc.osips.bleproject.model.remote_comms.ble_comms;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-
-import inc.osips.bleproject.interfaces.PresenterInterface;
 
 import static android.content.Context.SENSOR_SERVICE;
 

@@ -7,7 +7,7 @@ import android.util.Log;
 
 import java.util.Locale;
 import inc.osips.bleproject.interfaces.VoiceRecognition;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public abstract class VoiceRecognitionImpl  implements VoiceRecognition{
 

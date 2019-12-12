@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.ble_comms;
+package inc.osips.bleproject.model.remote_comms.ble_comms;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.UUID;
 
 import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
-import inc.osips.bleproject.model.DeviceScannerFactory;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.model.remote_comms.DeviceScannerFactory;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BLE_Scanner implements WirelessConnectionScanner {

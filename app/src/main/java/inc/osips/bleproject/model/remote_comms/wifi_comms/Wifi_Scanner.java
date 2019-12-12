@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.wifi_comms;
+package inc.osips.bleproject.model.remote_comms.wifi_comms;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,9 +9,8 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Looper;
 
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.interfaces.PresenterInterface;
 import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.ActionListener {
 

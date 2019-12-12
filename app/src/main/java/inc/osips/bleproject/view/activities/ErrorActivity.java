@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.Button;
 
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class ErrorActivity extends AppCompatActivity {
 

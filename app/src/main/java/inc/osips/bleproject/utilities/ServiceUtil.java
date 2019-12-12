@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.utilities;
+package inc.osips.bleproject.utilities;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -14,8 +14,8 @@ import android.util.Log;
 import java.util.Iterator;
 import java.util.List;
 
-import inc.osips.bleproject.model.ble_comms.services.BleGattService;
-import inc.osips.bleproject.model.wifi_comms.service.P2pDataTransferService;
+import inc.osips.bleproject.model.remote_comms.ble_comms.services.BleGattService;
+import inc.osips.bleproject.model.remote_comms.wifi_comms.service.P2pDataTransferService;
 import inc.osips.bleproject.view.fragments.home_fragments.DeviceScannerFragment;
 
 import static android.content.Context.ACTIVITY_SERVICE;

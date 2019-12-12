@@ -21,9 +21,9 @@ import java.util.List;
 import inc.osips.bleproject.interfaces.PresenterInterface;
 import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
 import inc.osips.bleproject.interfaces.ScannerViewInterface;
-import inc.osips.bleproject.model.Devices;
-import inc.osips.bleproject.model.DeviceScannerFactory;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.model.remote_comms.Devices;
+import inc.osips.bleproject.model.remote_comms.DeviceScannerFactory;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class ScannerPresenter extends ScanCallback implements PresenterInterface, WifiP2pManager
         .PeerListListener{

@@ -1,11 +1,12 @@
-package inc.osips.bleproject.model.ble_comms;
+package inc.osips.bleproject.model.remote_comms.ble_comms;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.model.remote_comms.Util;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 /**
  * Created by BABY v2.0 on 9/13/2016.
@@ -13,7 +14,7 @@ import inc.osips.bleproject.model.utilities.GeneralUtil;
 public class BluetoothState extends BroadcastReceiver {
 
     Context context;
-    GeneralUtil toast;
+    Util toast;
 
     public BluetoothState(Context contxt){
         this.context = contxt;
@@ -29,16 +30,16 @@ public class BluetoothState extends BroadcastReceiver {
 
             switch (state) {
                 case BluetoothAdapter.STATE_OFF:
-                    toast.message( "Bluetooth is off");
+                    toast.message( context,"Bluetooth is off");
                     break;
                 case BluetoothAdapter.STATE_TURNING_OFF:
-                    toast.message("Bluetooth is turning off...");
+                    toast.message( context,"Bluetooth is turning off...");
                     break;
                 case BluetoothAdapter.STATE_ON:
-                    toast.message("Bluetooth is on");
+                    toast.message(context,"Bluetooth is on");
                     break;
                 case BluetoothAdapter.STATE_TURNING_ON:
-                    toast.message("Bluetooth is turning on...");
+                    toast.message(context,"Bluetooth is turning on...");
                     break;
             }
         }

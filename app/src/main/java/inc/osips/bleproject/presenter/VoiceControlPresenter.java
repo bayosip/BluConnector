@@ -19,7 +19,7 @@ import java.util.Locale;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.model.VoiceRecognitionImpl;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.view.activities.ControllerActivity;
 
 public class VoiceControlPresenter extends VoiceRecognitionImpl implements RecognitionListener {

@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.ble_comms.services;
+package inc.osips.bleproject.model.remote_comms.ble_comms.services;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 /**
  * Created by BABY v2.0 on 10/11/2016.

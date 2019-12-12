@@ -6,7 +6,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.widget.EditText;
 
-import inc.osips.bleproject.model.utilities.Constants;
+import inc.osips.bleproject.utilities.Constants;
 
 public class UUID_IP_TextWatcher implements TextWatcher {
 

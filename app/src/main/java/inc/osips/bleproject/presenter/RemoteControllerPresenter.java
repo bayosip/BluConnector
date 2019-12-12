@@ -14,11 +14,11 @@ import android.util.Log;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
-import inc.osips.bleproject.model.DeviceConnectionFactory;
-import inc.osips.bleproject.model.ble_comms.services.BleGattService;
-import inc.osips.bleproject.model.utilities.Constants;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
-import inc.osips.bleproject.model.utilities.ServiceUtil;
+import inc.osips.bleproject.model.remote_comms.DeviceConnectionFactory;
+import inc.osips.bleproject.model.remote_comms.ble_comms.services.BleGattService;
+import inc.osips.bleproject.utilities.Constants;
+import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.ServiceUtil;
 import inc.osips.bleproject.view.activities.Home;
 
 public class RemoteControllerPresenter extends VoiceControlPresenter {
@@ -134,6 +134,10 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     break;
 
                 case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
+                    break;
+                case DeviceConnectionFactory.DEVICE_CONNECTION_SERVICE_STOPPED:
+                case DeviceConnectionFactory.FAILED_DEVICE_CONNECTION:
+                    GeneralUtil.transitionActivity(activity, Home.class);
                     break;
             }
         }

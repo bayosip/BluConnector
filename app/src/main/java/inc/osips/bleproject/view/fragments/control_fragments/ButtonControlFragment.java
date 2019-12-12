@@ -22,7 +22,7 @@ import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
 import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
+import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.view.activities.ControllerActivity;
 import inc.osips.bleproject.view.custom_views.CustomColorFlag;
 

@@ -12,9 +12,8 @@ import androidx.annotation.Nullable;
 
 import at.markushi.ui.CircleButton;
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.model.utilities.Constants;
-import inc.osips.bleproject.model.utilities.GeneralUtil;
-import inc.osips.bleproject.view.activities.Home;
+import inc.osips.bleproject.utilities.Constants;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class CommChooserFragment extends BaseFragment {
 

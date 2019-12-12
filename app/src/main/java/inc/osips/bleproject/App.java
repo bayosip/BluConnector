@@ -7,7 +7,7 @@ import android.content.Context;
 import androidx.multidex.MultiDex;
 
 import cat.ereza.customactivityoncrash.config.CaocConfig;
-import inc.osips.bleproject.model.utilities.ServiceUtil;
+import inc.osips.bleproject.utilities.ServiceUtil;
 import inc.osips.bleproject.view.activities.ErrorActivity;
 
 public class App extends Application {

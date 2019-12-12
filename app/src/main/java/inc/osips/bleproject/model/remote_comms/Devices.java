@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model;
+package inc.osips.bleproject.model.remote_comms;
 
 import android.os.Parcelable;
 
