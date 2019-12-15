@@ -10,4 +10,5 @@
     <string name="cancel">CANCEL</string>
     <string name="enable_wifi_msg">Please Enable WiFi To Continue.</string>
     <string name="enable_wifi_title">Enable WiFi?</string>
+    <string name="enter_preferred_instruction">Enter Preferred Instruction</string>
 </resources>

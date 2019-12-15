@@ -41,7 +41,7 @@
         android:layout_height="@dimen/button_size"
         android:background="@drawable/curved_edges_layout"
         android:elevation="5dp"
-        android:src="@drawable/ic_action_light_off"
+        android:src="@drawable/ic_power_on_24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
