@@ -3,6 +3,7 @@ package inc.osips.bleproject.utilities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -28,13 +29,17 @@ import inc.osips.bleproject.view.activities.ControllerActivity;
  */
 
 public class GeneralUtil {
-    private Context context;
-    private Toast toast;
+    private static SharedPreferences appPref;
 
+    private static final String APP_PREFS_NAME = "inc.osips.bleproject.app_pref";
     private static Handler uiHandler;
+    private static SharedPreferences.Editor editor;
 
     static {
         uiHandler = new Handler(Looper.getMainLooper());
+        appPref = App.context.getSharedPreferences(APP_PREFS_NAME,
+                Context.MODE_PRIVATE);
+        editor = appPref.edit();
     }
 
 
@@ -46,6 +51,40 @@ public class GeneralUtil {
         return uiHandler;
     }
 
+    public static SharedPreferences getAppPref() {
+        if (appPref == null) appPref = App.context.getSharedPreferences(APP_PREFS_NAME,
+                Context.MODE_PRIVATE);
+
+        return appPref;
+    }
+
+    public static boolean checkIfPrefExists(String name){
+        if (appPref!=null && appPref.contains(name)) return true;
+
+        return false;
+    }
+
+    public static String getAppPrefStoredStringWithName(String name){
+        if (checkIfPrefExists(name))
+            return appPref.getString(name, "");
+        return "";
+    }
+
+    public static SharedPreferences.Editor getEditor() {
+        return editor;
+    }
+
+
+    /*This function takes a String array @parameter and checks
+     *if it exist and if its not the same as previous saved,
+     * removes previous ave on satisfied condition then saves new instruction
+     * */
+    public static void saveButtonConfig(String... data){
+        if(appPref.contains(data[0]) && !appPref.getString(data[0],"").equalsIgnoreCase(data[1])){
+            editor.remove(data[0]).commit();
+        }
+        editor.putString(data[0], data[1]).commit();
+    }
 
     public static void exitApp(Activity activity) {
         if (Build.VERSION.SDK_INT >= 21) activity.finishAndRemoveTask();

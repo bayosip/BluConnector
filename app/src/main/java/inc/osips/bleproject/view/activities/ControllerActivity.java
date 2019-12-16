@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.util.LinkedList;
@@ -52,6 +53,12 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     private String commType;
     private Dialog uuidPopUp;
 
+    public static final String BUTTON_CONFIG = "button_config";
+    public static final String ON_OFF = "on_off";
+    public static final String LEFT = "left";
+    public static final String RIGHT = "right";
+    public static final String UP = "up";
+    public static final String DOWN = "down";
     private static final String TAG = ControllerActivity.class.getSimpleName();
 
     @Override
@@ -113,6 +120,56 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         uuidPopUp.show();
     }
 
+    public void getButtonConfigPopUp(){
+        final Dialog buttonConfig = new Dialog(this);
+        buttonConfig.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        buttonConfig.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        buttonConfig.setContentView(R.layout.change_button_control_config);
+        buttonConfig.setOwnerActivity(this);
+        buttonConfig.setCancelable(true);
+
+        Button saveConfig = buttonConfig.findViewById(R.id.button_save_config);
+        final EditText txtOnOff =  buttonConfig.findViewById(R.id.editOn);
+        presenter.setEditTextIfStringAvailable(txtOnOff, GeneralUtil.getAppPrefStoredStringWithName(ON_OFF));
+
+        final EditText txtLeft =  buttonConfig.findViewById(R.id.editArrowLeft);
+        presenter.setEditTextIfStringAvailable(txtLeft, GeneralUtil.getAppPrefStoredStringWithName(LEFT));
+
+        final EditText txtRight =  buttonConfig.findViewById(R.id.editArrowRight);
+        presenter.setEditTextIfStringAvailable(txtRight, GeneralUtil.getAppPrefStoredStringWithName(RIGHT));
+
+        final EditText txtUp =  buttonConfig.findViewById(R.id.editArrowUp);
+        presenter.setEditTextIfStringAvailable(txtUp, GeneralUtil.getAppPrefStoredStringWithName(UP));
+
+        final EditText txtDown =  buttonConfig.findViewById(R.id.editArrowDown);
+        presenter.setEditTextIfStringAvailable(txtDown, GeneralUtil.getAppPrefStoredStringWithName(DOWN));
+
+        saveConfig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                presenter.setASharedPrefFromButtonConfig(ON_OFF, txtOnOff);
+                presenter.setASharedPrefFromButtonConfig(LEFT, txtLeft);
+                presenter.setASharedPrefFromButtonConfig(RIGHT, txtRight);
+                presenter.setASharedPrefFromButtonConfig(UP, txtUp);
+                presenter.setASharedPrefFromButtonConfig(DOWN, txtDown);
+
+                if(!GeneralUtil.getAppPref().contains(BUTTON_CONFIG))
+                    GeneralUtil.getEditor().putBoolean(BUTTON_CONFIG, true).commit();
+
+                manualFrag.shouldEnableButtons();
+                buttonConfig.dismiss();
+            }
+        });
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                buttonConfig.show();
+            }
+        });
+
+    }
+
     @Override
     public void removeUUIDPopUp(){
         if (uuidPopUp!=null){
@@ -127,6 +184,13 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         bar.setDisplayShowTitleEnabled(false);
         bar.setDisplayHomeAsUpEnabled(false);
 
+        ImageButton changeConfig = findViewById(R.id.buttonConfig);
+        changeConfig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getButtonConfigPopUp();
+            }
+        });
         disconnectButton = findViewById(R.id.buttonDisconnect);
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,7 +224,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
                 .setTitle("Notice").setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (!ServiceUtil.isServiceBLEAlreadyRunningAPI16(ControllerActivity.this)){
+                if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(ControllerActivity.this)){
                     getUUIDFromPopUp();
                 }
                 dialog.dismiss();
@@ -194,14 +258,14 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     protected void onPause() {
         super.onPause();
         removeUUIDPopUp();
-        if(presenter!=null && ServiceUtil.isServiceBLEAlreadyRunningAPI16(this))
+        if(presenter!=null && ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(this))
             presenter.unregisterBleMsgReceiver();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(presenter!=null && ServiceUtil.isServiceBLEAlreadyRunningAPI16(this))
+        if(presenter!=null && ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(this))
             presenter.registerRemoteMsgReceiver();
     }
 

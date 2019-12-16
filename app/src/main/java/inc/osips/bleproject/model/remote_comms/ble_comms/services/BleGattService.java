@@ -44,15 +44,11 @@ public class BleGattService extends Service {
     private static final int STATE_CONNECTED = 2;
     private static boolean mLedSwitchState = false;
 
-    public final static String ACTION_CONNECTED =
-            "inc.osips.bleproject.Model.Services.BleGattService.ACTION_CONNECTED";
-    public final static String ACTION_DISCONNECTED =
-            "inc.osips.bleproject.Model.Services.BleGattService.ACTION_DISCONNECTED";
-    public final static String ACTION_BLE_SERVICES_DISCOVERED =
-            "inc.osips.bleproject.Model.Services.BleGattService.ACTION_BLE_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "inc.osips.bleproject.Model.Services.BleGattService.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA = "inc.osips.bleproject.Model.Services.BleGattService.EXTRA_DATA";
+    public final static String ACTION_CONNECTED = "BleGattService.ACTION_CONNECTED";
+    public final static String ACTION_DISCONNECTED ="BleGattService.ACTION_DISCONNECTED";
+    public final static String ACTION_BLE_SERVICES_DISCOVERED = "BleGattService.ACTION_BLE_SERVICES_DISCOVERED";
+    public final static String ACTION_DATA_AVAILABLE ="BleGattService.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA = "BleGattService.EXTRA_DATA";
     public  String EXTRA_UUID;
 
     public String serviceUUID;// = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";

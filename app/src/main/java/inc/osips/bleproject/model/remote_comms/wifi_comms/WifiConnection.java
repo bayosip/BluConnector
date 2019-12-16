@@ -91,6 +91,7 @@ public class WifiConnection implements WirelessDeviceConnector {
 
     @Override
     public void connectToDeviceWithDeviceInfoFrom(Intent intent) {
-        p2pService.establishConnection(intent);
+        if (p2pService!= null)
+            p2pService.establishConnection(intent);
     }
 }

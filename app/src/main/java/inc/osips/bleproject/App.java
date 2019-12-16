@@ -44,17 +44,4 @@ public class App extends Application {
         super.attachBaseContext(base);
         MultiDex.install(this);
     }
-
-
-
-
-
-    @Override
-    public void onTerminate() {
-        if(ServiceUtil.isServiceBLEAlreadyRunningAPI16(context)){
-            ServiceUtil.stopService(this);
-        }
-        super.onTerminate();
-    }
-
 }

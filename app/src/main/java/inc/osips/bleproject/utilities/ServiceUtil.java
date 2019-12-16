@@ -26,35 +26,6 @@ public class ServiceUtil {
     private static Intent serviceIntent;
     private static BroadcastReceiver commsUpdateReceiver;
 
-    public static Intent getServiceIntent() {
-        return serviceIntent;
-    }
-
-    public static void startBLEService(final Context activity){
-        serviceIntent = new Intent(activity, BleGattService.class);
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
-            if(checkForIfDeviceIsFullyWake(activity))
-                ContextCompat.startForegroundService(activity, serviceIntent);
-            else {
-                GeneralUtil.getHandler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            ContextCompat.startForegroundService(activity, serviceIntent);
-                        }catch (Exception e){
-                            Log.e(activity.getClass().getSimpleName(), "Service Error", e);
-                            e.printStackTrace();
-                            GeneralUtil.message( "Service Error, Please Restart App");
-                        }
-                    }
-                }, 1500);
-            }
-        }else{
-           activity.startService(serviceIntent);
-        }
-    }
-
     private static boolean checkForIfDeviceIsFullyWake(Context activity){
         ActivityManager activityManager = (ActivityManager) activity.getSystemService(ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
@@ -68,7 +39,7 @@ public class ServiceUtil {
     }
 
     @SuppressWarnings("deprecation")
-    public static Boolean isServiceBLEAlreadyRunningAPI16(Context activity) {
+    private static Boolean isServiceBLEAlreadyRunningAPI16(Context activity) {
         ActivityManager activityManager = (ActivityManager) activity.getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo serviceInfo : activityManager
                 .getRunningServices(Integer.MAX_VALUE)) {
@@ -78,8 +49,14 @@ public class ServiceUtil {
         return false;
     }
 
+    public static Boolean isAnyRemoteConnectionServiceRunningAPI16(Context context){
+        if (isServiceWiFiAlreadyRunningAPI16(context) || isServiceBLEAlreadyRunningAPI16(context))
+            return true;
+        else return false;
+    }
+
     @SuppressWarnings("deprecation")
-    public static Boolean isServiceWiFiAlreadyRunningAPI16(Context activity) {
+    private static Boolean isServiceWiFiAlreadyRunningAPI16(Context activity) {
         ActivityManager activityManager = (ActivityManager) activity.getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo serviceInfo : activityManager
                 .getRunningServices(Integer.MAX_VALUE)) {
@@ -111,46 +88,5 @@ public class ServiceUtil {
         }
 
         return true; // App is in background or foreground
-    }
-
-    public static BroadcastReceiver getCommsUpdateReceiver(final Activity activity){
-
-        if(commsUpdateReceiver==null) {
-            commsUpdateReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    final String action = intent.getAction();
-                    switch (action) {
-                        case BleGattService.ACTION_CONNECTED:
-                            // No need to do anything here. Service discovery is started by the service.
-                            break;
-                        case BleGattService.ACTION_DISCONNECTED:
-                            Log.i(activity.getClass().getSimpleName(), "Service Disconnected");
-                            GeneralUtil.message("Device Disconnected");
-                            //if (App.getCurrentActivity() instanceof ControllerActivity)
-                            GeneralUtil.transitionActivity(activity, DeviceScannerFragment.class);
-                            break;
-                        case BleGattService.ACTION_DATA_AVAILABLE:
-                            // This is called after a Notify completes
-                            break;
-                        case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
-                            break;
-                        case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
-                            break;
-                        case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
-                            break;
-                        case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
-                            break;
-                    }
-                }
-
-                @Override
-                public IBinder peekService(Context myContext, Intent service) {
-                    return super.peekService(myContext, service);
-                }
-            };
-        }
-
-        return commsUpdateReceiver;
     }
 }

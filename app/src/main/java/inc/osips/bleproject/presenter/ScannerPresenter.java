@@ -110,9 +110,7 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
             switch (action) {
                 case DeviceScannerFactory.SCANNING_STOPPED:
                     Log.w("BLe", "broadcast");
-                    if (devices.size() >0){
-                        viewInterface.progressFromScan(devices);
-                    }
+                    viewInterface.progressFromScan(devices);
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
@@ -134,7 +132,6 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
                         scanner.onStop();
                     }
                     break;
-
             }
         }
     };

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="false">
+    <item android:state_pressed="false"
+        android:state_enabled="true">
         <shape xmlns:android="http://schemas.android.com/apk/res/android">
             <solid android:color="@color/buttonColor" />
             <stroke android:width="0.75dp" android:color="@color/shadow" />
@@ -8,11 +9,20 @@
             <padding android:bottom="0dp" android:left="0dp" android:right="0dp" android:top="0dp" />
         </shape>
     </item>
-    <item android:state_pressed="true">
+    <item android:state_pressed="true"
+        android:state_enabled="true">
         <shape xmlns:android="http://schemas.android.com/apk/res/android">
             <solid android:color="@color/ripple"/>
             <stroke android:width="2dp" android:color="@color/colorPrimary" />
             <corners android:radius="35dp" />
+            <padding android:bottom="0dp" android:left="0dp" android:right="0dp" android:top="0dp" />
+        </shape>
+    </item>
+    <item android:state_enabled="false">
+        <shape xmlns:android="http://schemas.android.com/apk/res/android">
+            <solid android:color="@color/light_theme_line" />
+            <stroke android:width="1.75dp" android:color="@color/buttonColor" />
+            <corners android:radius="25dp" />
             <padding android:bottom="0dp" android:left="0dp" android:right="0dp" android:top="0dp" />
         </shape>
     </item>

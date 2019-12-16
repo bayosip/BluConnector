@@ -47,11 +47,11 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity
-            android:name=".view.fragments.home_fragments.DeviceScannerFragment"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Splash">
-        </activity>
+        <service
+            android:name=".model.remote_comms.wifi_comms.service.P2pDataTransferService"
+            android:enabled="true"
+            android:exported="false" />
+
         <activity
             android:name=".view.activities.ControllerActivity"
             android:launchMode="singleTop"

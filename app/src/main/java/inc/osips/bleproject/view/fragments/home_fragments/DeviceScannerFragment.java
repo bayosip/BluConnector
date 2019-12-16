@@ -81,20 +81,28 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
         discoveredDevices = view.findViewById(R.id.peerListView);
         sendMessage = view.findViewById(R.id.buttonSend);
         msgBox = view.findViewById(R.id.editWriteMsg);
-        searchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(!isFirstScan)
-                    resizeForSearch();
-                if(!activity.isAlreadyScanning())launchRingDialog();
-            }
-        });
+
         discoveredDevices = view.findViewById(R.id.peerListView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(activity,
                 RecyclerView.VERTICAL, false);
 
         discoveredDevices.setLayoutManager(layoutManager);
         discoveredDevices.setAdapter(adapter);
+
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!isFirstScan)
+                    resizeForSearch();
+                if(!activity.isAlreadyScanning()){
+                    launchRingDialog();
+                    if (remoteDevices.size()>0){
+                        remoteDevices.clear();
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            }
+        });
     }
 
     private void resizeForIncomingListOfDevice(){
@@ -153,24 +161,27 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
     }
 
     public void progressFromScan(final List<Devices> devices) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ringProgressDialog.dismiss();
-                activity.stopDeviceScanning();
-                if (!ringProgressDialog.isShowing()) {
-                    if(devices.size()> 0){
-                        isFirstScan =false;
-                        resizeForIncomingListOfDevice();
-                        remoteDevices.clear();
-                        remoteDevices.addAll(devices);
-                        adapter.notifyDataSetChanged();
-                        //discoveredDevices.
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (ringProgressDialog!=null && ringProgressDialog.isShowing())
+                        ringProgressDialog.dismiss();
+                    activity.stopDeviceScanning();
+                    if (ringProgressDialog!= null && !ringProgressDialog.isShowing()) {
+                        if (devices.size() > 0) {
+                            isFirstScan = false;
+                            resizeForIncomingListOfDevice();
+                            remoteDevices.clear();
+                            remoteDevices.addAll(devices);
+                            adapter.notifyDataSetChanged();
+                            //discoveredDevices.
+                        }
                     }
                 }
-            }
-        });
+            });
     }
+
+
 
     @Override
     public void onStart() {

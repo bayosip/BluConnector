@@ -10,12 +10,15 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.Log;
+import android.widget.EditText;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
 import inc.osips.bleproject.model.remote_comms.DeviceConnectionFactory;
 import inc.osips.bleproject.model.remote_comms.ble_comms.services.BleGattService;
+import inc.osips.bleproject.model.remote_comms.wifi_comms.service.P2pDataTransferService;
 import inc.osips.bleproject.utilities.Constants;
 import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.utilities.ServiceUtil;
@@ -27,6 +30,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     private Activity activity;
     private String deviceName;
     private DeviceConnectionFactory.Builder builder;
+    private Intent intent;
 
     public RemoteControllerPresenter(final ControllerViewInterface viewInterface, String type,
                                      Parcelable device) {
@@ -44,26 +48,42 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
             Log.i("Connection", builder.getDeviceType());
             if (builder !=null){
                 deviceConnector = builder.build();
-                if(!ServiceUtil.isServiceBLEAlreadyRunningAPI16(viewInterface.getControlContext()))
+
+                intent = new Intent(activity, P2pDataTransferService.class);
+                if(!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
                     bindBleService();
             }
             this.deviceName = ((WifiP2pDevice) device).deviceName;
         }
     }
 
+    public void setEditTextIfStringAvailable(EditText txt, String str){
+        if(!TextUtils.isEmpty(str)){
+            txt.setText(str);
+        }
+    }
+
+    public void setASharedPrefFromButtonConfig(String name, EditText txt){
+        GeneralUtil.saveButtonConfig(name, txt.getText().toString());
+    }
+
     public void setBaseUuidOfBLEDeviceAndConnect(String uuid){
         if (builder !=null){//"6e400001-b5a3-f393-e0a9-e50e24dcca9e"
             String str = uuid.toLowerCase();
-            deviceConnector = builder.setDeviceUniqueID(str).build();
-            if(!ServiceUtil.isServiceBLEAlreadyRunningAPI16(viewInterface.getControlContext()))
-                bindBleService();
+            if (str.length()==36) {
+                intent = new Intent(activity, BleGattService.class);
+                deviceConnector = builder.setDeviceUniqueID(str).build();
+                if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
+                    bindBleService();
+            }else {
+                GeneralUtil.message("Please Enter A Valid BaseUUID");
+            }
         }
     }
 
     private void bindBleService(){
         Log.i(TAG, "starting service");
-        Intent intent = new Intent(activity, BleGattService.class);
-        if (deviceConnector !=null && !ServiceUtil.isServiceBLEAlreadyRunningAPI16(activity)){
+        if (deviceConnector !=null && !ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(activity)){
             activity.bindService(intent, deviceConnector.getServiceConnection(), Context.BIND_AUTO_CREATE);
             registerRemoteMsgReceiver();
         }
@@ -75,7 +95,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
 
     public void unbindBleService(){
         if (deviceConnector!=null && deviceConnector.isConnected() &&
-                ServiceUtil.isServiceBLEAlreadyRunningAPI16(viewInterface.getControlContext())) {
+                ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext())) {
             activity.unbindService(deviceConnector.getServiceConnection());
             deviceConnector = null;
         }
@@ -113,7 +133,12 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     viewInterface.removeUUIDPopUp();
                     break;
                 case BleGattService.ACTION_DATA_AVAILABLE:
+                    Log.w("BLE DATA", "" + intent.getStringExtra(BleGattService.EXTRA_DATA));
+                    break;
+                case P2pDataTransferService.ACTION_DATA_AVAILABLE:
+                    Log.w("DATA", intent.getStringExtra(P2pDataTransferService.EXTRA_DATA));
                     // This is called after a Notify completes
+                    GeneralUtil.message(intent.getStringExtra(P2pDataTransferService.EXTRA_DATA));
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);

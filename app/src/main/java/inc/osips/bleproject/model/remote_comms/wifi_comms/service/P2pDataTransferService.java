@@ -21,9 +21,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 
-import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.bleproject.model.remote_comms.Util;
+import inc.osips.bleproject.model.remote_comms.ble_comms.services.BleGattService;
 
 public class P2pDataTransferService extends Service {
 
@@ -31,22 +33,32 @@ public class P2pDataTransferService extends Service {
     private WifiP2pManager p2pManager;
     private WifiP2pManager.Channel p2pChannel;
     private WifiP2pConfig config;
-    private final Binder serviceBinder = new P2pServiceBinder();
     private Intent serviceIntent;
     private boolean isP2pConnected = false;
-    private Thread serviceThread;
+    private Thread clientServiceThread;
     private Socket socket = new Socket();
     private String hostAddress;
     private int TIME_OUT = 3000; //default time out for connection
     private int PORT = 8888; // default port number
-    private static final int MESSAGE_READ=1;
+    private static final int MESSAGE_READ = 1;
     private SendReceive sendReceive;
+
+    public final static String EXTRA_DATA = "P2pDataTransferService.EXTRA_DATA";
+    public final static String ACTION_DATA_AVAILABLE = "P2pDataTransferService.ACTION_DATA_AVAILABLE";
+
+    private final IBinder mBinder = new P2pDataTransferService.P2pServiceBinder();
+
+    public class P2pServiceBinder extends Binder{
+
+        public P2pDataTransferService getService(){ return P2pDataTransferService.this; }
+    }
+
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         serviceIntent = intent;
-        return serviceBinder;
+        return mBinder;
     }
 
     @Override
@@ -78,13 +90,13 @@ public class P2pDataTransferService extends Service {
         p2pManager.connect(p2pChannel, config, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                GeneralUtil.message("Connected to " + p2pDevice.deviceName);
+                Util.message(P2pDataTransferService.this,"Connected to " + p2pDevice.deviceName);
                 isP2pConnected = true;
             }
 
             @Override
             public void onFailure(int i) {
-                GeneralUtil.message("Failed To Connect...");
+                Util.message(P2pDataTransferService.this,"Failed To Connect...");
                 onUnbind(serviceIntent);
             }
         });
@@ -92,11 +104,24 @@ public class P2pDataTransferService extends Service {
     }
 
     public void writeLEDInstructions(String instruct) {
-        sendReceive.write(instruct.getBytes());
+        if(sendReceive!=null)
+            sendReceive.write(instruct.getBytes());
     }
 
     private void disconnect() {
+        p2pManager.cancelConnect(p2pChannel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+               Util.message(P2pDataTransferService.this,"Disconnected");
+                isP2pConnected = true;
+            }
 
+            @Override
+            public void onFailure(int i) {
+                Util.message(P2pDataTransferService.this,"Failed To Connect...");
+                onUnbind(serviceIntent);
+            }
+        });
     }
 
     public void establishConnection(Intent intent){
@@ -109,7 +134,7 @@ public class P2pDataTransferService extends Service {
                     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
                         final InetAddress hostAddress = wifiP2pInfo.groupOwnerAddress;
                         if (wifiP2pInfo.groupFormed) {
-                            serviceThread = new Thread(){
+                            clientServiceThread = new Thread(){
                                 @Override
                                 public void run() {
                                     try {
@@ -121,13 +146,28 @@ public class P2pDataTransferService extends Service {
                                     }
                                 }
                             };
-                            serviceThread.start();
+                            clientServiceThread.start();
+                        }else {
+                            ServerClass server= new ServerClass();
+                            server.start();
                         }
                     }
                 });
-            }else GeneralUtil.message("Wifi Device is Not Connected!");
+            }else Util.message(P2pDataTransferService.this,"Wifi Device is Not Connected!");
         }
     }
+
+    private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        sendBroadcast(intent);
+    }
+
+    private void broadcastUpdate(final String action, String data) {
+        final Intent intent = new Intent(action);
+        intent.putExtra(EXTRA_DATA, data);
+        sendBroadcast(intent);
+    }
+
 
     Handler handler=new Handler(new Handler.Callback() {
         @Override
@@ -136,7 +176,8 @@ public class P2pDataTransferService extends Service {
             {
                 case MESSAGE_READ:
                     byte[] readBuff= (byte[]) msg.obj;
-                    String tempMsg=new String(readBuff,0,msg.arg1);
+                    String tempMsg=new String(readBuff,0, msg.arg1);
+                    broadcastUpdate(ACTION_DATA_AVAILABLE, tempMsg);
                     break;
             }
             return true;
@@ -152,8 +193,8 @@ public class P2pDataTransferService extends Service {
         {
             socket=skt;
             try {
-                inputStream=socket.getInputStream();
-                outputStream=socket.getOutputStream();
+                inputStream = socket.getInputStream();
+                outputStream = socket.getOutputStream();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -167,7 +208,7 @@ public class P2pDataTransferService extends Service {
             while (socket!=null)
             {
                 try {
-                    bytes=inputStream.read(buffer);
+                    bytes = inputStream.read(buffer);
                     if(bytes>0)
                     {
                         handler.obtainMessage(MESSAGE_READ,bytes,-1,buffer).sendToTarget();
@@ -188,11 +229,20 @@ public class P2pDataTransferService extends Service {
         }
     }
 
+    public class ServerClass extends Thread{
+        Socket socket;
+        ServerSocket serverSocket;
 
-    public class P2pServiceBinder extends Binder{
-
-        public P2pDataTransferService getService(){
-            return P2pDataTransferService.this;
+        @Override
+        public void run() {
+            try {
+                serverSocket=new ServerSocket(8888);
+                socket=serverSocket.accept();
+                sendReceive=new SendReceive(socket);
+                sendReceive.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

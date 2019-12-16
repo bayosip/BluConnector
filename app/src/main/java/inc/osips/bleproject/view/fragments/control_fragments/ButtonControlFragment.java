@@ -28,7 +28,7 @@ import inc.osips.bleproject.view.custom_views.CustomColorFlag;
 
 public class ButtonControlFragment extends Fragment {
 
-    private ImageButton colorWheel, buttonOnOff, buttonDark, buttonBright, buttonBack, buttonNext;
+    private ImageButton colorWheel, buttonOnOff, buttonDown, buttonUp, buttonLeft, buttonRight;
     private ControlFragmentListener fragListner;
     private Context context;
     private String instruct;
@@ -89,15 +89,24 @@ public class ButtonControlFragment extends Fragment {
         colorWheel.setOnClickListener(OnClick);
         buttonOnOff = v.findViewById(R.id.buttonOnoff);
         buttonOnOff.setOnClickListener(OnClick);
-        buttonDark = v.findViewById(R.id.buttonDark);
-        buttonDark.setOnClickListener(OnClick);
-        buttonBack = v.findViewById(R.id.buttonBack);
-        buttonBack.setOnClickListener(OnClick);
-        buttonBright = v.findViewById(R.id.buttonBright);
-        buttonBright.setOnClickListener(OnClick);
-        buttonNext = v.findViewById(R.id.buttonNext);
-        buttonNext.setOnClickListener(OnClick);
+        buttonDown = v.findViewById(R.id.buttonDark);
+        buttonDown.setOnClickListener(OnClick);
+        buttonLeft = v.findViewById(R.id.buttonBack);
+        buttonLeft.setOnClickListener(OnClick);
+        buttonUp = v.findViewById(R.id.buttonBright);
+        buttonUp.setOnClickListener(OnClick);
+        buttonRight = v.findViewById(R.id.buttonNext);
+        buttonRight.setOnClickListener(OnClick);
+        shouldEnableButtons();
+    }
 
+    public void shouldEnableButtons(){
+
+        buttonOnOff.setEnabled(GeneralUtil.checkIfPrefExists(ControllerActivity.ON_OFF));
+        buttonLeft.setEnabled(GeneralUtil.checkIfPrefExists(ControllerActivity.LEFT));
+        buttonRight.setEnabled(GeneralUtil.checkIfPrefExists(ControllerActivity.RIGHT));
+        buttonUp.setEnabled(GeneralUtil.checkIfPrefExists(ControllerActivity.UP));
+        buttonDown.setEnabled(GeneralUtil.checkIfPrefExists(ControllerActivity.DOWN));
     }
 
     Button.OnClickListener OnClick = new View.OnClickListener() {
@@ -121,19 +130,19 @@ public class ButtonControlFragment extends Fragment {
                 default:
                     switch (v.getId()) {
                         case R.id.buttonOnoff:
-                            instruct = "On/Off";
+                            instruct = GeneralUtil.getAppPrefStoredStringWithName(ControllerActivity.ON_OFF);//"On/Off"
                             break;
                         case R.id.buttonDark:
-                            instruct = "Dim";
+                            instruct = GeneralUtil.getAppPrefStoredStringWithName(ControllerActivity.DOWN);//"Dim"
                             break;
                         case R.id.buttonBright:
-                            instruct = "Bright";
+                            instruct = GeneralUtil.getAppPrefStoredStringWithName(ControllerActivity.UP);//"Bright"
                             break;
                         case R.id.buttonBack:
-                            instruct = "Back";
+                            instruct = GeneralUtil.getAppPrefStoredStringWithName(ControllerActivity.LEFT);//"Back"
                             break;
                         case R.id.buttonNext:
-                            instruct = "Next";
+                            instruct = GeneralUtil.getAppPrefStoredStringWithName(ControllerActivity.RIGHT);//"Next"
                             break;
                     }
                     fragListner.sendInstructions(instruct.toLowerCase());

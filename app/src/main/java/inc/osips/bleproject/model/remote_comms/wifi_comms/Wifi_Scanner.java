@@ -27,7 +27,7 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
     private boolean scanState = false;
     private WifiP2pManager.PeerListListener mPeerListListener;
 
-    private long SCAN_TIME = 6000; //default scan time
+    private long SCAN_TIME = 10000; //default scan time
 
     private final static String TAG = "WiFi Device Scanner";
 
@@ -98,9 +98,7 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
                 }
             }, SCAN_TIME);
 
-            scanState = true;
-
-            if(p2pManager!=null && wifiManager.isWifiEnabled() && !scanState) {
+            if(p2pManager!=null && wifiManager.isWifiEnabled()) {
                 p2pManager.discoverPeers(p2pChannel, this);
                 scanState = true;
             }
@@ -138,11 +136,13 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
 
     @Override
     public void onSuccess() {
+        Log.i(TAG, "Wifi Peer Discovery Started!");
         Util.message(activity,"Wifi Peer Discovery Started!");
     }
 
     @Override
     public void onFailure(int i) {
+        Log.e(TAG, "Wifi Peer Discovery Failed To Start!");
         Util.message(activity,"Wifi Peer Discovery Failed To Start!");
     }
 }
