@@ -1,1 +1,1 @@
-include ':app'
+include ':app', ':iot_wireless_communication'

@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms.ble_comms.services;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -20,10 +20,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.iot_wireless_communication.R;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 /**
- * Created by BABY v2.0 on 10/11/2016.
+ * Created by Adebayo Osipitan on 10/11/2016.
  */
 
 public class BleGattService extends Service {
@@ -120,7 +121,7 @@ public class BleGattService extends Service {
                     broadcastUpdate(ACTION_DISCONNECTED);
                     break;
                 case BluetoothProfile.STATE_DISCONNECTING:
-                    GeneralUtil.message("Disconnecting...");
+                    Util.message(BleGattService.this,getString(R.string.disconnecting));
                     break;
             }
         }
@@ -349,7 +350,7 @@ public class BleGattService extends Service {
     private void disconnect() {
         if (bleGatt== null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
-            GeneralUtil.message( "No Device Connected!");
+            Util.message( this,"No Device Connected!");
         }
         else {
             bleGatt.disconnect();
@@ -379,10 +380,10 @@ public class BleGattService extends Service {
         }catch (NullPointerException e)
         {
             Log.w(TAG, "Characteristic is null: " + e.toString());
-            GeneralUtil.getHandler().post(new Runnable() {
+            Util.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                    GeneralUtil.message( "Bluetooth error! Check Connection");
+                    Util.message( BleGattService.this, getString(R.string.ble_err_connection));
                 }
             });
         }
@@ -402,10 +403,10 @@ public class BleGattService extends Service {
             }
         }catch (NullPointerException e){
             Log.w(TAG, "BluetoothAdapter not initialized: "+e.toString());
-            GeneralUtil.getHandler().post(new Runnable() {
+            Util.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                    GeneralUtil.message( "Bluetooth error! Check Connection");
+                    Util.message( BleGattService.this,"Bluetooth error! Check Connection");
                 }
             });
         }

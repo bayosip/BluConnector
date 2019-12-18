@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms.wifi_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -8,13 +8,10 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.IBinder;
 import android.os.Parcelable;
 
-import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
-import inc.osips.bleproject.model.remote_comms.DeviceConnectionFactory;
-import inc.osips.bleproject.model.remote_comms.Util;
-import inc.osips.bleproject.utilities.GeneralUtil;
-import inc.osips.bleproject.model.remote_comms.wifi_comms.service.P2pDataTransferService;
-import inc.osips.bleproject.view.activities.Home;
-import inc.osips.bleproject.view.fragments.home_fragments.DeviceScannerFragment;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service.P2pDataTransferService;
 
 public class WifiConnection implements WirelessDeviceConnector {
 

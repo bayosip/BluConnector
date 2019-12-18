@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms;
 
 import android.app.Activity;
 import android.os.Parcelable;
@@ -8,10 +8,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
-import inc.osips.bleproject.model.remote_comms.ble_comms.BleConnection;
-import inc.osips.bleproject.utilities.Constants;
-import inc.osips.bleproject.model.remote_comms.wifi_comms.WifiConnection;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.BleConnection;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.WifiConnection;
 
 public class DeviceConnectionFactory {
 
@@ -74,7 +74,7 @@ public class DeviceConnectionFactory {
 
         @Override
         public String getDeviceType() {
-            return "WiFi";
+            return Constants.WIFI;
         }
     }
 
@@ -101,7 +101,7 @@ public class DeviceConnectionFactory {
 
         @Override
         public String getDeviceType() {
-            return "BLE";
+            return Constants.BLE;
         }
     }
 }

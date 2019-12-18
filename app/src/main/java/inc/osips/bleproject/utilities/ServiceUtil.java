@@ -1,22 +1,15 @@
 package inc.osips.bleproject.utilities;
 
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import androidx.core.content.ContextCompat;
-
-import android.net.wifi.p2p.WifiP2pManager;
-import android.os.IBinder;
-import android.util.Log;
 
 import java.util.Iterator;
 import java.util.List;
 
-import inc.osips.bleproject.model.remote_comms.ble_comms.services.BleGattService;
-import inc.osips.bleproject.model.remote_comms.wifi_comms.service.P2pDataTransferService;
-import inc.osips.bleproject.view.fragments.home_fragments.DeviceScannerFragment;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service.P2pDataTransferService;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 

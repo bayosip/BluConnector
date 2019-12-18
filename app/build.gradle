@@ -35,6 +35,7 @@ dependencies {
     implementation 'cat.ereza:customactivityoncrash:2.2.0'
     implementation 'com.github.skydoves:colorpickerview:2.1.5'
     testImplementation 'junit:junit:4.12'
+    implementation project(path: ':iot_wireless_communication')
 
     //added Libraries
 }

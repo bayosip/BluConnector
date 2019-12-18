@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms;
 
 import android.app.Activity;
 import android.bluetooth.le.ScanCallback;
@@ -7,10 +7,10 @@ import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
-import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
-import inc.osips.bleproject.model.remote_comms.ble_comms.BLE_Scanner;
-import inc.osips.bleproject.utilities.Constants;
-import inc.osips.bleproject.model.remote_comms.wifi_comms.Wifi_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.BLE_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.Wifi_Scanner;
 
 public class DeviceScannerFactory {
 

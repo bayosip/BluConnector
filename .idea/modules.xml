@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Voice-Control-BLE-App-master.iml" filepath="$PROJECT_DIR$/Voice-Control-BLE-App-master.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/iot_wireless_communication/iot_wireless_communication.iml" filepath="$PROJECT_DIR$/iot_wireless_communication/iot_wireless_communication.iml" />
     </modules>
   </component>
 </project>

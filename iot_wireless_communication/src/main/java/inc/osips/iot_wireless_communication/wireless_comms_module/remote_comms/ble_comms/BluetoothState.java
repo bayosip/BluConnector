@@ -1,20 +1,19 @@
-package inc.osips.bleproject.model.remote_comms.ble_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import inc.osips.bleproject.model.remote_comms.Util;
-import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.iot_wireless_communication.R;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 /**
- * Created by BABY v2.0 on 9/13/2016.
+ * Created by Adebayo Osipitan on 9/13/2016.
  */
 public class BluetoothState extends BroadcastReceiver {
 
     Context context;
-    Util toast;
 
     public BluetoothState(Context contxt){
         this.context = contxt;
@@ -30,16 +29,16 @@ public class BluetoothState extends BroadcastReceiver {
 
             switch (state) {
                 case BluetoothAdapter.STATE_OFF:
-                    toast.message( context,"Bluetooth is off");
+                    Util.message( context,context.getString(R.string.bluetooth_off));
                     break;
                 case BluetoothAdapter.STATE_TURNING_OFF:
-                    toast.message( context,"Bluetooth is turning off...");
+                    Util.message( context,context.getString(R.string.bt_turning_off));
                     break;
                 case BluetoothAdapter.STATE_ON:
-                    toast.message(context,"Bluetooth is on");
+                    Util.message(context,context.getString(R.string.bt_on));
                     break;
                 case BluetoothAdapter.STATE_TURNING_ON:
-                    toast.message(context,"Bluetooth is turning on...");
+                    Util.message(context,context.getString(R.string.bt_turning_on));
                     break;
             }
         }

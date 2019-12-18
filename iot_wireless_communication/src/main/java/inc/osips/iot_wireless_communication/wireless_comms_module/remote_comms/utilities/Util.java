@@ -1,11 +1,9 @@
-package inc.osips.bleproject.model.remote_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities;
 
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
-
-import inc.osips.bleproject.App;
 
 public class Util {
     private static Handler uiHandler;

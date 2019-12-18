@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms.wifi_comms.service;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service;
 
 import android.app.Service;
 import android.content.Context;
@@ -24,8 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import inc.osips.bleproject.model.remote_comms.Util;
-import inc.osips.bleproject.model.remote_comms.ble_comms.services.BleGattService;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 public class P2pDataTransferService extends Service {
 

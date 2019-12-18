@@ -24,7 +24,7 @@ import java.util.List;
 import at.markushi.ui.CircleButton;
 import inc.osips.bleproject.interfaces.OnDiscoveredDevicesClickListener;
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.model.remote_comms.Devices;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 import inc.osips.bleproject.utilities.Constants;
 import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.view.activities.ControllerActivity;

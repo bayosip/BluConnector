@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import java.util.List;
 
-import inc.osips.bleproject.model.remote_comms.Devices;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 
 public interface ScannerViewInterface extends AppActivity{
 

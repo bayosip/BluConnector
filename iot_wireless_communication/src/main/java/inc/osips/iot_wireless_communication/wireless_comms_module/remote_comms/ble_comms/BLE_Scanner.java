@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms.ble_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -17,16 +17,13 @@ import android.os.ParcelUuid;
 import android.text.TextUtils;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
-import inc.osips.bleproject.model.remote_comms.DeviceScannerFactory;
-import inc.osips.bleproject.model.remote_comms.Util;
-import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceScannerFactory;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BLE_Scanner implements WirelessConnectionScanner {
@@ -125,7 +122,7 @@ public class BLE_Scanner implements WirelessConnectionScanner {
     private void scanForAllBLEDevices(){
         if (!scanState){
             //start scan for 15s, the stop
-            GeneralUtil.getHandler().postDelayed(new Runnable() {
+            Util.getHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     scanStop();

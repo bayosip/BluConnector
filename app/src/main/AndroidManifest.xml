@@ -43,12 +43,12 @@
             android:theme="@style/AppTheme.Splash" />
 
         <service
-            android:name=".model.remote_comms.ble_comms.services.BleGattService"
+            android:name="inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService"
             android:enabled="true"
             android:exported="false" />
 
         <service
-            android:name=".model.remote_comms.wifi_comms.service.P2pDataTransferService"
+            android:name="inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service.P2pDataTransferService"
             android:enabled="true"
             android:exported="false" />
 

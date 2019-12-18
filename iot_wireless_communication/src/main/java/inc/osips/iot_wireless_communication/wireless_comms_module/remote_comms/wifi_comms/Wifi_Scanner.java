@@ -1,5 +1,6 @@
-package inc.osips.bleproject.model.remote_comms.wifi_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -7,16 +8,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Looper;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
-import inc.osips.bleproject.R;
-import inc.osips.bleproject.interfaces.WirelessConnectionScanner;
-import inc.osips.bleproject.model.remote_comms.DeviceScannerFactory;
-import inc.osips.bleproject.model.remote_comms.Util;
-import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.iot_wireless_communication.R;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceScannerFactory;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.ActionListener {
 
@@ -27,9 +26,9 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
     private boolean scanState = false;
     private WifiP2pManager.PeerListListener mPeerListListener;
 
-    private long SCAN_TIME = 10000; //default scan time
+    private long SCAN_TIME = 6000; //default scan time
 
-    private final static String TAG = "WiFi Device Scanner";
+    private static final String TAG = "Wifi_Scanner";
 
 
     public Wifi_Scanner (Activity activity, WifiP2pManager
@@ -40,8 +39,11 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
 
         initialisePrequisites();
 
-        if(!wifiManager.isWifiEnabled())
-            askUserToTurnWifiOn();
+        if(!wifiManager.isWifiEnabled()){
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+                askUserToTurnWifiOn29();
+            else askUserToTurnWifiOn();
+        }
     }
 
     private void initialisePrequisites(){
@@ -56,10 +58,10 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
         p2pChannel = p2pManager.initialize(activity, Looper.getMainLooper(), null);
     }
 
+
     private void askUserToTurnWifiOn(){
         final AlertDialog wifiAsk = new AlertDialog.Builder(activity)
                 .setCancelable(true)
-                .setIcon(R.mipmap.ic_launcher)
                 .setTitle(R.string.enable_wifi_title)
                 .setMessage(R.string.enable_wifi_msg)
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -71,6 +73,23 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         wifiManager.setWifiEnabled(true);
+                    }
+                }).create();
+
+        wifiAsk.show();
+    }
+
+    @TargetApi(29)
+    private void askUserToTurnWifiOn29(){
+
+        final AlertDialog wifiAsk = new AlertDialog.Builder(activity)
+                .setCancelable(true)
+                .setTitle(R.string.enable_wifi_title)
+                .setMessage(R.string.enable_wifi_msg)
+                .setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
                     }
                 }).create();
 
@@ -137,12 +156,12 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
     @Override
     public void onSuccess() {
         Log.i(TAG, "Wifi Peer Discovery Started!");
-        Util.message(activity,"Wifi Peer Discovery Started!");
+        Util.message(activity,activity.getString(R.string.p2p_discovery_started));
     }
 
     @Override
     public void onFailure(int i) {
         Log.e(TAG, "Wifi Peer Discovery Failed To Start!");
-        Util.message(activity,"Wifi Peer Discovery Failed To Start!");
+        Util.message(activity, activity.getString(R.string.p2p_discovery_failed));
     }
 }

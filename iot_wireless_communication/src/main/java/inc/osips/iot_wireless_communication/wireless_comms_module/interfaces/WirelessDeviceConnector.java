@@ -1,4 +1,4 @@
-package inc.osips.bleproject.interfaces;
+package inc.osips.iot_wireless_communication.wireless_comms_module.interfaces;
 
 import android.content.Intent;
 import android.content.ServiceConnection;

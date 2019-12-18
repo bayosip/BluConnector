@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms.ble_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;

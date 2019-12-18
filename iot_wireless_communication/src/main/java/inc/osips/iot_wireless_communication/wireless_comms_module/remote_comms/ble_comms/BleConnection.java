@@ -1,4 +1,4 @@
-package inc.osips.bleproject.model.remote_comms.ble_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -11,12 +11,10 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import inc.osips.bleproject.interfaces.WirelessDeviceConnector;
-import inc.osips.bleproject.model.remote_comms.DeviceConnectionFactory;
-import inc.osips.bleproject.model.remote_comms.Util;
-import inc.osips.bleproject.model.remote_comms.ble_comms.services.BleGattService;
-import inc.osips.bleproject.utilities.GeneralUtil;
-import inc.osips.bleproject.view.activities.Home;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService;
 
 public class BleConnection implements WirelessDeviceConnector {
 

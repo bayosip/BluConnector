@@ -12,7 +12,7 @@ import java.util.List;
 
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.interfaces.OnDiscoveredDevicesClickListener;
-import inc.osips.bleproject.model.remote_comms.Devices;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

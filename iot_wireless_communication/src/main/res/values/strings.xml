@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">IoT_Wireless_Communication</string>
+    <string name="p2p_discovery_failed">Wifi Peer Discovery Failed To Start!</string>
+    <string name="p2p_discovery_started">Wifi Peer Discovery Started!</string>
+    <string name="enable_wifi_msg">Please Enable WiFi To Continue.</string>
+    <string name="enable_wifi_title">Enable WiFi?</string>
+    <string name="disconnecting">Disconnecting...</string>
+    <string name="ble_err_connection">Bluetooth error! Check Connection</string>
+    <string name="bluetooth_off">Bluetooth is off</string>
+    <string name="bt_turning_off">Bluetooth is turning off...</string>
+    <string name="bt_on">Bluetooth is on</string>
+    <string name="bt_turning_on">Bluetooth is turning on...</string>
+</resources>
