@@ -10,6 +10,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -83,7 +84,8 @@ public class GeneralUtil {
         if(appPref.contains(data[0]) && !appPref.getString(data[0],"").equalsIgnoreCase(data[1])){
             editor.remove(data[0]).commit();
         }
-        editor.putString(data[0], data[1]).commit();
+        if (!TextUtils.isEmpty(data[1]))
+            editor.putString(data[0], data[1]).commit();
     }
 
     public static void exitApp(Activity activity) {

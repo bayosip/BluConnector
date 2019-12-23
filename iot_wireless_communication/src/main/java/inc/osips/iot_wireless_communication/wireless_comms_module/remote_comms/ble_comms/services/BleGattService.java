@@ -53,8 +53,6 @@ public class BleGattService extends Service {
     public  String EXTRA_UUID;
 
     public String serviceUUID;// = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-    public String writeUUID;// = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
-    public String readUUID;// = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
     int mydata;
     String MyLogData;
 
@@ -183,7 +181,6 @@ public class BleGattService extends Service {
                                           BluetoothGattCharacteristic characteristic,
                                           int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE);
                 // Pop the item that was written from the queue
                 BleQueue.remove();
                 // See if there are more items in the BLE queues
@@ -224,26 +221,17 @@ public class BleGattService extends Service {
         // This is special handling for the Heart Rate Measurement profile. Data
         // parsing is carried out as per profile specifications.
         if (myNotifycharx.getUuid().equals(characteristic.getUuid())) {
-            int flag = characteristic.getProperties();
-            int format = -1;
-            if ((flag & 0x01) != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.i(TAG, "Heart rate format UINT16.");
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.i(TAG, "Heart rate format UINT8.");
-            }
-            final String led_state = characteristic.getStringValue(format);
-            Log.i(TAG, String.format("Received heart rate: %d", led_state));
-            intent.putExtra(EXTRA_DATA, String.valueOf(led_state));
+            final String received = characteristic.getStringValue(1);
+            Log.i(TAG, String.format("Received from ble device: %s", received));
+            intent.putExtra(EXTRA_DATA, String.valueOf(received));
         } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
                 for(byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                Log.i(TAG, stringBuilder.toString());
+                    stringBuilder.append(String.format("%s ", byteChar));
+                Log.e(TAG, stringBuilder.toString());
                 intent.putExtra(EXTRA_DATA, new String(data) + "\n" +
                         stringBuilder.toString());
             }
@@ -324,13 +312,15 @@ public class BleGattService extends Service {
                         gattCharacteristics) {
                     if (gattCharacteristic.getProperties()==BluetoothGattCharacteristic.PROPERTY_WRITE ) {
                         myWriteCharx = gattCharacteristic;
+                        Log.i(TAG, "getGattServices: Write charX discovered");
                     }
                     else if (gattCharacteristic.getProperties()==BluetoothGattCharacteristic.PROPERTY_READ){
                         myReadCharx = gattCharacteristic;
-
+                        Log.i(TAG, "getGattServices: Read charX discovered");
                     }else if (gattCharacteristic.getProperties() == BluetoothGattCharacteristic.PROPERTY_NOTIFY){
                         myNotifycharx = gattCharacteristic;
                         setCharacteristicNotification(true);
+                        Log.i(TAG, "getGattServices: Notify charX discovered");
                     }
                 }
                 isHasService = true;

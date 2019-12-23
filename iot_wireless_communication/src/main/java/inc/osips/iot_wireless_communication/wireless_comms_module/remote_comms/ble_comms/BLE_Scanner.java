@@ -37,7 +37,7 @@ public class BLE_Scanner implements WirelessConnectionScanner {
     private ScanCallback mScanCallback;
     private boolean scanState = false;
     private String deviceName = null;//"Osi_p BLE-LED Controller";
-    private final static String TAG = "BLE Device Scanner";
+    private static final String TAG = "BLE_Scanner";
 
     private ScanSettings settings;
     //"6e400001-b5a3-f393-e0a9-e50e24dcca9e";
