@@ -46,7 +46,7 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
     private List<Devices> remoteDevices;
 
 
-    public static DeviceScannerFragment getInstance(String type){
+    public static DeviceScannerFragment getInstance(@NonNull String type){
         DeviceScannerFragment fragment = new DeviceScannerFragment();
         Bundle extra = new Bundle();
         extra.putString(Constants.COMM_TYPE, type);

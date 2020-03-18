@@ -18,7 +18,7 @@ import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service.P2pDataTransferService;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.service.P2pDataTransferService;
 import inc.osips.bleproject.utilities.Constants;
 import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.utilities.ServiceUtil;
@@ -191,6 +191,6 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     }
 
     public void sendInstructionsToDevice(String instruct) {
-        deviceConnector.sendInstructionsToDevice(instruct);
+        deviceConnector.sendInstructionsToRemoteDevice(instruct);
     }
 }

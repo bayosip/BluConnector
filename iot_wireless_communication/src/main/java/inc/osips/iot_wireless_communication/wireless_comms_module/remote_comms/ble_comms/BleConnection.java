@@ -11,6 +11,8 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
@@ -26,7 +28,7 @@ public class BleConnection implements WirelessDeviceConnector {
     private boolean mBound = false;
     private static final String TAG = "BLE Connection";
 
-    public BleConnection(Activity activity, Parcelable bleDevice, String baseUUID) {
+    public BleConnection(@NonNull Activity activity, @NonNull Parcelable bleDevice, @NonNull String baseUUID) {
         Log.w("Connection+", baseUUID);
         this.baseUUID = baseUUID;
         this.bleDevice = (BluetoothDevice) bleDevice;
@@ -50,7 +52,7 @@ public class BleConnection implements WirelessDeviceConnector {
 
     //API 21 and Above
     private void ConnectToBleDevice(){
-        if (makeConnectionBLE()) {
+        if (tryBLEConnection()) {
             return;
         } else {
             Util.message(activity,"Cannot Connect to Device");
@@ -59,7 +61,7 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
 
-    private boolean makeConnectionBLE() {
+    private boolean tryBLEConnection() {
 
         if (gattService != null){
             if(gattService.init() && !TextUtils.isEmpty(baseUUID)){
@@ -75,8 +77,8 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void sendInstructionsToDevice(String instuctions) {
-        gattService.writeLEDInstructions(instuctions);
+    public void sendInstructionsToRemoteDevice(String instuctions) {
+        gattService.sendInstructionsToConnectedDevice(instuctions);
     }
 
     private ServiceConnection mConnection =

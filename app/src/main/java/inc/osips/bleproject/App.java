@@ -6,6 +6,8 @@ import android.content.Context;
 
 import androidx.multidex.MultiDex;
 
+import java.util.Arrays;
+
 import cat.ereza.customactivityoncrash.config.CaocConfig;
 import inc.osips.bleproject.utilities.ServiceUtil;
 import inc.osips.bleproject.view.activities.ErrorActivity;

@@ -2,27 +2,30 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms;
 
 import android.app.Activity;
 import android.bluetooth.le.ScanCallback;
+import android.net.nsd.NsdManager;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.BLE_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wlan_comms.WLANServiceScanner;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.Wifi_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.P2p_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 public class DeviceScannerFactory {
 
 
     private Activity activity;
-    public static final String SCANNING_STOPPED = "device_scanning stopped";
 
-    public DeviceScannerFactory(Activity activity) {
+    public DeviceScannerFactory(@NonNull Activity activity) {
         this.activity = activity;
     }
 
-    public Builder getRemoteDeviceBuilderScannerOfType(String connectionType){
+    public Builder getRemoteDeviceBuilderScannerOfType(@NonNull String connectionType){
 
         if(TextUtils.isEmpty(connectionType))return null;
 
@@ -30,8 +33,8 @@ public class DeviceScannerFactory {
             return new BLEScanBuilder(activity);
         }
 
-        else if (connectionType.equals(Constants.WIFI)){
-            return new WifiScanBuilder(activity);
+        else if (connectionType.equals(Constants.P2P)){
+            return new WifiP2pScanBuilder(activity);
         }
 
         else return null;
@@ -45,10 +48,11 @@ public class DeviceScannerFactory {
             this.activity = activity;
         }
 
-        abstract public WirelessConnectionScanner build();
+        abstract public WlanConnectionScanner build();
         abstract public Builder setmScanCallback(@Nullable ScanCallback mScanCallback);
-        abstract public Builder setmWifiPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener);
-        abstract public Builder setDeviceUniqueID(@Nullable String UUID_IP);
+        abstract public Builder setmP2PPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener);
+        abstract public Builder setmNsdDiscoveryListener(@Nullable NsdManager.DiscoveryListener mNsdDiscoveryListener);
+        abstract public Builder setDeviceUniqueID_ServiceType(@Nullable String UUID_IP);
         abstract public Builder setScanTime(long milliSecs);
     }
 
@@ -69,13 +73,18 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public Builder setmWifiPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener) {
+        public Builder setmP2PPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener) {
             return this;
         }
 
         @Override
-        public Builder setDeviceUniqueID(@Nullable String UUID_IP) {
-            this.baseUUID = UUID_IP;
+        public Builder setmNsdDiscoveryListener(@Nullable NsdManager.DiscoveryListener mNsdDiscoveryListener) {
+            return this;
+        }
+
+        @Override
+        public Builder setDeviceUniqueID_ServiceType(@Nullable String UUID) {
+            this.baseUUID = UUID;
             return this;
         }
 
@@ -85,29 +94,35 @@ public class DeviceScannerFactory {
             return this;
         }
 
-        public WirelessConnectionScanner build(){
+        public WlanConnectionScanner build(){
             return new BLE_Scanner(activity, mScanCallback, baseUUID, milliSecs);
         }
     }
 
-    private class WifiScanBuilder extends Builder{
+    private class WifiP2pScanBuilder extends Builder{
 
         private WifiP2pManager.PeerListListener mPeerListListener;
         private String address = null;
 
-        private WifiScanBuilder(Activity activity) {
+        private WifiP2pScanBuilder(Activity activity) {
             super(activity);
         }
 
         @Override
-        public Builder setmWifiPeerListListener(WifiP2pManager.PeerListListener mPeerListListener) {
+        public Builder setmP2PPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener) {
             this.mPeerListListener = mPeerListListener;
             return this;
         }
 
         @Override
-        public Builder setDeviceUniqueID(@Nullable String UUID_IP) {
-            this.address = UUID_IP;
+        public Builder setmNsdDiscoveryListener(@Nullable NsdManager.DiscoveryListener mNsdDiscoveryListener) {
+            return this;
+        }
+
+        @Override
+        public Builder setDeviceUniqueID_ServiceType(@Nullable String ipAddress) {
+
+            this.address = ipAddress;
             return this;
         }
 
@@ -118,12 +133,61 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public WirelessConnectionScanner build(){
-            return new Wifi_Scanner(activity, mPeerListListener, milliSecs);
+        public WlanConnectionScanner build(){
+            return new P2p_Scanner(activity, mPeerListListener, milliSecs);
         }
 
         @Override
         public Builder setmScanCallback(@Nullable ScanCallback mScanCallback) {
+            return this;
+        }
+    }
+
+    private class WlanServiceScanBuilder extends Builder{
+
+        NsdManager.DiscoveryListener mDiscoveryListener;
+        String serviceType;
+
+        private WlanServiceScanBuilder(Activity activity) {
+            super(activity);
+        }
+
+        @Override
+        public WlanConnectionScanner build() {
+            if (TextUtils.isEmpty(serviceType)) {
+                Util.message(activity, "Specify The Service Type to Scan ");
+                return null;
+            }
+
+           return new WLANServiceScanner(activity, milliSecs, mDiscoveryListener, serviceType);
+        }
+
+        @Override
+        public Builder setmScanCallback(@Nullable ScanCallback mScanCallback) {
+            return this;
+        }
+
+        @Override
+        public Builder setmP2PPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener) {
+            return this;
+        }
+
+        @Override
+        public Builder setmNsdDiscoveryListener(@Nullable NsdManager.DiscoveryListener mNsdDiscoveryListener) {
+            if (mNsdDiscoveryListener!=null)
+                this.mDiscoveryListener = mNsdDiscoveryListener;
+            return this;
+        }
+
+        @Override
+        public Builder setDeviceUniqueID_ServiceType(@Nullable String serviceType) {
+            this.serviceType = serviceType;
+            return this;
+        }
+
+        @Override
+        public Builder setScanTime(long milliSecs) {
+            this.milliSecs = milliSecs;
             return this;
         }
     }

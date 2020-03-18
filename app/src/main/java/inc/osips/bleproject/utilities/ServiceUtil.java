@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service.P2pDataTransferService;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.service.P2pDataTransferService;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 

@@ -16,6 +16,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -214,6 +216,12 @@ public class BleGattService extends Service {
         sendBroadcast(intent);
     }
 
+
+    /**
+     * Sends a broadcast to the listener in the main activity.
+     * @param action The type of action that occurred, and
+     * @param characteristic the ble gatt charx active on broadcast call.
+     */
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
@@ -271,7 +279,7 @@ public class BleGattService extends Service {
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      * callback.
      */
-    public boolean connect(final BluetoothDevice device, String serviceUUID) {
+    public boolean connect(@NonNull final BluetoothDevice device, @NonNull String serviceUUID) {
 
         this.serviceUUID = serviceUUID;
         if (bAdapter == null || device == null) {
@@ -294,9 +302,9 @@ public class BleGattService extends Service {
     * Loop through the discovered ble services finds the service matching
     * */
 
-    public void getGattServices(List<BluetoothGattService> gattServices) {
+    private void getGattServices(List<BluetoothGattService> gattServices) {
         if (gattServices == null) return;
-        String uuid = null;
+        String uuid ;
 
         // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {
@@ -360,11 +368,11 @@ public class BleGattService extends Service {
         bleGatt.close();
     }
 
-    public void writeLEDInstructions(String instruct) {
+    public void sendInstructionsToConnectedDevice(String instructions) {
         try {
             if (bleGatt != null) {
-                byte[] bytes = instruct.getBytes();
-                myWriteCharx.setValue(instruct);
+                byte[] bytes = instructions.getBytes();
+                myWriteCharx.setValue(instructions);
                 writeCharacteristic(myWriteCharx);
             }
         }catch (NullPointerException e)
@@ -418,8 +426,7 @@ public class BleGattService extends Service {
      *
      * @param enabled        If true, enable notification.  False otherwise.
      */
-    private void setCharacteristicNotification(
-                                               boolean enabled) {
+    private void setCharacteristicNotification(boolean enabled) {
         if (myNotifycharx!= null)
             bleGatt.setCharacteristicNotification(myNotifycharx, enabled);
     }

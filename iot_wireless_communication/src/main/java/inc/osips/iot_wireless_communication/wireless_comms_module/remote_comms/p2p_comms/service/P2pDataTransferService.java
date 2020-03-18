@@ -1,8 +1,9 @@
-package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.service;
 
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -14,6 +15,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.IOException;
@@ -37,8 +39,6 @@ public class P2pDataTransferService extends Service {
     private Thread clientServiceThread;
     private Socket socket = new Socket();
     private String hostAddress;
-    private int TIME_OUT = 3000; //default time out for connection
-    private int PORT = 8888; // default port number
     private static final int MESSAGE_READ = 1;
     private SendReceive sendReceive;
 
@@ -81,7 +81,7 @@ public class P2pDataTransferService extends Service {
         return false;
     }
 
-    public boolean connect(final WifiP2pDevice p2pDevice){
+    public boolean connect(@NonNull final WifiP2pDevice p2pDevice){
         config = new WifiP2pConfig();
         config.deviceAddress = p2pDevice.deviceAddress;
 
@@ -123,9 +123,11 @@ public class P2pDataTransferService extends Service {
         });
     }
 
-    public void establishConnection(Intent intent){
+    public void establishConnection(@NonNull Intent intent, final int PORT, final int TIME_OUT){
+
         if (p2pManager !=null){
             NetworkInfo info = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
+            //ConnectivityManager manager;
 
             if(info!=null && info.isConnected()){
                 p2pManager.requestConnectionInfo(p2pChannel, new WifiP2pManager.ConnectionInfoListener() {
@@ -147,7 +149,7 @@ public class P2pDataTransferService extends Service {
                             };
                             clientServiceThread.start();
                         }else {
-                            ServerClass server= new ServerClass();
+                            ServerClass server= new ServerClass(PORT);
                             server.start();
                         }
                     }
@@ -231,11 +233,16 @@ public class P2pDataTransferService extends Service {
     public class ServerClass extends Thread{
         Socket socket;
         ServerSocket serverSocket;
+        int mPort;
+
+        private ServerClass(int port){
+            mPort = port;
+        }
 
         @Override
         public void run() {
             try {
-                serverSocket=new ServerSocket(8888);
+                serverSocket= new ServerSocket(mPort);
                 socket=serverSocket.accept();
                 sendReceive=new SendReceive(socket);
                 sendReceive.start();
@@ -244,6 +251,4 @@ public class P2pDataTransferService extends Service {
             }
         }
     }
-
-
 }

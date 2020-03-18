@@ -3,10 +3,12 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
@@ -17,16 +19,19 @@ import android.os.ParcelUuid;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessConnectionScanner;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceScannerFactory;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BLE_Scanner implements WirelessConnectionScanner {
+public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
 
     private long SCAN_TIME = 6000; //default scan time
     private BluetoothAdapter bleAdapter;
@@ -34,10 +39,13 @@ public class BLE_Scanner implements WirelessConnectionScanner {
     private Activity activity;
 
     private List<ScanFilter> filters;
-    private ScanCallback mScanCallback;
+    private ScanCallback mScanCallback = this;
     private boolean scanState = false;
     private String deviceName = null;//"Osi_p BLE-LED Controller";
     private static final String TAG = "BLE_Scanner";
+
+    private List<String> deviceAddresses;
+    //private
 
     private ScanSettings settings;
     //"6e400001-b5a3-f393-e0a9-e50e24dcca9e";
@@ -45,12 +53,13 @@ public class BLE_Scanner implements WirelessConnectionScanner {
     private ParcelUuid uuidParcel = null;
     //UUID uuid;
 
-    public BLE_Scanner(Activity activity, ScanCallback mScanCallback, String baseUUID, long scantime){
-
+    public BLE_Scanner(@NonNull Activity activity, @Nullable ScanCallback mScanCallback, @NonNull String baseUUID, long scantime){
+        deviceAddresses = new ArrayList<>();
         if (scantime >=1000)SCAN_TIME = scantime;
 
         this.activity = activity;
-        this.mScanCallback = mScanCallback;
+        if (mScanCallback != null)
+            this.mScanCallback = mScanCallback;
         final BluetoothManager manager = (BluetoothManager) activity
                 .getSystemService(Context.BLUETOOTH_SERVICE);
 
@@ -102,7 +111,7 @@ public class BLE_Scanner implements WirelessConnectionScanner {
                         .setDeviceName(deviceName).build();
                 filters.add(myDevice);
             }
-            //start scan for 15s, the stop
+            //start scan for scan_time, then stop
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -121,7 +130,7 @@ public class BLE_Scanner implements WirelessConnectionScanner {
 
     private void scanForAllBLEDevices(){
         if (!scanState){
-            //start scan for 15s, the stop
+            //start scan for scan_time, then stop
             Util.getHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -130,7 +139,6 @@ public class BLE_Scanner implements WirelessConnectionScanner {
             }, SCAN_TIME);
 
             scanState = true;
-
             bluetoothLeScanner.startScan(null, settings, mScanCallback);
         }
         else{
@@ -147,14 +155,39 @@ public class BLE_Scanner implements WirelessConnectionScanner {
             if(bluetoothLeScanner != null)
                 bluetoothLeScanner.stopScan(mScanCallback);
 
-            activity.sendBroadcast(new Intent(DeviceScannerFactory.SCANNING_STOPPED));
+            activity.sendBroadcast(new Intent(WlanConnectionScanner.SCANNING_STOPPED));
         }
     }
 
-
-
     @Override
-    public void showDiscoveredDevices() {
+    public void showDiscoveredDevices() {}
 
+    @TargetApi(21)
+    @Override
+    public void onScanResult(int callbackType, final ScanResult result) {
+        Log.i("callbackType", String.valueOf(callbackType));
+        Log.i("result", result.toString());
+        final int RSSI = result.getRssi();
+        BluetoothDevice ble = result.getDevice();
+        if (RSSI>=-105 && !deviceAddresses.contains(ble.getAddress())) {
+            activity.sendBroadcast(new Intent(WlanConnectionScanner.DEVICE_DISCOVERED)
+                    .putExtra(Constants.DEVICE_DATA, ble));
+            deviceAddresses.add(ble.getAddress());
+        }
     }
+
+    @TargetApi(21)
+    @Override
+    public void onBatchScanResults(List<ScanResult> results) {
+        for (ScanResult sr : results) {
+            Log.w("ScanResult - Results", sr.toString());
+        }
+    }
+
+    @TargetApi(21)
+    @Override
+    public void onScanFailed(int errorCode) {
+        Log.e("Scan Failed", "Error Code: " + errorCode);
+    }
+
 }

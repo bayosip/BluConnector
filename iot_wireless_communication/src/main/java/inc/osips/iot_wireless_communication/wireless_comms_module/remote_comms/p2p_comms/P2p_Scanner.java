@@ -1,4 +1,4 @@
-package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -7,35 +7,43 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import inc.osips.iot_wireless_communication.R;
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessConnectionScanner;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceScannerFactory;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
-public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.ActionListener {
+public class P2p_Scanner implements WlanConnectionScanner, WifiP2pManager.ActionListener, WifiP2pManager
+        .PeerListListener {
 
     private WifiManager wifiManager;
     private WifiP2pManager p2pManager;
     private WifiP2pManager.Channel p2pChannel;
     private Activity activity;
     private boolean scanState = false;
-    private WifiP2pManager.PeerListListener mPeerListListener;
+    private WifiP2pManager.PeerListListener mPeerListListener = this;//default peerListener
 
     private long SCAN_TIME = 6000; //default scan time
 
-    private static final String TAG = "Wifi_Scanner";
+    private static final String TAG = "P2p_Scanner";
 
 
-    public Wifi_Scanner (Activity activity, WifiP2pManager
+    public P2p_Scanner(@NonNull Activity activity, @Nullable WifiP2pManager
             .PeerListListener mPeerListListener, long scanTime){
         if (scanTime >=1000)SCAN_TIME = scanTime;
         this.activity = activity;
-        this.mPeerListListener =mPeerListListener;
+
+        if (mPeerListListener != null)
+            this.mPeerListListener =mPeerListListener;
 
         initialisePrequisites();
 
@@ -104,10 +112,10 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
     @Override
     public void onStart() {
         if(wifiManager.isWifiEnabled())
-            scanForWifiDevices();
+            scanForWifiP2pDevices();
     }
 
-    private void scanForWifiDevices(){
+    private void scanForWifiP2pDevices(){
         if (!scanState){
 
             Util.getHandler().postDelayed(new Runnable() {
@@ -135,8 +143,7 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
             Log.w(TAG, "scanning stopped");
             if (p2pManager!=null)
                 p2pManager.stopPeerDiscovery(p2pChannel, this);
-
-            activity.sendBroadcast(new Intent(DeviceScannerFactory.SCANNING_STOPPED));
+            activity.sendBroadcast(new Intent(WlanConnectionScanner.SCANNING_STOPPED));
         }
     }
 
@@ -163,5 +170,13 @@ public class Wifi_Scanner implements WirelessConnectionScanner, WifiP2pManager.A
     public void onFailure(int i) {
         Log.e(TAG, "Wifi Peer Discovery Failed To Start!");
         Util.message(activity, activity.getString(R.string.p2p_discovery_failed));
+    }
+
+    @Override
+    public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
+        for (WifiP2pDevice p2pDevice: wifiP2pDeviceList.getDeviceList()){
+            activity.sendBroadcast(new Intent(WlanConnectionScanner.DEVICE_DISCOVERED)
+                    .putExtra(Constants.DEVICE_DATA, p2pDevice));
+        }
     }
 }

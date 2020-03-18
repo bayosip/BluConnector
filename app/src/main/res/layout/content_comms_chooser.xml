@@ -33,19 +33,48 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/buttonSelectP2P"
         app:layout_constraintVertical_bias="0.3" />
 
     <TextView
         android:id="@+id/textSelectWIFI"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/text_size"
+        android:textSize="12sp"
         android:text="Select Wifi Communication"
         app:layout_constraintTop_toBottomOf="@id/buttonSelectWIFI"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/buttonSelectWIFI"
+        app:layout_constraintEnd_toEndOf="@id/buttonSelectWIFI"
+        app:layout_constraintVertical_bias="0.1"/>
+
+    <at.markushi.ui.CircleButton
+        android:scaleType="fitXY"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:id="@+id/buttonSelectP2P"
+        android:src="@drawable/ic_wifi_direct_24dp"
+        android:elevation="5dp"
+        app:cb_color="@color/title_color"
+        app:cb_pressedRingWidth="8dip"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/buttonSelectWIFI"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.3" />
+
+    <TextView
+        android:id="@+id/textSelectP2P"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:text="Select P2P Communication"
+        app:layout_constraintTop_toBottomOf="@id/buttonSelectWIFI"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@id/buttonSelectP2P"
+        app:layout_constraintEnd_toEndOf="@id/buttonSelectP2P"
         app:layout_constraintVertical_bias="0.1"/>
 
     <at.markushi.ui.CircleButton
@@ -70,7 +99,7 @@
         android:id="@+id/textSelectBLE"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/text_size"
+        android:textSize="12sp"
         android:text="Select Wifi Communication"
         app:layout_constraintTop_toBottomOf="@id/buttonSelectBLE"
         app:layout_constraintBottom_toBottomOf="parent"

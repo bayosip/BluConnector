@@ -6,15 +6,11 @@
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
 
     <application
@@ -48,7 +44,7 @@
             android:exported="false" />
 
         <service
-            android:name="inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wifi_comms.service.P2pDataTransferService"
+            android:name="inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.service.P2pDataTransferService"
             android:enabled="true"
             android:exported="false" />
 

@@ -1,48 +1,44 @@
 package inc.osips.bleproject.presenter;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Parcelable;
 import android.util.Log;
 
-import java.util.ArrayList;
+import androidx.annotation.NonNull;
+
 import java.util.LinkedList;
 import java.util.List;
 
 import inc.osips.bleproject.interfaces.PresenterInterface;
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
 import inc.osips.bleproject.interfaces.ScannerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceScannerFactory;
 import inc.osips.bleproject.utilities.GeneralUtil;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
 
-public class ScannerPresenter extends ScanCallback implements PresenterInterface, WifiP2pManager
-        .PeerListListener{
+public class ScannerPresenter implements PresenterInterface{
 
-    private WirelessConnectionScanner scanner;
+    private WlanConnectionScanner scanner;
     private ScannerViewInterface viewInterface;
     private List<Devices> devices;
-    private List<String> deviceAddresses;
 
 
-    public ScannerPresenter(ScannerViewInterface viewInterface, String commsType) {
+    public ScannerPresenter(@NonNull ScannerViewInterface viewInterface, @NonNull String commsType) {
         this.viewInterface = viewInterface;
         DeviceScannerFactory factory = new DeviceScannerFactory(viewInterface.getCurrentActivity());
         DeviceScannerFactory.Builder builder = factory.getRemoteDeviceBuilderScannerOfType(commsType);
 
         if (builder!=null)
-            scanner = builder.setmScanCallback(this).
-                    setmWifiPeerListListener(this).build();
-        deviceAddresses = new ArrayList<>();
+            scanner = builder.build();
         devices = new LinkedList<>();
     }
 
@@ -73,34 +69,6 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
         activity.unregisterReceiver(commsReceiver);
     }
 
-    @TargetApi(21)
-    @Override
-    public void onScanResult(int callbackType, final ScanResult result) {
-        Log.i("callbackType", String.valueOf(callbackType));
-        Log.i("result", result.toString());
-        final int RSSI = result.getRssi();
-        BluetoothDevice ble = result.getDevice();
-        if (RSSI>=-105 && !deviceAddresses.contains(ble.getAddress())) {
-            Devices device = new Devices(ble.getName(),
-                    ble.getAddress(), result.getRssi(), ble);
-            devices.add(device);
-            deviceAddresses.add(ble.getAddress());
-        }
-    }
-
-    @TargetApi(21)
-    @Override
-    public void onBatchScanResults(List<ScanResult> results) {
-        for (ScanResult sr : results) {
-            Log.w("ScanResult - Results", sr.toString());
-        }
-    }
-
-    @TargetApi(21)
-    @Override
-    public void onScanFailed(int errorCode) {
-        Log.e("Scan Failed", "Error Code: " + errorCode);
-    }
 
 
     private final BroadcastReceiver commsReceiver = new BroadcastReceiver() {
@@ -108,9 +76,29 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             switch (action) {
-                case DeviceScannerFactory.SCANNING_STOPPED:
+                case WlanConnectionScanner.SCANNING_STOPPED:
                     Log.w("BLe", "broadcast");
                     viewInterface.progressFromScan(devices);
+                    break;
+                case WlanConnectionScanner.DEVICE_DISCOVERED:
+                    Parcelable device = intent.getParcelableExtra(Constants.DEVICE_DATA);
+                    if(device instanceof BluetoothDevice){
+                        BluetoothDevice ble = (BluetoothDevice)device;
+                        Devices aDevice = new Devices(ble.getName(),
+                                ble.getAddress(), ble.getBondState(), ble);
+                        devices.add(aDevice);
+                    }else if (device instanceof WifiP2pDevice){
+                        WifiP2pDevice p2pDevice = (WifiP2pDevice)device;
+                        Devices aDevice = new Devices(p2pDevice.deviceName,
+                                p2pDevice.deviceAddress, p2pDevice.status, p2pDevice);
+                        devices.add(aDevice);
+
+                    }else if (device instanceof NsdServiceInfo){
+                        NsdServiceInfo service = (NsdServiceInfo) device;
+                        Devices aDevice = new Devices(service.getServiceName(),
+                                service.getHost().toString(), service.getPort(), service);
+                        devices.add(aDevice);
+                    }
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
@@ -143,24 +131,12 @@ public class ScannerPresenter extends ScanCallback implements PresenterInterface
      */
     private IntentFilter commsUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(DeviceScannerFactory.SCANNING_STOPPED);
+        intentFilter.addAction(WlanConnectionScanner.SCANNING_STOPPED);
+        intentFilter.addAction(WlanConnectionScanner.DEVICE_DISCOVERED);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
         return intentFilter;
-    }
-
-    @Override
-    public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
-        for (WifiP2pDevice p2pDevice: wifiP2pDeviceList.getDeviceList()){
-            Devices device = new Devices(p2pDevice.deviceName,
-                    p2pDevice.deviceAddress, p2pDevice.status, p2pDevice);
-            devices.add(device);
-        }
-
-        if (devices.size() >0){
-            viewInterface.progressFromScan(devices);
-        }
     }
 }
