@@ -1,4 +1,4 @@
-package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility;
 
 import android.content.Context;
 import android.os.Handler;

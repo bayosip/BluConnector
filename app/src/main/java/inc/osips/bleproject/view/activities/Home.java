@@ -34,12 +34,9 @@ public class Home extends AppCompatActivity implements ScannerViewInterface {
 
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.fragment_container, chooserFragment, frag1).commit();
-
-        ;
     }
 
     private void initialisePrequistes(){
-
         chooserFragment = CommChooserFragment.getInstance();
     }
 

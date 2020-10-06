@@ -3,7 +3,6 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -26,7 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
 public class P2pDataTransferService extends Service {
 

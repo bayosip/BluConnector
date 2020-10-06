@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import inc.osips.iot_wireless_communication.R;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
 /**
  * Created by Adebayo Osipitan on 9/13/2016.

@@ -22,7 +22,7 @@ public class WLANServiceConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(String instuctions) {
+    public void sendInstructionsToRemoteDevice(String instructions) {
 
     }
 }

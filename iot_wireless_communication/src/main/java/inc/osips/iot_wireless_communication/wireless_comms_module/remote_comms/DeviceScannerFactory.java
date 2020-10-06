@@ -9,12 +9,12 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnectionScanner;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.BLE_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.IoTCommException;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wlan_comms.WLANServiceScanner;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.P2p_Scanner;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
 
 public class DeviceScannerFactory {
 
@@ -25,7 +25,7 @@ public class DeviceScannerFactory {
         this.activity = activity;
     }
 
-    public Builder getRemoteDeviceBuilderScannerOfType(@NonNull String connectionType){
+    public Builder getRemoteDeviceBuilderScannerOfType(@NonNull String connectionType) throws IoTCommException {
 
         if(TextUtils.isEmpty(connectionType))return null;
 
@@ -37,7 +37,11 @@ public class DeviceScannerFactory {
             return new WifiP2pScanBuilder(activity);
         }
 
-        else return null;
+        else if(connectionType.equals(Constants.WLAN)){
+            return new WlanServiceScanBuilder(activity);
+        }
+
+        else throw new IoTCommException("Invalid, or Unsupported Remote Communication Type", connectionType);
     }
 
     abstract public static class Builder{
@@ -48,7 +52,7 @@ public class DeviceScannerFactory {
             this.activity = activity;
         }
 
-        abstract public WlanConnectionScanner build();
+        abstract public WirelessDeviceConnectionScanner build();
         abstract public Builder setmScanCallback(@Nullable ScanCallback mScanCallback);
         abstract public Builder setmP2PPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener);
         abstract public Builder setmNsdDiscoveryListener(@Nullable NsdManager.DiscoveryListener mNsdDiscoveryListener);
@@ -67,7 +71,7 @@ public class DeviceScannerFactory {
         }
 
 
-        public Builder setmScanCallback(ScanCallback mScanCallback) {
+        public Builder setmScanCallback(@Nullable ScanCallback mScanCallback) {
             this.mScanCallback = mScanCallback;
             return this;
         }
@@ -94,8 +98,8 @@ public class DeviceScannerFactory {
             return this;
         }
 
-        public WlanConnectionScanner build(){
-            return new BLE_Scanner(activity, mScanCallback, baseUUID, milliSecs);
+        public WirelessDeviceConnectionScanner build() throws NullPointerException{
+                return new BLE_Scanner(activity, mScanCallback, baseUUID, milliSecs);
         }
     }
 
@@ -133,8 +137,8 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public WlanConnectionScanner build(){
-            return new P2p_Scanner(activity, mPeerListListener, milliSecs);
+        public WirelessDeviceConnectionScanner build(){
+                return new P2p_Scanner(activity, mPeerListListener, milliSecs);
         }
 
         @Override
@@ -153,10 +157,9 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public WlanConnectionScanner build() {
+        public WirelessDeviceConnectionScanner build() throws NullPointerException{
             if (TextUtils.isEmpty(serviceType)) {
-                Util.message(activity, "Specify The Service Type to Scan ");
-                return null;
+                throw new NullPointerException("Specify The Service Type to Scan ");
             }
 
            return new WLANServiceScanner(activity, milliSecs, mDiscoveryListener, serviceType);

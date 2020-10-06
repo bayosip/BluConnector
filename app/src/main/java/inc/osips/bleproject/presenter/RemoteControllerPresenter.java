@@ -23,6 +23,7 @@ import inc.osips.bleproject.utilities.Constants;
 import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.utilities.ServiceUtil;
 import inc.osips.bleproject.view.activities.Home;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.IoTCommException;
 
 public class RemoteControllerPresenter extends VoiceControlPresenter {
 
@@ -38,13 +39,22 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         activity = viewInterface.getControlContext();
         DeviceConnectionFactory factory = new DeviceConnectionFactory(viewInterface.getControlContext());
 
-         builder = factory.establishConnectionWithDeviceOf(type, device);
+        try {
+            builder = factory.establishConnectionWithDeviceOf(type, device);
+        } catch (IoTCommException e) {
+            Log.e(TAG, "RemoteControllerPresenter: ",e );
+            e.printStackTrace();
+        }
 
         if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)){
             Log.i("Connection type", builder.getDeviceType());
             this.deviceName = ((BluetoothDevice) device).getName();
-            viewInterface.getUUIDFromPopUp();
-        }else if (device instanceof WifiP2pDevice && type.equalsIgnoreCase(Constants.WIFI)) {
+            //viewInterface.getUUIDFromPopUp();
+            intent = new Intent(activity, BleGattService.class);
+            deviceConnector = builder.build();
+            if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
+                bindBleService();
+        }else if (device instanceof WifiP2pDevice && type.equalsIgnoreCase(Constants.P2P)) {
             Log.i("Connection", builder.getDeviceType());
             if (builder !=null){
                 deviceConnector = builder.build();

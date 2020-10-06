@@ -10,8 +10,9 @@ import androidx.annotation.Nullable;
 
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.BleConnection;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.P2pConnection;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.IoTCommException;
 
 public class DeviceConnectionFactory {
 
@@ -23,7 +24,7 @@ public class DeviceConnectionFactory {
         this.activity = activity;
     }
 
-    public Builder establishConnectionWithDeviceOf(@NonNull String connectionType, @NonNull Parcelable device){
+    public Builder establishConnectionWithDeviceOf(@NonNull String connectionType, @NonNull Parcelable device) throws IoTCommException {
 
         if(TextUtils.isEmpty(connectionType))return null;
 
@@ -35,7 +36,10 @@ public class DeviceConnectionFactory {
             return new P2PDeviceConnectionBuilder(activity, device);
         }
 
-        else return null;
+        else if (connectionType.equals(Constants.WLAN))
+            return new LocalWiFiServiceConnectionBuilder(activity, device);
+
+        else throw new IoTCommException("Invalid, or Unsupported Remote Communication Type", connectionType);
     }
 
     abstract public static class Builder{
@@ -96,16 +100,14 @@ public class DeviceConnectionFactory {
         }
 
         @Override
-        public WirelessDeviceConnector build() {
+        public WirelessDeviceConnector build() throws NullPointerException{
             Log.w("Connection++", UUID_IP);
-            if (!TextUtils.isEmpty(UUID_IP))
                 return new BleConnection(activity, device, UUID_IP);
-            else return null;
         }
 
         @Override
-        public Builder setDeviceUniqueID(@NonNull String UUID) {
-            this.UUID_IP = UUID_IP;
+        public Builder setDeviceUniqueID(@Nullable String UUID) {
+            this.UUID_IP = UUID;
             return this;
         }
 

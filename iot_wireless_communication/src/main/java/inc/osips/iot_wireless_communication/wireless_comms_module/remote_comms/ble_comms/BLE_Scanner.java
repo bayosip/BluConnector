@@ -26,29 +26,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
+public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectionScanner {
 
     private long SCAN_TIME = 6000; //default scan time
     private BluetoothAdapter bleAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
     private Activity activity;
 
-    private List<ScanFilter> filters;
+    private List<ScanFilter> filters;//filters for specified devices
     private ScanCallback mScanCallback = this;
     private boolean scanState = false;
-    private String deviceName = null;//"Osi_p BLE-LED Controller";
+    private String deviceName = null;
     private static final String TAG = "BLE_Scanner";
 
     private List<String> deviceAddresses;
     //private
 
     private ScanSettings settings;
-    //"6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 
     private ParcelUuid uuidParcel = null;
     //UUID uuid;
@@ -79,6 +78,9 @@ public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
         return scanState;
     }
 
+    /*
+    * Start scanning for BLE devices, after checking the device is Bluetooth is on
+    * */
     public void onStart() {
         if (!HW_Compatibility_Checker.checkBluetooth(bleAdapter)) {
             HW_Compatibility_Checker.requestUserBluetooth(activity);
@@ -96,6 +98,9 @@ public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
         }
     }
 
+    /*
+    * Scan for BLE with a specific uuid
+    * */
     private void scanForSpecificBLEDevices() {
         if (!scanState) {
             ScanFilter myDevice = new ScanFilter.Builder()
@@ -120,7 +125,6 @@ public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
             }, SCAN_TIME);
 
             scanState = true;
-
             bluetoothLeScanner.startScan(filters, settings, mScanCallback);
         }
         else{
@@ -128,6 +132,9 @@ public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
         }
     }
 
+    /*
+    * Scan for ALL BLE devices
+    * */
     private void scanForAllBLEDevices(){
         if (!scanState){
             //start scan for scan_time, then stop
@@ -146,6 +153,7 @@ public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
         }
     }
 
+    //
     private void scanStop() {
         Util.message(activity,"Scanning Stopped!");
 
@@ -155,7 +163,7 @@ public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
             if(bluetoothLeScanner != null)
                 bluetoothLeScanner.stopScan(mScanCallback);
 
-            activity.sendBroadcast(new Intent(WlanConnectionScanner.SCANNING_STOPPED));
+            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
         }
     }
 
@@ -170,7 +178,7 @@ public class BLE_Scanner extends ScanCallback implements WlanConnectionScanner {
         final int RSSI = result.getRssi();
         BluetoothDevice ble = result.getDevice();
         if (RSSI>=-105 && !deviceAddresses.contains(ble.getAddress())) {
-            activity.sendBroadcast(new Intent(WlanConnectionScanner.DEVICE_DISCOVERED)
+            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
                     .putExtra(Constants.DEVICE_DATA, ble));
             deviceAddresses.add(ble.getAddress());
         }

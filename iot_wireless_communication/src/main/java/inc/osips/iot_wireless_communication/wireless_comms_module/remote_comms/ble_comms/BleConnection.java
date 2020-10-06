@@ -12,10 +12,11 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService;
 
 public class BleConnection implements WirelessDeviceConnector {
@@ -28,9 +29,10 @@ public class BleConnection implements WirelessDeviceConnector {
     private boolean mBound = false;
     private static final String TAG = "BLE Connection";
 
-    public BleConnection(@NonNull Activity activity, @NonNull Parcelable bleDevice, @NonNull String baseUUID) {
+    public BleConnection(@NonNull Activity activity, @NonNull Parcelable bleDevice, @Nullable String baseUUID) {
         Log.w("Connection+", baseUUID);
-        this.baseUUID = baseUUID;
+        if (!TextUtils.isEmpty(baseUUID))
+            this.baseUUID = baseUUID;
         this.bleDevice = (BluetoothDevice) bleDevice;
         this.activity = activity;
     }
@@ -64,7 +66,7 @@ public class BleConnection implements WirelessDeviceConnector {
     private boolean tryBLEConnection() {
 
         if (gattService != null){
-            if(gattService.init() && !TextUtils.isEmpty(baseUUID)){
+            if(gattService.init()){
                 final boolean result = gattService.connect(bleDevice, baseUUID);
                 return result;
             }

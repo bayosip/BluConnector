@@ -14,16 +14,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
 import inc.osips.iot_wireless_communication.R;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
 /**
  * Created by Adebayo Osipitan on 10/11/2016.
@@ -279,9 +281,11 @@ public class BleGattService extends Service {
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      * callback.
      */
-    public boolean connect(@NonNull final BluetoothDevice device, @NonNull String serviceUUID) {
+    public boolean connect(@NonNull final BluetoothDevice device, @Nullable String serviceUUID) {
 
-        this.serviceUUID = serviceUUID;
+        if(!TextUtils.isEmpty(serviceUUID))
+            this.serviceUUID = serviceUUID;
+
         if (bAdapter == null || device == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
@@ -303,7 +307,7 @@ public class BleGattService extends Service {
     * */
 
     private void getGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null) return;
+        if (gattServices == null || gattServices.isEmpty()) return;
         String uuid ;
 
         // Loops through available GATT Services.
@@ -311,7 +315,8 @@ public class BleGattService extends Service {
 
             uuid = gattService.getUuid().toString();
 
-            if (uuid.equalsIgnoreCase(serviceUUID)) {
+           // if (uuid.equalsIgnoreCase(serviceUUID))
+            {
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         gattService.getCharacteristics();
 

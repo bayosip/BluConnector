@@ -18,16 +18,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 import inc.osips.bleproject.interfaces.PresenterInterface;
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
+import inc.osips.bleproject.utilities.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnectionScanner;
 import inc.osips.bleproject.interfaces.ScannerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceScannerFactory;
 import inc.osips.bleproject.utilities.GeneralUtil;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.IoTCommException;
 
 public class ScannerPresenter implements PresenterInterface{
 
-    private WlanConnectionScanner scanner;
+    private static final String TAG = "ScannerPresenter";
+    private WirelessDeviceConnectionScanner scanner;
     private ScannerViewInterface viewInterface;
     private List<Devices> devices;
 
@@ -35,7 +37,13 @@ public class ScannerPresenter implements PresenterInterface{
     public ScannerPresenter(@NonNull ScannerViewInterface viewInterface, @NonNull String commsType) {
         this.viewInterface = viewInterface;
         DeviceScannerFactory factory = new DeviceScannerFactory(viewInterface.getCurrentActivity());
-        DeviceScannerFactory.Builder builder = factory.getRemoteDeviceBuilderScannerOfType(commsType);
+        DeviceScannerFactory.Builder builder = null;
+        try {
+            builder = factory.getRemoteDeviceBuilderScannerOfType(commsType);
+        } catch (IoTCommException e) {
+            Log.e(TAG, "ScannerPresenter: ", e);
+            e.printStackTrace();
+        }
 
         if (builder!=null)
             scanner = builder.build();
@@ -76,11 +84,11 @@ public class ScannerPresenter implements PresenterInterface{
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             switch (action) {
-                case WlanConnectionScanner.SCANNING_STOPPED:
+                case WirelessDeviceConnectionScanner.SCANNING_STOPPED:
                     Log.w("BLe", "broadcast");
                     viewInterface.progressFromScan(devices);
                     break;
-                case WlanConnectionScanner.DEVICE_DISCOVERED:
+                case WirelessDeviceConnectionScanner.DEVICE_DISCOVERED:
                     Parcelable device = intent.getParcelableExtra(Constants.DEVICE_DATA);
                     if(device instanceof BluetoothDevice){
                         BluetoothDevice ble = (BluetoothDevice)device;
@@ -131,8 +139,8 @@ public class ScannerPresenter implements PresenterInterface{
      */
     private IntentFilter commsUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(WlanConnectionScanner.SCANNING_STOPPED);
-        intentFilter.addAction(WlanConnectionScanner.DEVICE_DISCOVERED);
+        intentFilter.addAction(WirelessDeviceConnectionScanner.SCANNING_STOPPED);
+        intentFilter.addAction(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);

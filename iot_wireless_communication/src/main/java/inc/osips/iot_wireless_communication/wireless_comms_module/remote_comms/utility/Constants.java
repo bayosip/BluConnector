@@ -1,6 +1,4 @@
-package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities;
-
-import android.net.nsd.NsdManager;
+package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility;
 
 public class Constants {
     public static final String BLE = "Bluetooth Low Energy";

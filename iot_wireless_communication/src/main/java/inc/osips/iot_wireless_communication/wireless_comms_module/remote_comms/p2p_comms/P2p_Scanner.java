@@ -18,11 +18,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import inc.osips.iot_wireless_communication.R;
-import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WlanConnectionScanner;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Constants;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utilities.Util;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnectionScanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
-public class P2p_Scanner implements WlanConnectionScanner, WifiP2pManager.ActionListener, WifiP2pManager
+public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pManager.ActionListener, WifiP2pManager
         .PeerListListener {
 
     private WifiManager wifiManager;
@@ -143,7 +143,7 @@ public class P2p_Scanner implements WlanConnectionScanner, WifiP2pManager.Action
             Log.w(TAG, "scanning stopped");
             if (p2pManager!=null)
                 p2pManager.stopPeerDiscovery(p2pChannel, this);
-            activity.sendBroadcast(new Intent(WlanConnectionScanner.SCANNING_STOPPED));
+            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
         }
     }
 
@@ -175,7 +175,7 @@ public class P2p_Scanner implements WlanConnectionScanner, WifiP2pManager.Action
     @Override
     public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
         for (WifiP2pDevice p2pDevice: wifiP2pDeviceList.getDeviceList()){
-            activity.sendBroadcast(new Intent(WlanConnectionScanner.DEVICE_DISCOVERED)
+            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
                     .putExtra(Constants.DEVICE_DATA, p2pDevice));
         }
     }

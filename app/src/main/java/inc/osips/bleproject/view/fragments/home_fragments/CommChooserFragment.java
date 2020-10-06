@@ -13,7 +13,6 @@ import androidx.annotation.Nullable;
 import at.markushi.ui.CircleButton;
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.utilities.Constants;
-import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class CommChooserFragment extends BaseFragment {
 
@@ -36,7 +35,7 @@ public class CommChooserFragment extends BaseFragment {
     public void initiateWidget(View v){
         CircleButton selectWIFI, selectBLE;
         selectBLE = v.findViewById(R.id.buttonSelectBLE);
-        selectWIFI = v.findViewById(R.id.buttonSelectWIFI);
+        selectWIFI = v.findViewById(R.id.buttonSelectWLAN);
 
         selectWIFI.setOnClickListener(listener);
         selectBLE.setOnClickListener(listener);
@@ -46,13 +45,15 @@ public class CommChooserFragment extends BaseFragment {
         @Override
         public void onClick(View view) {
             String commsType = null;
-            Intent intent = new Intent(activity, DeviceScannerFragment.class);
             switch (view.getId()){
                 case R.id.buttonSelectBLE:
                     commsType = Constants.BLE;
                     break;
-                case R.id.buttonSelectWIFI:
-                    commsType = Constants.WIFI;
+                case R.id.buttonSelectP2P:
+                    commsType = Constants.P2P;
+                    break;
+                case  R.id.buttonSelectWLAN:
+                    commsType = Constants.WLAN;
                     break;
             }
             activity.changeFragmentToScannerFrag(commsType);
