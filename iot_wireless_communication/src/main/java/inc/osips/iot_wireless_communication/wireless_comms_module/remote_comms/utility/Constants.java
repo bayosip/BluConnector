@@ -6,4 +6,10 @@ public class Constants {
     public static final String WLAN = "Local Area Network";
     public static final String COMM_TYPE = "Comms Protocol";
     public static final String DEVICE_DATA = "Device Data";
+    public static final String SERVICE_UUID = "Service UUID";
+    public final static String ACTION_CONNECTED = "BleGattService.ACTION_CONNECTED";
+    public final static String ACTION_DISCONNECTED ="BleGattService.ACTION_DISCONNECTED";
+    public final static String ACTION_BLE_SERVICES_DISCOVERED = "BleGattService.ACTION_BLE_SERVICES_DISCOVERED";
+    public final static String ACTION_DATA_AVAILABLE ="BleGattService.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA = "BleGattService.EXTRA_DATA";
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -9,7 +10,7 @@
     android:background="@drawable/egde_layout">
 
     <TextView
-        android:text="Enter Base UUID of Device"
+        android:text="Select Service UUID of to Use"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:id="@+id/textUUID_title"
@@ -20,23 +21,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/editTextBaseUUID"/>
+        app:layout_constraintBottom_toTopOf="@id/listServiceUUID"/>
 
-    <EditText
-        android:hint="Enter Service Base UUID To Connect"
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="250dp"
         android:gravity="center"
         android:textColor="@color/textColor"
-        android:id="@+id/editTextBaseUUID"
+        android:id="@+id/listServiceUUID"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         android:layout_below="@+id/textView6"
         android:layout_alignParentStart="true"
         android:textSize="@dimen/text_size"
-        android:autoSizeMaxTextSize="@dimen/text_size"
-        android:autoSizeMinTextSize="11sp"
-        android:autoSizeStepGranularity="1sp"
-        android:autoSizeTextType="uniform"
+        tools:listitem="@layout/device_list_item"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textUUID_title"
@@ -44,7 +41,7 @@
 
     <Button
         android:layout_marginTop="@dimen/activity_vertical_margin"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/curved_button"
         android:id="@+id/buttonUUID"
@@ -55,6 +52,6 @@
         android:contentDescription="@string/speak"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editTextBaseUUID"
+        app:layout_constraintTop_toBottomOf="@id/listServiceUUID"
         app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Queue;
 
 import inc.osips.iot_wireless_communication.R;
+import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
 /**
@@ -35,9 +37,9 @@ public class BleGattService extends Service {
     private final static String TAG = BleGattService.class.getSimpleName();
     private BluetoothGatt bleGatt;
     private boolean hasService;
+    private volatile List<BluetoothGattService> services = new LinkedList<>();
     private BluetoothManager bManager;
     private BluetoothAdapter bAdapter;
-    private List<BluetoothGattService> services = new LinkedList<>();
     private boolean isHasService = false;
 
     //  Queue for BLE events
@@ -49,11 +51,6 @@ public class BleGattService extends Service {
     private static final int STATE_CONNECTED = 2;
     private static boolean mLedSwitchState = false;
 
-    public final static String ACTION_CONNECTED = "BleGattService.ACTION_CONNECTED";
-    public final static String ACTION_DISCONNECTED ="BleGattService.ACTION_DISCONNECTED";
-    public final static String ACTION_BLE_SERVICES_DISCOVERED = "BleGattService.ACTION_BLE_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE ="BleGattService.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA = "BleGattService.EXTRA_DATA";
     public  String EXTRA_UUID;
 
     public String serviceUUID;// = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
@@ -108,7 +105,7 @@ public class BleGattService extends Service {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             switch (newState){
                 case BluetoothProfile.STATE_CONNECTED:
-                    broadcastUpdate(ACTION_CONNECTED);
+                    broadcastUpdate(Constants.ACTION_CONNECTED);
                     MyLogData += "Connected to GATT server.\n";
                     Log.i(TAG, "Connected to GATT server.");
                     // Attempts to discover services after successful connection.
@@ -120,7 +117,7 @@ public class BleGattService extends Service {
                 case BluetoothProfile.STATE_DISCONNECTED:
                     Log.i(TAG, "Disconnected from GATT server.");
                     MyLogData += "Disconnected from GATT server.\n";
-                    broadcastUpdate(ACTION_DISCONNECTED);
+                    broadcastUpdate(Constants.ACTION_DISCONNECTED);
                     break;
                 case BluetoothProfile.STATE_DISCONNECTING:
                     Util.message(BleGattService.this,getString(R.string.disconnecting));
@@ -137,17 +134,17 @@ public class BleGattService extends Service {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-
                 if (!services.isEmpty() || services.size() >0)
-                    services.clear();
+                  services.clear();
+
                 services.addAll(gatt.getServices());
-                getGattServices(services);
+                //getGattServices(services);
 
                 /*BluetoothGattService myGattService = gatt.getService(UUID.fromString(serviceUUID));
                 myWriteCharx = myGattService.getCharacteristic(UUID.fromString(writeUUID));
                 myReadCharx = myGattService.getCharacteristic(UUID.fromString(readUUID));*/
                 Log.w(TAG, "Services Discovered");
-                broadcastUpdate(ACTION_BLE_SERVICES_DISCOVERED);
+                broadcastUpdate(Constants.ACTION_BLE_SERVICES_DISCOVERED, gatt.getServices());
                 //readLedCharacteristic();
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
@@ -169,7 +166,7 @@ public class BleGattService extends Service {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
             }
         }
 
@@ -205,7 +202,7 @@ public class BleGattService extends Service {
             String uuid = characteristic.getUuid().toString();
             mydata= characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT32,0);
             // Tell the activity that new car data is available
-            broadcastUpdate(ACTION_DATA_AVAILABLE);
+            broadcastUpdate(Constants.ACTION_DATA_AVAILABLE);
         }
     };
 
@@ -218,6 +215,15 @@ public class BleGattService extends Service {
         sendBroadcast(intent);
     }
 
+    private void broadcastUpdate(final String action,
+                                 final List<BluetoothGattService> availableServices){
+        for(BluetoothGattService service: availableServices){
+            final Intent intent = new Intent(action);
+            intent.putExtra(Constants.SERVICE_UUID, service.getUuid());
+            sendBroadcast(intent);
+        }
+        sendBroadcast(new Intent(WirelessDeviceConnector.NO_MORE_SERVICES_AVAILABLE));
+    }
 
     /**
      * Sends a broadcast to the listener in the main activity.
@@ -233,7 +239,7 @@ public class BleGattService extends Service {
         if (myNotifycharx.getUuid().equals(characteristic.getUuid())) {
             final String received = characteristic.getStringValue(1);
             Log.i(TAG, String.format("Received from ble device: %s", received));
-            intent.putExtra(EXTRA_DATA, String.valueOf(received));
+            intent.putExtra(Constants.EXTRA_DATA, String.valueOf(received));
         } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
@@ -242,7 +248,7 @@ public class BleGattService extends Service {
                 for(byte byteChar : data)
                     stringBuilder.append(String.format("%s ", byteChar));
                 Log.e(TAG, stringBuilder.toString());
-                intent.putExtra(EXTRA_DATA, new String(data) + "\n" +
+                intent.putExtra(Constants.EXTRA_DATA, new String(data) + "\n" +
                         stringBuilder.toString());
             }
         }
@@ -302,21 +308,32 @@ public class BleGattService extends Service {
         return true;
     }
 
+    public void selectServiceFromUUID (@NonNull String UUID){
+        this.serviceUUID = UUID;
+        if (!getGattServices()){
+            Util.message(BleGattService.this, "No service with selected UUID!");
+        }
+    }
+
+
     /*
     * Loop through the discovered ble services finds the service matching
     * */
 
-    private void getGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null || gattServices.isEmpty()) return;
+    private boolean getGattServices() {
+        if (this.services == null || this.services.isEmpty()){
+            stopSelf();
+            return false;
+        }
+
         String uuid ;
 
         // Loops through available GATT Services.
-        for (BluetoothGattService gattService : gattServices) {
+        for (BluetoothGattService gattService : this.services) {
 
             uuid = gattService.getUuid().toString();
 
-           // if (uuid.equalsIgnoreCase(serviceUUID))
-            {
+            if (uuid.equalsIgnoreCase(serviceUUID)) {
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         gattService.getCharacteristics();
 
@@ -342,6 +359,8 @@ public class BleGattService extends Service {
         }
 
         if(!isHasService)stopSelf();
+
+        return isHasService;
     }
 
     /**
@@ -359,7 +378,7 @@ public class BleGattService extends Service {
             bleGatt.disconnect();
             close();
             bleGatt = null;
-            broadcastUpdate(ACTION_DISCONNECTED);
+            broadcastUpdate(Constants.ACTION_DISCONNECTED);
         }
     }
     /**

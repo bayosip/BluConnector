@@ -14,6 +14,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.EditText;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
@@ -32,6 +35,11 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     private String deviceName;
     private DeviceConnectionFactory.Builder builder;
     private Intent intent;
+    private List<String> listOfRemoteServices = new ArrayList<>();
+
+    public List<String> getListOfRemoteServices() {
+        return listOfRemoteServices;
+    }
 
     public RemoteControllerPresenter(final ControllerViewInterface viewInterface, String type,
                                      Parcelable device) {
@@ -78,15 +86,12 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     }
 
     public void setBaseUuidOfBLEDeviceAndConnect(String uuid){
-        if (builder !=null){//"6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+        if (deviceConnector !=null){//"6e400001-b5a3-f393-e0a9-e50e24dcca9e"
             String str = uuid.toLowerCase();
-            if (str.length()==36) {
-                intent = new Intent(activity, BleGattService.class);
-                deviceConnector = builder.setDeviceUniqueID(str).build();
-                if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
-                    bindBleService();
+            if (!TextUtils.isEmpty(str)) {
+                deviceConnector.selectServiceUsingUUID(str);
             }else {
-                GeneralUtil.message("Please Enter A Valid BaseUUID");
+                GeneralUtil.message("Please Select A Valid BaseUUID");
             }
         }
     }
@@ -128,22 +133,26 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
             final String action = intent.getAction();
             Log.w(TAG, action);
             switch (action) {
-                case BleGattService.ACTION_CONNECTED:
+                case Constants.ACTION_CONNECTED:
                     // No need to do anything here. Service discovery is started by the service.
                     Log.i(TAG, "Connected to GATT server.");
                     break;
-                case BleGattService.ACTION_DISCONNECTED:
+                case Constants.ACTION_DISCONNECTED:
                     Log.i(TAG, "Service Disconnected");
                     GeneralUtil.message("Device Disconnected");
                     //if (App.getCurrentActivity() instanceof ControllerActivity)
                     GeneralUtil.transitionActivity(activity, Home.class);
                     break;
-                case BleGattService.ACTION_BLE_SERVICES_DISCOVERED:
+                case Constants.ACTION_BLE_SERVICES_DISCOVERED:
                     Log.w("BLE", "services discovered");
-                    viewInterface.removeUUIDPopUp();
+                    String UUID = intent.getStringExtra(Constants.SERVICE_UUID);
+                    listOfRemoteServices.add(UUID);
                     break;
-                case BleGattService.ACTION_DATA_AVAILABLE:
-                    Log.w("BLE DATA", "" + intent.getStringExtra(BleGattService.EXTRA_DATA));
+                case WirelessDeviceConnector.NO_MORE_SERVICES_AVAILABLE:
+                    viewInterface.getUUIDFromPopUp(listOfRemoteServices);
+                    break;
+                case Constants.ACTION_DATA_AVAILABLE:
+                    Log.w("BLE DATA", "" + intent.getStringExtra(Constants.EXTRA_DATA));
                     break;
                 case P2pDataTransferService.ACTION_DATA_AVAILABLE:
                     Log.w("DATA", intent.getStringExtra(P2pDataTransferService.EXTRA_DATA));
@@ -190,10 +199,10 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
      */
     private IntentFilter commsUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BleGattService.ACTION_CONNECTED);
-        intentFilter.addAction(BleGattService.ACTION_DISCONNECTED);
-        intentFilter.addAction(BleGattService.ACTION_BLE_SERVICES_DISCOVERED);
-        intentFilter.addAction(BleGattService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(Constants.ACTION_CONNECTED);
+        intentFilter.addAction(Constants.ACTION_DISCONNECTED);
+        intentFilter.addAction(Constants.ACTION_BLE_SERVICES_DISCOVERED);
+        intentFilter.addAction(Constants.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);

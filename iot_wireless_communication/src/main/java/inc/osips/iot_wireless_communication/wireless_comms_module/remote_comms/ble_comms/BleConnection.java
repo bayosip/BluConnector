@@ -79,6 +79,11 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
+    public void selectServiceUsingUUID(@NonNull String UUID) {
+        gattService.selectServiceFromUUID(UUID);
+    }
+
+    @Override
     public void sendInstructionsToRemoteDevice(String instuctions) {
         gattService.sendInstructionsToConnectedDevice(instuctions);
     }

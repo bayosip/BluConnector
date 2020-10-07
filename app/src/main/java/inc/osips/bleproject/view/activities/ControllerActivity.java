@@ -9,6 +9,9 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.ActionBar;
@@ -16,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -23,6 +27,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -38,6 +43,7 @@ import inc.osips.bleproject.presenter.RemoteControllerPresenter;
 import inc.osips.bleproject.view.fragments.control_fragments.ButtonControlFragment;
 import inc.osips.bleproject.view.fragments.control_fragments.ControlAdapter;
 import inc.osips.bleproject.view.fragments.control_fragments.VoiceControlFragment;
+import inc.osips.bleproject.view.listviews.DevicesViewHolderAdapter;
 
 public class ControllerActivity extends AppCompatActivity implements ControlFragmentListener, ControllerViewInterface {
 
@@ -52,6 +58,9 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     private List<Fragment> fragList;
     private String commType;
     private Dialog uuidPopUp;
+    private RecyclerView listServices;
+    private DevicesViewHolderAdapter adapter;
+    private String selectedUUID = "";
 
     public static final String BUTTON_CONFIG = "button_config";
     public static final String ON_OFF = "on_off";
@@ -95,30 +104,48 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         }
     }
 
-    public void getUUIDFromPopUp(){
+    @Override
+    public void getUUIDFromPopUp(List<String> listUUID){
 
-        uuidPopUp = new Dialog(this);
-        uuidPopUp.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        uuidPopUp.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        uuidPopUp.setContentView(R.layout.enter_uuid_ip_dialog);
-        uuidPopUp.setOwnerActivity(this);
-        uuidPopUp.setCancelable(false);
+        if (!listUUID.isEmpty()) {
+            uuidPopUp = new Dialog(this);
+            uuidPopUp.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            uuidPopUp.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            uuidPopUp.setContentView(R.layout.enter_uuid_ip_dialog);
+            uuidPopUp.setOwnerActivity(this);
+            uuidPopUp.setCancelable(false);
 
-        Button enterUUID = uuidPopUp.findViewById(R.id.buttonUUID);
-        final EditText baseUUID =  uuidPopUp.findViewById(R.id.editTextBaseUUID);
-        baseUUID.addTextChangedListener(new UUID_IP_TextWatcher(baseUUID, commType));
+            Button enterUUID = uuidPopUp.findViewById(R.id.buttonUUID);
+            listServices = uuidPopUp.findViewById(R.id.listServiceUUID);
+            adapter = new DevicesViewHolderAdapter(listUUID, ControllerActivity.this);
+            LinearLayoutManager layoutManager = new LinearLayoutManager(ControllerActivity.this,
+                    RecyclerView.VERTICAL, false);
 
-        enterUUID.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String str = baseUUID.getText().toString();
-                presenter.setBaseUuidOfBLEDeviceAndConnect(str);
-                //uuidPopUp.dismiss();
-            }
-        });
-
-        uuidPopUp.show();
+            listServices.setLayoutManager(layoutManager);
+            listServices.setAdapter(adapter);
+            enterUUID.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    presenter.setBaseUuidOfBLEDeviceAndConnect(selectedUUID);
+                    uuidPopUp.dismiss();
+                }
+            });
+            uuidPopUp.show();
+        }
     }
+
+    @Override
+    public void selectAServiceWith(int pos) {
+        try {
+            selectedUUID = presenter.getListOfRemoteServices().get(pos);
+            Log.w(TAG, "selectAServiceWith: "+ selectedUUID );
+        }catch (IndexOutOfBoundsException e){
+            e.printStackTrace();
+            Log.e(TAG, "selectAServiceWith: No services available", e);
+        }
+
+    }
+
 
     public void getButtonConfigPopUp(){
         final Dialog buttonConfig = new Dialog(this);
@@ -225,7 +252,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(ControllerActivity.this)){
-                    getUUIDFromPopUp();
+                    getUUIDFromPopUp(presenter.getListOfRemoteServices());
                 }
                 dialog.dismiss();
             }

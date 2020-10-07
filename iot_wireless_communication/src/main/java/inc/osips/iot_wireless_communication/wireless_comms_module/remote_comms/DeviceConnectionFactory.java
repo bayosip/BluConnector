@@ -36,9 +36,6 @@ public class DeviceConnectionFactory {
             return new P2PDeviceConnectionBuilder(activity, device);
         }
 
-        else if (connectionType.equals(Constants.WLAN))
-            return new LocalWiFiServiceConnectionBuilder(activity, device);
-
         else throw new IoTCommException("Invalid, or Unsupported Remote Communication Type", connectionType);
     }
 
