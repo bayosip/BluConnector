@@ -53,6 +53,7 @@ public class DeviceConnectionFactory {
         abstract public DeviceConnectionFactory.Builder setDeviceUniqueID(String UUID_IP);
         abstract public String getDeviceType();
         abstract public Builder setConnectionTimeOut(int timeOut);
+        abstract public Builder setMaxTransmissionUnit(int size);
     }
 
     private class P2PDeviceConnectionBuilder extends Builder{
@@ -87,11 +88,17 @@ public class DeviceConnectionFactory {
             this.timeOut = timeOut;
             return this;
         }
+
+        @Override
+        public Builder setMaxTransmissionUnit(int size) {
+            return this;
+        }
     }
 
     private class BleDeviceConnectionBuilder extends Builder{
 
         String UUID_IP;
+        int ATT_MTU =0;
         private BleDeviceConnectionBuilder(Activity activity, Parcelable device) {
             super(activity, device);
         }
@@ -99,7 +106,7 @@ public class DeviceConnectionFactory {
         @Override
         public WirelessDeviceConnector build(){
             Log.w("Connection++", UUID_IP);
-                return new BleConnection(activity, device, UUID_IP);
+                return new BleConnection(activity, device, UUID_IP, ATT_MTU);
         }
 
         @Override
@@ -116,6 +123,12 @@ public class DeviceConnectionFactory {
 
         @Override
         public Builder setConnectionTimeOut(int timeOut) {
+            return this;
+        }
+
+        @Override
+        public Builder setMaxTransmissionUnit(int size) {
+            ATT_MTU = size;
             return this;
         }
     }
@@ -143,6 +156,11 @@ public class DeviceConnectionFactory {
 
         @Override
         public Builder setConnectionTimeOut(int timeOut) {
+            return null;
+        }
+
+        @Override
+        public Builder setMaxTransmissionUnit(int size) {
             return null;
         }
     }

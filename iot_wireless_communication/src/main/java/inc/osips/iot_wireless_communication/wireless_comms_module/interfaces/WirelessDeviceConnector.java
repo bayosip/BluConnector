@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 public interface WirelessDeviceConnector {
 
     String NO_MORE_SERVICES_AVAILABLE = "No_more_services";
+    String MTU_CHANGE_SUCCESS ="Success";
+    String MTU_CHANGE_FAILURE = "Failure";
     boolean isConnected();
     ServiceConnection getServiceConnection();
     void selectServiceUsingUUID (@NonNull String UUID);

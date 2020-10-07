@@ -49,6 +49,7 @@ public class BleGattService extends Service {
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
+    private int GATT_MAX_MTU_SIZE = 517;// default ATT MTU size
     private static boolean mLedSwitchState = false;
 
     public  String EXTRA_UUID;
@@ -145,7 +146,7 @@ public class BleGattService extends Service {
                 myReadCharx = myGattService.getCharacteristic(UUID.fromString(readUUID));*/
                 Log.w(TAG, "Services Discovered");
                 broadcastUpdate(Constants.ACTION_BLE_SERVICES_DISCOVERED, gatt.getServices());
-                //readLedCharacteristic();
+                //readBleCharacteristic();
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
                 MyLogData += "onServicesDiscovered received: " + status+ "\n";
@@ -164,9 +165,12 @@ public class BleGattService extends Service {
         }
 
         @Override
-        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicRead(BluetoothGatt gatt,
+                                         BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
+                Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
+                + characteristic.getStringValue(0));
             }
         }
 
@@ -203,6 +207,17 @@ public class BleGattService extends Service {
             mydata= characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT32,0);
             // Tell the activity that new car data is available
             broadcastUpdate(Constants.ACTION_DATA_AVAILABLE);
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            Log.i(TAG, "onMtuChanged: ATT MTU changed to" + mtu
+                    +", success: "+ status);
+            if (status == BluetoothGatt.GATT_SUCCESS){
+                sendBroadcast(new Intent(WirelessDeviceConnector.MTU_CHANGE_SUCCESS));
+            }else {
+                sendBroadcast(new Intent(WirelessDeviceConnector.MTU_CHANGE_FAILURE));
+            }
         }
     };
 
@@ -287,7 +302,11 @@ public class BleGattService extends Service {
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      * callback.
      */
-    public boolean connect(@NonNull final BluetoothDevice device, @Nullable String serviceUUID) {
+    public boolean connect(@NonNull final BluetoothDevice device, @Nullable String serviceUUID, int GATT_MAX_MTU_SIZE) {
+
+        if(GATT_MAX_MTU_SIZE>1){
+            this.GATT_MAX_MTU_SIZE = GATT_MAX_MTU_SIZE;
+        }
 
         if(!TextUtils.isEmpty(serviceUUID))
             this.serviceUUID = serviceUUID;
@@ -303,6 +322,8 @@ public class BleGattService extends Service {
             return bleGatt.connect();
         }
         bleGatt = device.connectGatt(this, false, mGattCallback);
+        if (bleGatt!=null)
+            bleGatt.requestMtu(this.GATT_MAX_MTU_SIZE);
         Log.i(TAG, "Trying to create a new connection.");
         MyLogData +="Trying to create a new connection.\n";
         return true;
@@ -346,6 +367,7 @@ public class BleGattService extends Service {
                     }
                     else if (gattCharacteristic.getProperties()==BluetoothGattCharacteristic.PROPERTY_READ){
                         myReadCharx = gattCharacteristic;
+                        readBleCharacteristic();
                         Log.i(TAG, "getGattServices: Read charX discovered");
                     }else if (gattCharacteristic.getProperties() == BluetoothGattCharacteristic.PROPERTY_NOTIFY){
                         myNotifycharx = gattCharacteristic;
@@ -397,7 +419,7 @@ public class BleGattService extends Service {
             if (bleGatt != null) {
                 byte[] bytes = instructions.getBytes();
                 myWriteCharx.setValue(instructions);
-                writeCharacteristic(myWriteCharx);
+                writeBleCharacteristic();
             }
         }catch (NullPointerException e)
         {
@@ -413,14 +435,12 @@ public class BleGattService extends Service {
 
     /**
      * Request a write on a given {@code BluetoothGattCharacteristic}.
-     *
-     * @param characteristic The characteristic to write.
      */
-    private void writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+    private void writeBleCharacteristic() {
         try{
-            BleQueue.add(characteristic);
+            BleQueue.add(myWriteCharx);
             if (BleQueue.size() == 1) {
-                bleGatt.writeCharacteristic(characteristic);
+                bleGatt.writeCharacteristic(myWriteCharx);
                 Log.i(TAG, "Writing Characteristic");
             }
         }catch (NullPointerException e){
@@ -437,7 +457,7 @@ public class BleGattService extends Service {
     /**
      * This method is used to read the state of the LED from the device
      */
-    public void readLedCharacteristic() {
+    public void readBleCharacteristic() {
         if (bAdapter == null || bleGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;

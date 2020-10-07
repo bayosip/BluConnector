@@ -25,16 +25,19 @@ public class BleConnection implements WirelessDeviceConnector {
     private BluetoothDevice bleDevice;
     private Activity activity;
     private String baseUUID;
+    private int GATT_MAX_MTU_SIZE = 0;
 
     private boolean mBound = false;
     private static final String TAG = "BLE Connection";
 
-    public BleConnection(@NonNull Activity activity, @NonNull Parcelable bleDevice, @Nullable String baseUUID) {
+    public BleConnection(@NonNull Activity activity, @NonNull Parcelable bleDevice,
+                         @Nullable String baseUUID, int GATT_MAX_MTU_SIZE) {
         Log.w("Connection+", baseUUID);
         if (!TextUtils.isEmpty(baseUUID))
             this.baseUUID = baseUUID;
         this.bleDevice = (BluetoothDevice) bleDevice;
         this.activity = activity;
+        this.GATT_MAX_MTU_SIZE = GATT_MAX_MTU_SIZE;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class BleConnection implements WirelessDeviceConnector {
 
         if (gattService != null){
             if(gattService.init()){
-                final boolean result = gattService.connect(bleDevice, baseUUID);
+                final boolean result = gattService.connect(bleDevice, baseUUID, GATT_MAX_MTU_SIZE);
                 return result;
             }
             return false;
