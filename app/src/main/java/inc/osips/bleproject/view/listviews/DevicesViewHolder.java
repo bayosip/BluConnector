@@ -1,5 +1,6 @@
 package inc.osips.bleproject.view.listviews;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
 import android.widget.TextView;
@@ -25,10 +26,23 @@ public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.O
     ServiceSelectorListener listener1;
     private List<Devices> devices;
     private boolean isRemoteServices = false;
+    private RefreshItem refresh;
+    private Context context;
+
+    interface RefreshItem {
+        void setSelectedPosition(int position);
+    }
 
     public DevicesViewHolder(@NonNull View itemView) {
         super(itemView);
         initialiseWidgets(itemView);
+    }
+
+    public DevicesViewHolder(@NonNull View itemView, RefreshItem refreshItem) {
+        super(itemView);
+        isRemoteServices = true;
+        initialiseWidgets(itemView);
+        this.refresh = refreshItem;
     }
 
     public void setItems(List<Devices> discoveredDevices){
@@ -37,16 +51,17 @@ public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.O
         deviceAddress.setText(discoveredDevices.get(getAdapterPosition()).getDeviceAddress());
     }
     public void setServiceItems(List<String> discoveredServices){
-        isRemoteServices = true;
         deviceName.setText(discoveredServices.get(getAdapterPosition()));
     }
 
     public void setDeviceListener(OnDiscoveredDevicesClickListener listener) {
         this.listener = listener;
+        context = listener.getListenerContext();
     }
 
     public void setServiceSelection(ServiceSelectorListener listener){
         this.listener1 = listener;
+        context = listener1.getListenerContext();
     }
 
     private void initialiseWidgets(View v){
@@ -56,19 +71,31 @@ public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.O
         deviceAddress = v.findViewById(R.id.textDeviceAddress);
     }
 
+    public void changeItemBackground(boolean shouldChange) {
+        if (shouldChange){
+            layout.setBackgroundResource(R.color.ripple);
+            deviceName.setTextColor(Color.WHITE);
+        }
+        else {
+            layout.setBackgroundResource(R.color.app_background_white);
+            deviceName.setTextColor(ContextCompat.getColor(listener1.getListenerContext(),
+                    R.color.title_color));
+        }
+    }
+
     @Override
     public void onClick(View view) {
         if(isRemoteServices){
+            refresh.setSelectedPosition(getAdapterPosition());
             listener1.selectAServiceWith(getAdapterPosition());
         }else {
             if (getAdapterPosition() < devices.size())
                 listener.selectDeviceToConnectTo(devices.get(getAdapterPosition()));
-            deviceName.setTextColor(Color.WHITE);
 
             GeneralUtil.getHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    deviceName.setTextColor(ContextCompat.getColor(listener.getListenerContext(), R.color.title_color));
+                    deviceName.setTextColor(ContextCompat.getColor(context, R.color.title_color));
                 }
             }, 200);
         }

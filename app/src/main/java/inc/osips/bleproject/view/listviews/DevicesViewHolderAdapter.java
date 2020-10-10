@@ -1,6 +1,7 @@
 package inc.osips.bleproject.view.listviews;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,15 +16,21 @@ import inc.osips.bleproject.interfaces.OnDiscoveredDevicesClickListener;
 import inc.osips.bleproject.interfaces.ServiceSelectorListener;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 
-public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHolder> {
+public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHolder> implements DevicesViewHolder.RefreshItem {
 
+    private static final String TAG = "DevicesVHAdapter";
     List<Devices> discoveredDevices;
     List<String> discoveredServices;
     Context context;
     OnDiscoveredDevicesClickListener itemListener;
     ServiceSelectorListener listener;
     boolean isListOfServices = false;
+    private int selectedPos = RecyclerView.NO_POSITION;
 
+    @Override
+    public void setSelectedPosition(int position) {
+        selectedPos = position;
+    }
 
     public DevicesViewHolderAdapter(List<Devices> discoveredDevices, OnDiscoveredDevicesClickListener listener) {
         this.discoveredDevices = discoveredDevices;
@@ -35,16 +42,19 @@ public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHo
         isListOfServices = true;
         this.discoveredServices = discoveredServices;
         this.listener = listener;
+        this.context = listener.getListenerContext();
     }
 
     @NonNull
     @Override
     public DevicesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.device_list_item,parent, false);
-        DevicesViewHolder holder =  new DevicesViewHolder(view);
+        DevicesViewHolder holder;
         if(isListOfServices){
+            holder =  new DevicesViewHolder(view, this);
             holder.setServiceSelection(listener);
         }else {
+            holder =  new DevicesViewHolder(view);
             holder.setDeviceListener(itemListener);
         }
         return holder;
@@ -54,6 +64,9 @@ public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHo
     public void onBindViewHolder(@NonNull DevicesViewHolder holder, int position) {
         if(isListOfServices) {
             holder.setServiceItems(discoveredServices);
+
+            Log.w(TAG, "onBindViewHolder: pos - " + position + " vs selectedPos - "+ selectedPos  );
+            holder.changeItemBackground(position == selectedPos);
         }else {
             holder.setItems(discoveredDevices);
         }
@@ -61,6 +74,6 @@ public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHo
 
     @Override
     public int getItemCount() {
-        return discoveredDevices.size();
+        return isListOfServices? discoveredServices.size():discoveredDevices.size();
     }
 }

@@ -67,6 +67,10 @@ public class P2pConnection implements WirelessDeviceConnector {
     }
 
     @Override
+    public void selectServiceUsingUUID(@NonNull String UUID) {
+    }
+
+    @Override
     public void sendInstructionsToRemoteDevice(String instuctions) {
         p2pService.writeLEDInstructions(instuctions);
     }

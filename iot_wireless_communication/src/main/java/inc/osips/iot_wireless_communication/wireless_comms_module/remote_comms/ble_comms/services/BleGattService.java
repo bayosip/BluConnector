@@ -20,6 +20,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -232,12 +233,14 @@ public class BleGattService extends Service {
 
     private void broadcastUpdate(final String action,
                                  final List<BluetoothGattService> availableServices){
+        ArrayList<String> uuid_strings = new ArrayList<>();
         for(BluetoothGattService service: availableServices){
-            final Intent intent = new Intent(action);
-            intent.putExtra(Constants.SERVICE_UUID, service.getUuid());
-            sendBroadcast(intent);
+            uuid_strings.add(service.getUuid().toString());
         }
-        sendBroadcast(new Intent(WirelessDeviceConnector.NO_MORE_SERVICES_AVAILABLE));
+
+        final Intent intent = new Intent(action);
+        intent.putStringArrayListExtra(Constants.SERVICE_UUID, uuid_strings);
+        sendBroadcast(intent);
     }
 
     /**
@@ -333,6 +336,8 @@ public class BleGattService extends Service {
         this.serviceUUID = UUID;
         if (!getGattServices()){
             Util.message(BleGattService.this, "No service with selected UUID!");
+        }else {
+            Log.d(TAG, "selectServiceFromUUID: service uuid: " + serviceUUID + " connected");
         }
     }
 
@@ -353,7 +358,7 @@ public class BleGattService extends Service {
         for (BluetoothGattService gattService : this.services) {
 
             uuid = gattService.getUuid().toString();
-
+            Log.d(TAG, "getGattServices: "+ uuid);
             if (uuid.equalsIgnoreCase(serviceUUID)) {
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         gattService.getCharacteristics();

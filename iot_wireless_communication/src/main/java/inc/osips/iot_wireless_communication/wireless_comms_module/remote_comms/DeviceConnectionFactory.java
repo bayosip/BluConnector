@@ -105,7 +105,6 @@ public class DeviceConnectionFactory {
 
         @Override
         public WirelessDeviceConnector build(){
-            Log.w("Connection++", UUID_IP);
                 return new BleConnection(activity, device, UUID_IP, ATT_MTU);
         }
 

@@ -3,6 +3,7 @@ package inc.osips.bleproject.view.activities;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -42,6 +43,7 @@ import inc.osips.bleproject.utilities.ServiceUtil;
 import inc.osips.bleproject.presenter.RemoteControllerPresenter;
 import inc.osips.bleproject.view.fragments.control_fragments.ButtonControlFragment;
 import inc.osips.bleproject.view.fragments.control_fragments.ControlAdapter;
+import inc.osips.bleproject.view.fragments.control_fragments.ServiceSelectorDialog;
 import inc.osips.bleproject.view.fragments.control_fragments.VoiceControlFragment;
 import inc.osips.bleproject.view.listviews.DevicesViewHolderAdapter;
 
@@ -49,6 +51,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
 
     private VoiceControlFragment voiceFrag;
     private ButtonControlFragment manualFrag;
+    private ServiceSelectorDialog dialog;
     private ViewPager pager;
     private PagerAdapter mPagerAdapter;
     private TextView myDeviceName;
@@ -57,10 +60,6 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     private RemoteControllerPresenter presenter;
     private List<Fragment> fragList;
     private String commType;
-    private Dialog uuidPopUp;
-    private RecyclerView listServices;
-    private DevicesViewHolderAdapter adapter;
-    private String selectedUUID = "";
 
     public static final String BUTTON_CONFIG = "button_config";
     public static final String ON_OFF = "on_off";
@@ -84,6 +83,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         App.setCurrentActivity(ControllerActivity.this);
         voiceFrag = new VoiceControlFragment();
         manualFrag = new ButtonControlFragment();
+        dialog = ServiceSelectorDialog.getInstance();
         fragList = new LinkedList<>();
         fragList.add(manualFrag);
         fragList.add(voiceFrag);
@@ -97,55 +97,31 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
                 if (parcelDevice != null) {
                     presenter = new RemoteControllerPresenter(this, commType, parcelDevice);
                 }
-                else throw new Exception("No device to connect with!");
+                else {
+                    Log.e(TAG, "initialisePrequisite: ", new Exception("No device to connect with!"));
+                }
             }else throw new Exception("No device to connect with!");
         }catch (Exception e){
+            e.printStackTrace();
             GeneralUtil.message(e.getMessage());
         }
     }
 
     @Override
     public void getUUIDFromPopUp(List<String> listUUID){
-
+        Log.d(TAG, "getUUIDFromPopUp:  was called");
         if (!listUUID.isEmpty()) {
-            uuidPopUp = new Dialog(this);
-            uuidPopUp.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            uuidPopUp.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            uuidPopUp.setContentView(R.layout.enter_uuid_ip_dialog);
-            uuidPopUp.setOwnerActivity(this);
-            uuidPopUp.setCancelable(false);
-
-            Button enterUUID = uuidPopUp.findViewById(R.id.buttonUUID);
-            listServices = uuidPopUp.findViewById(R.id.listServiceUUID);
-            adapter = new DevicesViewHolderAdapter(listUUID, ControllerActivity.this);
-            LinearLayoutManager layoutManager = new LinearLayoutManager(ControllerActivity.this,
-                    RecyclerView.VERTICAL, false);
-
-            listServices.setLayoutManager(layoutManager);
-            listServices.setAdapter(adapter);
-            enterUUID.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    presenter.setBaseUuidOfBLEDeviceAndConnect(selectedUUID);
-                    uuidPopUp.dismiss();
-                }
-            });
-            uuidPopUp.show();
+            ServiceSelectorDialog.setListUUID(listUUID);
+            if (!dialog.isAdded())
+                dialog.show(getSupportFragmentManager(), "Service Selector");
         }
     }
 
     @Override
-    public void selectAServiceWith(int pos) {
-        try {
-            selectedUUID = presenter.getListOfRemoteServices().get(pos);
-            Log.w(TAG, "selectAServiceWith: "+ selectedUUID );
-        }catch (IndexOutOfBoundsException e){
-            e.printStackTrace();
-            Log.e(TAG, "selectAServiceWith: No services available", e);
-        }
-
+    public void setSelectedServiceUUID(String uuid) {
+        presenter.setBaseUuidOfBLEDeviceAndConnect(uuid);
+        dialog.dismiss();
     }
-
 
     public void getButtonConfigPopUp(){
         final Dialog buttonConfig = new Dialog(this);
@@ -199,8 +175,14 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
 
     @Override
     public void removeUUIDPopUp(){
-        if (uuidPopUp!=null){
-            uuidPopUp.dismiss();
+        if (dialog!=null){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    dialog.dismiss();
+                }
+            });
+
         }
     }
 
@@ -231,7 +213,8 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
             }
         });
         myDeviceName = findViewById(R.id.textViewDeviceName);
-        myDeviceName.setText(presenter.getDeviceName());
+        if (presenter!= null)
+            myDeviceName.setText(presenter.getDeviceName());
         pager = findViewById(R.id.contentFragment);
         pager.setAdapter(mPagerAdapter);
     }
@@ -285,14 +268,14 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     protected void onPause() {
         super.onPause();
         removeUUIDPopUp();
-        if(presenter!=null && ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(this))
+        if(presenter!=null)
             presenter.unregisterBleMsgReceiver();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(presenter!=null && ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(this))
+        if(presenter!=null)
             presenter.registerRemoteMsgReceiver();
     }
 

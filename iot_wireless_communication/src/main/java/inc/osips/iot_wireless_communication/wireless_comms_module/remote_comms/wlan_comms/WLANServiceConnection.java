@@ -3,6 +3,8 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.
 import android.content.Intent;
 import android.content.ServiceConnection;
 
+import androidx.annotation.NonNull;
+
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 
 public class WLANServiceConnection implements WirelessDeviceConnector {
@@ -14,6 +16,11 @@ public class WLANServiceConnection implements WirelessDeviceConnector {
     @Override
     public ServiceConnection getServiceConnection() {
         return null;
+    }
+
+    @Override
+    public void selectServiceUsingUUID(@NonNull String UUID) {
+
     }
 
     @Override

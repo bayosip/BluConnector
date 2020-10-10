@@ -36,6 +36,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     private DeviceConnectionFactory.Builder builder;
     private Intent intent;
     private List<String> listOfRemoteServices = new ArrayList<>();
+    private boolean isServiceSelected = false;
 
     public List<String> getListOfRemoteServices() {
         return listOfRemoteServices;
@@ -89,6 +90,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         if (deviceConnector !=null){//"6e400001-b5a3-f393-e0a9-e50e24dcca9e"
             String str = uuid.toLowerCase();
             if (!TextUtils.isEmpty(str)) {
+                isServiceSelected = true;
                 deviceConnector.selectServiceUsingUUID(str);
             }else {
                 GeneralUtil.message("Please Select A Valid BaseUUID");
@@ -145,11 +147,12 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     break;
                 case Constants.ACTION_BLE_SERVICES_DISCOVERED:
                     Log.w("BLE", "services discovered");
-                    String UUID = intent.getStringExtra(Constants.SERVICE_UUID);
-                    listOfRemoteServices.add(UUID);
-                    break;
-                case WirelessDeviceConnector.NO_MORE_SERVICES_AVAILABLE:
-                    viewInterface.getUUIDFromPopUp(listOfRemoteServices);
+                    if (!isServiceSelected) {
+                        listOfRemoteServices.clear();
+                        listOfRemoteServices.addAll(intent.getStringArrayListExtra(Constants.SERVICE_UUID));
+                        viewInterface.getUUIDFromPopUp(listOfRemoteServices);
+                        Log.w("BLE", "All services found : " + listOfRemoteServices.get(0));
+                    }
                     break;
                 case Constants.ACTION_DATA_AVAILABLE:
                     Log.w("BLE DATA", "" + intent.getStringExtra(Constants.EXTRA_DATA));

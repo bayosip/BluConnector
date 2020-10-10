@@ -32,7 +32,6 @@ public class BleConnection implements WirelessDeviceConnector {
 
     public BleConnection(@NonNull Activity activity, @NonNull Parcelable bleDevice,
                          @Nullable String baseUUID, int GATT_MAX_MTU_SIZE) {
-        Log.w("Connection+", baseUUID);
         if (!TextUtils.isEmpty(baseUUID))
             this.baseUUID = baseUUID;
         this.bleDevice = (BluetoothDevice) bleDevice;

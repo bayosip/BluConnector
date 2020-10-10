@@ -4,7 +4,7 @@ import android.app.Activity;
 
 import java.util.List;
 
-public interface ControllerViewInterface extends ServiceSelectorListener {
+public interface ControllerViewInterface {
 
     Activity getControlContext();
     void processInstructions (final String commands);
