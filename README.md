@@ -1,4 +1,4 @@
-# IoT-Client-Library
+# BluConnector
 Client side IoT wireless communication using either BLE or WiFi P2P (WiFi Direct).
 
 This library implements Scanning, Connecting and Communicating with remote devices either using WiFi P2P (WiFi Direct)
