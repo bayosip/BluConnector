@@ -1,5 +1,5 @@
 # IoT-Client-Library
-Client side IoT communication using either BLE or WiFi P2P (WiFi Direct).
+Client side IoT wireless communication using either BLE or WiFi P2P (WiFi Direct).
 
 This library implements Scanning, Connecting and Communicating with remote devices either using WiFi P2P (WiFi Direct)
 or Bluetooth Low Energy (BLE), establishing client-side bi-direction, text based communication.
