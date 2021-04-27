@@ -1,11 +1,12 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms;
 
+import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -16,6 +17,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 
 import inc.osips.iot_wireless_communication.R;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnectionScanner;
@@ -28,7 +30,7 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     private WifiManager wifiManager;
     private WifiP2pManager p2pManager;
     private WifiP2pManager.Channel p2pChannel;
-    private Activity activity;
+    private Context context;
     private boolean scanState = false;
     private WifiP2pManager.PeerListListener mPeerListListener = this;//default peerListener
 
@@ -37,38 +39,38 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     private static final String TAG = "P2p_Scanner";
 
 
-    public P2p_Scanner(@NonNull Activity activity, @Nullable WifiP2pManager
-            .PeerListListener mPeerListListener, long scanTime){
-        if (scanTime >=1000)SCAN_TIME = scanTime;
-        this.activity = activity;
+    public P2p_Scanner(@NonNull Context activity, @Nullable WifiP2pManager
+            .PeerListListener mPeerListListener, long scanTime) {
+        if (scanTime >= 1000) SCAN_TIME = scanTime;
+        this.context = activity;
 
         if (mPeerListListener != null)
-            this.mPeerListListener =mPeerListListener;
+            this.mPeerListListener = mPeerListListener;
 
         initialisePrequisites();
 
-        if(!wifiManager.isWifiEnabled()){
+        if (!wifiManager.isWifiEnabled()) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
                 askUserToTurnWifiOn29();
             else askUserToTurnWifiOn();
         }
     }
 
-    private void initialisePrequisites(){
+    private void initialisePrequisites() {
         if (wifiManager == null)
-            wifiManager = (WifiManager) activity.getApplicationContext().
+            wifiManager = (WifiManager) context.getApplicationContext().
                     getSystemService(Context.WIFI_SERVICE);
 
-        p2pManager = (WifiP2pManager) activity.getApplicationContext()
+        p2pManager = (WifiP2pManager) context.getApplicationContext()
                 .getSystemService(Context.WIFI_P2P_SERVICE);
 
 
-        p2pChannel = p2pManager.initialize(activity, Looper.getMainLooper(), null);
+        p2pChannel = p2pManager.initialize(context, Looper.getMainLooper(), null);
     }
 
 
-    private void askUserToTurnWifiOn(){
-        final AlertDialog wifiAsk = new AlertDialog.Builder(activity)
+    private void askUserToTurnWifiOn() {
+        final AlertDialog wifiAsk = new AlertDialog.Builder(context)
                 .setCancelable(true)
                 .setTitle(R.string.enable_wifi_title)
                 .setMessage(R.string.enable_wifi_msg)
@@ -88,9 +90,9 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     }
 
     @TargetApi(29)
-    private void askUserToTurnWifiOn29(){
+    private void askUserToTurnWifiOn29() {
 
-        final AlertDialog wifiAsk = new AlertDialog.Builder(activity)
+        final AlertDialog wifiAsk = new AlertDialog.Builder(context)
                 .setCancelable(true)
                 .setTitle(R.string.enable_wifi_title)
                 .setMessage(R.string.enable_wifi_msg)
@@ -111,12 +113,12 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
 
     @Override
     public void onStart() {
-        if(wifiManager.isWifiEnabled())
+        if (wifiManager.isWifiEnabled())
             scanForWifiP2pDevices();
     }
 
-    private void scanForWifiP2pDevices(){
-        if (!scanState){
+    private void scanForWifiP2pDevices() {
+        if (!scanState) {
 
             Util.getHandler().postDelayed(new Runnable() {
                 @Override
@@ -125,7 +127,11 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
                 }
             }, SCAN_TIME);
 
-            if(p2pManager!=null && wifiManager.isWifiEnabled()) {
+            if (p2pManager != null && wifiManager.isWifiEnabled()) {
+                if (ActivityCompat.checkSelfPermission(context,
+                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
                 p2pManager.discoverPeers(p2pChannel, this);
                 scanState = true;
             }
@@ -136,14 +142,14 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     }
 
     private void scanStop() {
-        Util.message(activity,"Scanning Stopped!");
+        Util.message(context,"Scanning Stopped!");
 
         if (scanState) {
             scanState = false;
             Log.w(TAG, "scanning stopped");
             if (p2pManager!=null)
                 p2pManager.stopPeerDiscovery(p2pChannel, this);
-            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
+            context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
         }
     }
 
@@ -163,19 +169,19 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     @Override
     public void onSuccess() {
         Log.i(TAG, "Wifi Peer Discovery Started!");
-        Util.message(activity,activity.getString(R.string.p2p_discovery_started));
+        Util.message(context, context.getString(R.string.p2p_discovery_started));
     }
 
     @Override
     public void onFailure(int i) {
         Log.e(TAG, "Wifi Peer Discovery Failed To Start!");
-        Util.message(activity, activity.getString(R.string.p2p_discovery_failed));
+        Util.message(context, context.getString(R.string.p2p_discovery_failed));
     }
 
     @Override
     public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
         for (WifiP2pDevice p2pDevice: wifiP2pDeviceList.getDeviceList()){
-            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
+            context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
                     .putExtra(Constants.DEVICE_DATA, p2pDevice));
         }
     }

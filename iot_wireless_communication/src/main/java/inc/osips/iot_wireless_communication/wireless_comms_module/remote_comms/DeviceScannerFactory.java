@@ -20,9 +20,16 @@ public class DeviceScannerFactory {
 
 
     private Activity activity;
+    private volatile static DeviceScannerFactory factory_instance = null;
 
-    public DeviceScannerFactory(@NonNull Activity activity) {
+    private DeviceScannerFactory(@NonNull Activity activity) {
         this.activity = activity;
+    }
+
+    public synchronized static DeviceScannerFactory withActivity(@NonNull Activity activity){
+        if(factory_instance ==null)
+            factory_instance = new DeviceScannerFactory(activity);
+        return factory_instance;
     }
 
     public Builder getRemoteDeviceBuilderScannerOfType(@NonNull String connectionType) throws IoTCommException {

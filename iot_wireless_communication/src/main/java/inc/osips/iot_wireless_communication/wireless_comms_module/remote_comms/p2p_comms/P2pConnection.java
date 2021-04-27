@@ -2,6 +2,7 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -22,17 +23,17 @@ import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p
 public class P2pConnection implements WirelessDeviceConnector {
 
 
-    private WifiP2pDevice p2pDevice;
-    private Activity activity;
+    private final WifiP2pDevice p2pDevice;
+    private final Context context;
     private P2pDataTransferService p2pService;
-    private boolean isConnected = false, mBound = false;
+    private volatile boolean mBound = false;
     private static final String TAG = "WiFi Connectionm";
     private int PORT, TIME_OUT = 3000;
 
 
-    public P2pConnection(@NonNull Activity activity, @NonNull final Parcelable p2pDevice, int time_out) {
+    public P2pConnection(@NonNull Context context, @NonNull final Parcelable p2pDevice, int time_out) {
         this.p2pDevice = (WifiP2pDevice) p2pDevice;
-        this.activity = activity;
+        this.context = context;
 
         if (time_out>1000)
             this.TIME_OUT = time_out;
@@ -58,7 +59,7 @@ public class P2pConnection implements WirelessDeviceConnector {
 
     @Override
     public boolean isConnected() {
-        return isConnected;
+        return mBound;
     }
 
     @Override
@@ -92,7 +93,7 @@ public class P2pConnection implements WirelessDeviceConnector {
                 @Override
                 public void onServiceDisconnected(ComponentName componentName) {
                     mBound = false;
-                    activity.sendBroadcast(new Intent(DeviceConnectionFactory.DEVICE_CONNECTION_SERVICE_STOPPED));
+                    context.sendBroadcast(new Intent(DeviceConnectionFactory.DEVICE_CONNECTION_SERVICE_STOPPED));
                 }
             };
 
@@ -100,9 +101,9 @@ public class P2pConnection implements WirelessDeviceConnector {
         if (tryWiFiConnection()) {
             return;
         } else {
-            Util.message(activity,"Cannot Connect to Device");
+            Util.message(context,"Cannot Connect to Device");
 
-            activity.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
+            context.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
         }
     }
 

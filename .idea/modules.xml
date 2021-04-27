@@ -2,12 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/IoT-Client-App-Library.iml" filepath="$PROJECT_DIR$/.idea/IoT-Client-App-Library.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Voice-Control-BLE-App-master.iml" filepath="$PROJECT_DIR$/Voice-Control-BLE-App-master.iml" group="Voice-Control-BLE-App-master" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="Voice-Control-BLE-App-master/app" />
-      <module fileurl="file://$PROJECT_DIR$/iot_wireless_communication/iot_wireless_communication.iml" filepath="$PROJECT_DIR$/iot_wireless_communication/iot_wireless_communication.iml" />
-      <module fileurl="file://$PROJECT_DIR$/iot_wireless_communication/iot_wireless_communication.iml" filepath="$PROJECT_DIR$/iot_wireless_communication/iot_wireless_communication.iml" group="Voice-Control-BLE-App-master/iot_wireless_communication" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/BluConnector.iml" filepath="$PROJECT_DIR$/.idea/modules/BluConnector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/BluConnector.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/BluConnector.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/iot_wireless_communication/BluConnector.iot_wireless_communication.iml" filepath="$PROJECT_DIR$/.idea/modules/iot_wireless_communication/BluConnector.iot_wireless_communication.iml" />
     </modules>
   </component>
 </project>

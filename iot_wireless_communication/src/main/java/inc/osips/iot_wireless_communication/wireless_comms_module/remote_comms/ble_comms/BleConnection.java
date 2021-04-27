@@ -3,6 +3,7 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
@@ -23,19 +24,19 @@ public class BleConnection implements WirelessDeviceConnector {
 
     private volatile BleGattService gattService;
     private BluetoothDevice bleDevice;
-    private Activity activity;
+    private final Context context;
     private String baseUUID;
     private int GATT_MAX_MTU_SIZE = 0;
 
     private boolean mBound = false;
     private static final String TAG = "BLE Connection";
 
-    public BleConnection(@NonNull Activity activity, @NonNull Parcelable bleDevice,
+    public BleConnection(@NonNull Context context, @NonNull Parcelable bleDevice,
                          @Nullable String baseUUID, int GATT_MAX_MTU_SIZE) {
         if (!TextUtils.isEmpty(baseUUID))
             this.baseUUID = baseUUID;
         this.bleDevice = (BluetoothDevice) bleDevice;
-        this.activity = activity;
+        this.context = context;
         this.GATT_MAX_MTU_SIZE = GATT_MAX_MTU_SIZE;
     }
 
@@ -59,8 +60,8 @@ public class BleConnection implements WirelessDeviceConnector {
         if (tryBLEConnection()) {
             return;
         } else {
-            Util.message(activity,"Cannot Connect to Device");
-            activity.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
+            Util.message(context,"Cannot Connect to Device");
+            context.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
         }
     }
 
@@ -105,7 +106,7 @@ public class BleConnection implements WirelessDeviceConnector {
                     if (Build.VERSION.SDK_INT >= 21) {
                         ConnectToBleDevice();
                     } else {
-                        Util.message(activity,"API too low for App!");
+                        Util.message(context,"API too low for App!");
                     }
                 }
 
@@ -113,7 +114,7 @@ public class BleConnection implements WirelessDeviceConnector {
                 public void onServiceDisconnected(ComponentName arg0) {
                     mBound = false;
                     Log.i(TAG, "Service Disconnected");
-                    activity.sendBroadcast(new Intent(DeviceConnectionFactory.DEVICE_CONNECTION_SERVICE_STOPPED));
+                    context.sendBroadcast(new Intent(DeviceConnectionFactory.DEVICE_CONNECTION_SERVICE_STOPPED));
                 }
             };
 

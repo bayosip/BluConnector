@@ -1,9 +1,9 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Parcelable;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,36 +16,42 @@ import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.u
 
 public class DeviceConnectionFactory {
 
-    private Activity activity;
+    private Context context;
     public final static String FAILED_DEVICE_CONNECTION = "device_connection_failed";
     public final static String DEVICE_CONNECTION_SERVICE_STOPPED = "connection_service_stopped";
-
-    public DeviceConnectionFactory(@NonNull Activity activity) {
-        this.activity = activity;
+    private volatile static DeviceConnectionFactory factory_instance = null;
+    private DeviceConnectionFactory(@NonNull Context activity) {
+        this.context = activity;
     }
 
+    public synchronized static DeviceConnectionFactory withContext(@NonNull Context context){
+        if (factory_instance ==null){
+            factory_instance = new DeviceConnectionFactory(context);
+        }
+        return factory_instance;
+    }
     public Builder establishConnectionWithDeviceOf(@NonNull String connectionType, @NonNull Parcelable device) throws IoTCommException {
 
         if(TextUtils.isEmpty(connectionType))return null;
 
         else if (connectionType.equals(Constants.BLE)){
-            return new BleDeviceConnectionBuilder(activity, device);
+            return new BleDeviceConnectionBuilder(context, device);
         }
 
         else if (connectionType.equals(Constants.P2P)){
-            return new P2PDeviceConnectionBuilder(activity, device);
+            return new P2PDeviceConnectionBuilder(context, device);
         }
 
         else throw new IoTCommException("Invalid, or Unsupported Remote Communication Type", connectionType);
     }
 
     abstract public static class Builder{
-        Activity activity;
+        Context context1;
         Parcelable device;
 
-        private Builder(Activity activity, Parcelable device) {
+        private Builder(Context activity, Parcelable device) {
 
-            this.activity = activity;
+            this.context1 = activity;
             this.device = device;
         }
 
@@ -62,13 +68,13 @@ public class DeviceConnectionFactory {
         int PORT, timeOut;
 
 
-        private P2PDeviceConnectionBuilder(Activity activity, Parcelable device) {
+        private P2PDeviceConnectionBuilder(Context activity, Parcelable device) {
             super(activity, device);
         }
 
         @Override
         public WirelessDeviceConnector build() {
-            return new P2pConnection(activity, device,  timeOut);
+            return new P2pConnection(context1, device,  timeOut);
         }
 
         @Override
@@ -99,13 +105,13 @@ public class DeviceConnectionFactory {
 
         String UUID_IP;
         int ATT_MTU =0;
-        private BleDeviceConnectionBuilder(Activity activity, Parcelable device) {
+        private BleDeviceConnectionBuilder(Context activity, Parcelable device) {
             super(activity, device);
         }
 
         @Override
         public WirelessDeviceConnector build(){
-                return new BleConnection(activity, device, UUID_IP, ATT_MTU);
+                return new BleConnection(context1, device, UUID_IP, ATT_MTU);
         }
 
         @Override

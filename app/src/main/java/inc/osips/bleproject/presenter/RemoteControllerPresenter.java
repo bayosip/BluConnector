@@ -46,7 +46,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                                      Parcelable device) {
         super(viewInterface);
         activity = viewInterface.getControlContext();
-        DeviceConnectionFactory factory = new DeviceConnectionFactory(viewInterface.getControlContext());
+        DeviceConnectionFactory factory = DeviceConnectionFactory.withContext(viewInterface.getControlContext());
 
         try {
             builder = factory.establishConnectionWithDeviceOf(type, device);
