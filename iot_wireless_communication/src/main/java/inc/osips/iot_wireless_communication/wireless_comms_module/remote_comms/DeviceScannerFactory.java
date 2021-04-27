@@ -63,7 +63,7 @@ public class DeviceScannerFactory {
         abstract public Builder setmScanCallback(@Nullable ScanCallback mScanCallback);
         abstract public Builder setmP2PPeerListListener(@Nullable WifiP2pManager.PeerListListener mPeerListListener);
         abstract public Builder setmNsdDiscoveryListener(@Nullable NsdManager.DiscoveryListener mNsdDiscoveryListener);
-        abstract public Builder setDeviceUniqueID_ServiceType(@Nullable String UUID_IP);
+        abstract public Builder setDeviceUniqueID(@Nullable String UUID_IP);
         abstract public Builder setScanTime(long milliSecs);
     }
 
@@ -94,7 +94,7 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public Builder setDeviceUniqueID_ServiceType(@Nullable String UUID) {
+        public Builder setDeviceUniqueID(@Nullable String UUID) {
             this.baseUUID = UUID;
             return this;
         }
@@ -131,7 +131,7 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public Builder setDeviceUniqueID_ServiceType(@Nullable String ipAddress) {
+        public Builder setDeviceUniqueID(@Nullable String ipAddress) {
 
             this.address = ipAddress;
             return this;
@@ -190,7 +190,7 @@ public class DeviceScannerFactory {
         }
 
         @Override
-        public Builder setDeviceUniqueID_ServiceType(@Nullable String serviceType) {
+        public Builder setDeviceUniqueID(@Nullable String serviceType) {
             this.serviceType = serviceType;
             return this;
         }
