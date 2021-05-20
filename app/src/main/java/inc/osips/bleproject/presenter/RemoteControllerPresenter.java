@@ -49,30 +49,29 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         DeviceConnectionFactory factory = DeviceConnectionFactory.withContext(viewInterface.getControlContext());
 
         try {
-            builder = factory.establishConnectionWithDeviceOf(type, device);
+            builder = factory.getDeviceConnectionBuilder(type, device);
+            if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)){
+                Log.i("Connection type", builder.getDeviceType());
+                this.deviceName = ((BluetoothDevice) device).getName();
+                //viewInterface.getUUIDFromPopUp();
+                intent = new Intent(activity, BleGattService.class);
+                deviceConnector = builder.build();
+                if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
+                    bindBleService();
+            }else if (device instanceof WifiP2pDevice && type.equalsIgnoreCase(Constants.P2P)) {
+                Log.i("Connection", builder.getDeviceType());
+                if (builder !=null){
+                    deviceConnector = builder.build();
+
+                    intent = new Intent(activity, P2pDataTransferService.class);
+                    if(!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
+                        bindBleService();
+                }
+                this.deviceName = ((WifiP2pDevice) device).deviceName;
+            }
         } catch (IoTCommException e) {
             Log.e(TAG, "RemoteControllerPresenter: ",e );
             e.printStackTrace();
-        }
-
-        if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)){
-            Log.i("Connection type", builder.getDeviceType());
-            this.deviceName = ((BluetoothDevice) device).getName();
-            //viewInterface.getUUIDFromPopUp();
-            intent = new Intent(activity, BleGattService.class);
-            deviceConnector = builder.build();
-            if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
-                bindBleService();
-        }else if (device instanceof WifiP2pDevice && type.equalsIgnoreCase(Constants.P2P)) {
-            Log.i("Connection", builder.getDeviceType());
-            if (builder !=null){
-                deviceConnector = builder.build();
-
-                intent = new Intent(activity, P2pDataTransferService.class);
-                if(!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(viewInterface.getControlContext()))
-                    bindBleService();
-            }
-            this.deviceName = ((WifiP2pDevice) device).deviceName;
         }
     }
 

@@ -34,7 +34,6 @@ public class P2pConnection implements WirelessDeviceConnector {
     public P2pConnection(@NonNull Context context, @NonNull final Parcelable p2pDevice, int time_out) {
         this.p2pDevice = (WifiP2pDevice) p2pDevice;
         this.context = context;
-
         if (time_out>1000)
             this.TIME_OUT = time_out;
         initializeServerSocket();

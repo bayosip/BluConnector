@@ -1,7 +1,9 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Parcelable;
 import android.text.TextUtils;
 
@@ -30,7 +32,7 @@ public class DeviceConnectionFactory {
         }
         return factory_instance;
     }
-    public Builder establishConnectionWithDeviceOf(@NonNull String connectionType, @NonNull Parcelable device) throws IoTCommException {
+    public Builder getDeviceConnectionBuilder(@NonNull String connectionType, @NonNull Parcelable device) throws IoTCommException {
 
         if(TextUtils.isEmpty(connectionType))return null;
 
@@ -57,7 +59,13 @@ public class DeviceConnectionFactory {
 
         abstract public WirelessDeviceConnector build();
         abstract public DeviceConnectionFactory.Builder setDeviceUniqueID(String UUID_IP);
-        abstract public String getDeviceType();
+        public String getDeviceType() throws IoTCommException{
+            if(device instanceof BluetoothDevice){
+                return Constants.BLE;
+            }else if (device instanceof WifiP2pDevice) return Constants.P2P;
+
+            else throw  new IoTCommException("This Parcelable object is not recognised", "Error!");
+        }
         abstract public Builder setConnectionTimeOut(int timeOut);
         abstract public Builder setMaxTransmissionUnit(int size);
     }
@@ -82,12 +90,6 @@ public class DeviceConnectionFactory {
             this.UUID_ServiceType = ip;
             return this;
         }
-
-        @Override
-        public String getDeviceType() {
-            return Constants.P2P;
-        }
-
 
         @Override
         public Builder setConnectionTimeOut(int timeOut) {
@@ -119,12 +121,6 @@ public class DeviceConnectionFactory {
             this.UUID_IP = UUID;
             return this;
         }
-
-        @Override
-        public String getDeviceType() {
-            return Constants.BLE;
-        }
-
 
         @Override
         public Builder setConnectionTimeOut(int timeOut) {
