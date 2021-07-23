@@ -11,6 +11,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -67,11 +68,11 @@ public class P2pConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void selectServiceUsingUUID(@NonNull String UUID) {
+    public void selectServiceUsingUUID(@Nullable String deviceAddress, @NonNull String UUID) {
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(String instuctions) {
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddr, String instuctions) {
         p2pService.writeLEDInstructions(instuctions);
     }
 

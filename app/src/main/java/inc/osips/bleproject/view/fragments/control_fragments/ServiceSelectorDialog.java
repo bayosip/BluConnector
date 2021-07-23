@@ -68,6 +68,7 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        //deviceAddr = requireArguments().getString(ADDRESS);
         initialiseWidgets(view);
     }
 
@@ -80,12 +81,8 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
 
         listServices.setLayoutManager(layoutManager);
         listServices.setAdapter(adapter);
-        enterUUID.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                listener.setSelectedServiceUUID(selectedUUID);
-            }
-        });
+        enterUUID.setOnClickListener(view1 ->
+                listener.setSelectedServiceUUID(selectedUUID));
     }
 
     @Override

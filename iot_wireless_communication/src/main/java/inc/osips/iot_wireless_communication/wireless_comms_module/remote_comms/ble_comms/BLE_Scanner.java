@@ -196,6 +196,10 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
     @Override
     public void onScanFailed(int errorCode) {
         Log.e("Scan Failed", "Error Code: " + errorCode);
+
+        if (errorCode == ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED){
+            Util.message(activity, "Please Disable And Re-enable Bluetooth, or Restart Device");
+        }
     }
 
 }

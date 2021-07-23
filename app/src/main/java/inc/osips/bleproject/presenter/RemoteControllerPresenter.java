@@ -14,12 +14,15 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.EditText;
 
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.service.P2pDataTransferService;
 import inc.osips.bleproject.utilities.Constants;
@@ -35,6 +38,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     private String deviceName;
     private DeviceConnectionFactory.Builder builder;
     private Intent intent;
+    private String deviceAddr =null;
     private List<String> listOfRemoteServices = new ArrayList<>();
     private boolean isServiceSelected = false;
 
@@ -52,6 +56,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
             builder = factory.getDeviceConnectionBuilder(type, device);
             if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)){
                 Log.i("Connection type", builder.getDeviceType());
+                this.deviceAddr = ((BluetoothDevice) device).getAddress();
                 this.deviceName = ((BluetoothDevice) device).getName();
                 //viewInterface.getUUIDFromPopUp();
                 intent = new Intent(activity, BleGattService.class);
@@ -90,7 +95,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
             String str = uuid.toLowerCase();
             if (!TextUtils.isEmpty(str)) {
                 isServiceSelected = true;
-                deviceConnector.selectServiceUsingUUID(str);
+                deviceConnector.selectServiceUsingUUID(deviceAddr, str);
             }else {
                 GeneralUtil.message("Please Select A Valid BaseUUID");
             }
@@ -212,6 +217,6 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     }
 
     public void sendInstructionsToDevice(String instruct) {
-        deviceConnector.sendInstructionsToRemoteDevice(instruct);
+        deviceConnector.sendInstructionsToRemoteDevice(deviceAddr,instruct);
     }
 }

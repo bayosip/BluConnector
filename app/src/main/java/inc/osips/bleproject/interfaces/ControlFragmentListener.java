@@ -9,6 +9,6 @@ public interface ControlFragmentListener extends AppActivity {
     void speechInputCall();
     void stopListening();
     void startListening();
-    void setSelectedServiceUUID (String uuid);
+    void setSelectedServiceUUID ( String uuid);
     Activity getFragmentactivity();
 }

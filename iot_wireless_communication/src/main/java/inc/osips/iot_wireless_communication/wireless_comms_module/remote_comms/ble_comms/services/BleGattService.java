@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -36,9 +37,8 @@ import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.u
 
 public class BleGattService extends Service {
     private final static String TAG = BleGattService.class.getSimpleName();
-    private BluetoothGatt bleGatt;
+    private final HashMap<String, BluetoothGatt> multiBleGatt = new HashMap<>();
     private boolean hasService;
-    private volatile List<BluetoothGattService> services = new LinkedList<>();
     private BluetoothManager bManager;
     private BluetoothAdapter bAdapter;
     private boolean isHasService = false;
@@ -46,12 +46,7 @@ public class BleGattService extends Service {
     //  Queue for BLE events
     //  This is needed so that rapid BLE events don't get dropped
     private static final Queue<Object> BleQueue = new LinkedList<>();
-    private int mConnectionState = STATE_DISCONNECTED;
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
     private int GATT_MAX_MTU_SIZE = 517;// default ATT MTU size
-    private static boolean mLedSwitchState = false;
 
     public  String EXTRA_UUID;
 
@@ -80,7 +75,7 @@ public class BleGattService extends Service {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
-        disconnect();
+        //disconnect();
         return super.onUnbind(intent);
     }
 
@@ -96,131 +91,151 @@ public class BleGattService extends Service {
     /**
      * Implements callback methods for GATT events.
      */
-    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
-        /**
-         * This is called on a connection state change (either connection or disconnection)
-         * @param gatt The GATT database object
-         * @param status Status of the event
-         * @param newState New state (connected or disconnected)
-         */
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            switch (newState){
-                case BluetoothProfile.STATE_CONNECTED:
-                    broadcastUpdate(Constants.ACTION_CONNECTED);
-                    MyLogData += "Connected to GATT server.\n";
-                    Log.i(TAG, "Connected to GATT server.");
-                    // Attempts to discover services after successful connection.
-                    MyLogData +="Attempting to start service discovery:" +
-                            bleGatt.discoverServices() +"\n";
-                    Log.i(TAG, "Attempting to start service discovery:" +
-                            bleGatt.discoverServices());
-                    break;
-                case BluetoothProfile.STATE_DISCONNECTED:
-                    Log.i(TAG, "Disconnected from GATT server.");
-                    MyLogData += "Disconnected from GATT server.\n";
-                    broadcastUpdate(Constants.ACTION_DISCONNECTED);
-                    break;
-                case BluetoothProfile.STATE_DISCONNECTING:
-                    Util.message(BleGattService.this,getString(R.string.disconnecting));
-                    break;
+
+    private BluetoothGattCallback createGattCallBack(final String address) {
+        return new BluetoothGattCallback() {
+            /**
+             * This is called on a connection state change (either connection or disconnection)
+             *
+             * @param gatt     The GATT database object
+             * @param status   Status of the event
+             * @param newState New state (connected or disconnected)
+             */
+            private BluetoothGatt bleGatt;
+            @Override
+            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                if(status == BluetoothGatt.GATT_SUCCESS){
+                    switch (newState) {
+                        case BluetoothProfile.STATE_CONNECTED:
+                            if (gatt!=null) {
+                                gatt.requestMtu(GATT_MAX_MTU_SIZE);
+                                bleGatt = gatt;
+
+                            multiBleGatt.put(address, gatt);
+                            broadcastUpdate(Constants.ACTION_CONNECTED);
+                            MyLogData += "Connected to GATT server.\n";
+                            Log.i(TAG, "Connected to GATT server.");
+                            // Attempts to discover services after successful connection.
+                            MyLogData += "Attempting to start service discovery:" +
+                                    gatt.discoverServices() + "\n";
+                            Log.i(TAG, MyLogData);
+                            }
+                            break;
+                        case BluetoothProfile.STATE_DISCONNECTED:
+                            Log.i(TAG, "Disconnected from GATT server.");
+                            MyLogData += "Disconnected from GATT server.\n";
+                            broadcastUpdate(Constants.ACTION_DISCONNECTED);
+                            gatt.close();
+                            break;
+                        case BluetoothProfile.STATE_DISCONNECTING:
+                            Util.message(BleGattService.this, getString(R.string.disconnecting));
+                            break;
+                    }
+                }else {
+                    Util.message(BleGattService.this,
+                            "Connection rejected or device too far");
+                    gatt.close();
+                }
             }
-        }
 
-        /**
-         * This is called when service discovery has completed.
-         * It broadcasts an update to the main activity.
-         * @param gatt The GATT database object
-         * @param status Status of whether the discovery was successful.
-         */
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (!services.isEmpty() || services.size() >0)
-                  services.clear();
-
-                services.addAll(gatt.getServices());
-                //getGattServices(services);
+            /**
+             * This is called when service discovery has completed.
+             * It broadcasts an update to the main activity.
+             *
+             * @param gatt   The GATT database object
+             * @param status Status of whether the discovery was successful.
+             */
+            @Override
+            public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    //getGattServices(services);
 
                 /*BluetoothGattService myGattService = gatt.getService(UUID.fromString(serviceUUID));
                 myWriteCharx = myGattService.getCharacteristic(UUID.fromString(writeUUID));
                 myReadCharx = myGattService.getCharacteristic(UUID.fromString(readUUID));*/
-                Log.w(TAG, "Services Discovered");
-                broadcastUpdate(Constants.ACTION_BLE_SERVICES_DISCOVERED, gatt.getServices());
-                //readBleCharacteristic();
-            } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
-                MyLogData += "onServicesDiscovered received: " + status+ "\n";
-            }
-        }
-
-        private void handleBleQueue() {
-            if(BleQueue.size() > 0) {
-                // Determine which type of event is next and fire it off
-                if (BleQueue.element() instanceof BluetoothGattDescriptor) {
-                    bleGatt.writeDescriptor((BluetoothGattDescriptor) BleQueue.element());
-                } else if (BleQueue.element() instanceof BluetoothGattCharacteristic) {
-                    bleGatt.writeCharacteristic((BluetoothGattCharacteristic) BleQueue.element());
+                    Log.w(TAG, "Services Discovered");
+                    broadcastUpdate(Constants.ACTION_BLE_SERVICES_DISCOVERED, gatt.getServices());
+                    //readBleCharacteristic();
+                } else {
+                    Log.w(TAG, "onServicesDiscovered received: " + status);
+                    MyLogData += "onServicesDiscovered received: " + status + "\n";
                 }
             }
-        }
 
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
-                Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
-                + characteristic.getStringValue(0));
+
+            private void handleBleQueue() {
+                if(BleQueue.size() > 0) {
+                    // Determine which type of event is next and fire it off
+                    if (BleQueue.element() instanceof BluetoothGattDescriptor) {
+                        bleGatt.writeDescriptor((BluetoothGattDescriptor) BleQueue.element());
+                    } else if (BleQueue.element() instanceof BluetoothGattCharacteristic) {
+                        bleGatt.writeCharacteristic((BluetoothGattCharacteristic) BleQueue.element());
+                    }
+                }
             }
-        }
 
-        /**
-         * This is called when a characteristic write has completed. Is uses a queue to determine if
-         * additional BLE actions are still pending and launches the next one if there are.
-         * @param gatt The GATT database object
-         * @param characteristic The characteristic that was written.
-         * @param status Status of whether the write was successful.
-         */
-        @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt,
-                                          BluetoothGattCharacteristic characteristic,
-                                          int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                // Pop the item that was written from the queue
-                BleQueue.remove();
-                // See if there are more items in the BLE queues
-                handleBleQueue();
+            @Override
+            public void onCharacteristicRead(BluetoothGatt gatt,
+                                             BluetoothGattCharacteristic characteristic, int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
+                    Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
+                            + characteristic.getStringValue(0));
+                }
             }
-        }
 
-        /**
-         * This is called when a characteristic with notify set changes.
-         * It broadcasts an update to the main activity with the changed data.
-         * @param gatt The GATT database object
-         * @param characteristic The characteristic that was changed
-         */
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            // Get the UUID of the characteristic that changed
-            String uuid = characteristic.getUuid().toString();
-            mydata= characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT32,0);
-            // Tell the activity that new car data is available
-            broadcastUpdate(Constants.ACTION_DATA_AVAILABLE);
-        }
-
-        @Override
-        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-            Log.i(TAG, "onMtuChanged: ATT MTU changed to" + mtu
-                    +", success: "+ status);
-            if (status == BluetoothGatt.GATT_SUCCESS){
-                sendBroadcast(new Intent(WirelessDeviceConnector.MTU_CHANGE_SUCCESS));
-            }else {
-                sendBroadcast(new Intent(WirelessDeviceConnector.MTU_CHANGE_FAILURE));
+            /**
+             * This is called when a characteristic write has completed. Is uses a queue to determine if
+             * additional BLE actions are still pending and launches the next one if there are.
+             * @param gatt The GATT database object
+             * @param characteristic The characteristic that was written.
+             * @param status Status of whether the write was successful.
+             */
+            @Override
+            public void onCharacteristicWrite(BluetoothGatt gatt,
+                                              BluetoothGattCharacteristic characteristic,
+                                              int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    // Pop the item that was written from the queue
+                    BleQueue.remove();
+                    // See if there are more items in the BLE queues
+                    handleBleQueue();
+                }else {
+                    boolean flag =status==BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH;
+                    Log.e(TAG, "onCharacteristicWrite: Failed with GATT_INVALID_ATTRIBUTE_LENGTH ="
+                            + flag);
+                    Util.message(BleGattService.this, "Write failed! Send smaller bytes");
+                }
             }
-        }
-    };
+
+            /**
+             * This is called when a characteristic with notify set changes.
+             * It broadcasts an update to the main activity with the changed data.
+             * @param gatt The GATT database object
+             * @param characteristic The characteristic that was changed
+             */
+            @Override
+            public void onCharacteristicChanged(BluetoothGatt gatt,
+                                                BluetoothGattCharacteristic characteristic) {
+                // Get the UUID of the characteristic that changed
+                String uuid = characteristic.getUuid().toString();
+                mydata= characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT32,0);
+                // Tell the activity that new car data is available
+                broadcastUpdate(Constants.ACTION_DATA_AVAILABLE);
+            }
+
+            @Override
+            public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+                Log.i(TAG, "onMtuChanged: ATT MTU changed to" + mtu
+                        +", success: "+ status);
+                if (status == BluetoothGatt.GATT_SUCCESS){
+                    sendBroadcast(new Intent(WirelessDeviceConnector.MTU_CHANGE_SUCCESS));
+                }else {
+                    sendBroadcast(new Intent(WirelessDeviceConnector.MTU_CHANGE_FAILURE));
+                }
+            }
+        };
+    }
 
     /**
      * Sends a broadcast to the listener in the main activity.
@@ -314,48 +329,51 @@ public class BleGattService extends Service {
         if(!TextUtils.isEmpty(serviceUUID))
             this.serviceUUID = serviceUUID;
 
-        if (bAdapter == null || device == null) {
+        if (bAdapter == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
-        if(bleGatt !=null) {
+        if(multiBleGatt.containsKey(device.getAddress())) {
             //try to reconnect to previously connected device
             Log.i(TAG, "Trying to use an existing mBluetoothGatt for connection.");
             MyLogData += "Trying to use an existing mBluetoothGatt for connection.\n";
-            return bleGatt.connect();
+            BluetoothGatt gatt = multiBleGatt.get(device.getAddress());
+            assert gatt != null;
+            return gatt.connect();
         }
-        bleGatt = device.connectGatt(this, false, mGattCallback);
-        if (bleGatt!=null)
-            bleGatt.requestMtu(this.GATT_MAX_MTU_SIZE);
+        device.connectGatt(this, false, createGattCallBack(device.getAddress()));
+
         Log.i(TAG, "Trying to create a new connection.");
         MyLogData +="Trying to create a new connection.\n";
         return true;
     }
 
-    public void selectServiceFromUUID (@NonNull String UUID){
+    public void selectServiceFromUUID (@NonNull String deviceAddr, @NonNull String UUID){
         this.serviceUUID = UUID;
-        if (!getGattServices()){
+        if (!getGattServices(deviceAddr)){
             Util.message(BleGattService.this, "No service with selected UUID!");
         }else {
             Log.d(TAG, "selectServiceFromUUID: service uuid: " + serviceUUID + " connected");
         }
     }
 
-
     /*
-    * Loop through the discovered ble services finds the service matching
-    * */
+     * Loop through the discovered ble services finds the service matching
+     * */
 
-    private boolean getGattServices() {
-        if (this.services == null || this.services.isEmpty()){
+    private boolean getGattServices(@NonNull String deviceAddr) {
+        BluetoothGatt gatt = multiBleGatt.get(deviceAddr);
+
+        assert gatt != null;
+        if ( gatt.getServices() == null ||gatt.getServices().isEmpty()){
             stopSelf();
             return false;
         }
-
+        List<BluetoothGattService> services = gatt.getServices();
         String uuid ;
 
         // Loops through available GATT Services.
-        for (BluetoothGattService gattService : this.services) {
+        for (BluetoothGattService gattService : services) {
 
             uuid = gattService.getUuid().toString();
             Log.d(TAG, "getGattServices: "+ uuid);
@@ -372,11 +390,11 @@ public class BleGattService extends Service {
                     }
                     else if (gattCharacteristic.getProperties()==BluetoothGattCharacteristic.PROPERTY_READ){
                         myReadCharx = gattCharacteristic;
-                        readBleCharacteristic();
+                        readBleCharacteristic(gatt);
                         Log.i(TAG, "getGattServices: Read charX discovered");
                     }else if (gattCharacteristic.getProperties() == BluetoothGattCharacteristic.PROPERTY_NOTIFY){
                         myNotifycharx = gattCharacteristic;
-                        setCharacteristicNotification(true);
+                        setCharacteristicNotification(gatt,true);
                         Log.i(TAG, "getGattServices: Notify charX discovered");
                     }
                 }
@@ -384,11 +402,12 @@ public class BleGattService extends Service {
                 break;
             }
         }
-
         if(!isHasService)stopSelf();
 
         return isHasService;
     }
+
+
 
     /**
      * Disconnects an existing connection or cancel a pending connection. The disconnection result
@@ -396,14 +415,14 @@ public class BleGattService extends Service {
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      * callback.
      */
-    private void disconnect() {
+    private void disconnect(BluetoothGatt bleGatt) {
         if (bleGatt== null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             Util.message( this,"No Device Connected!");
         }
         else {
             bleGatt.disconnect();
-            close();
+            close(bleGatt);
             bleGatt = null;
             broadcastUpdate(Constants.ACTION_DISCONNECTED);
         }
@@ -412,19 +431,20 @@ public class BleGattService extends Service {
      * After using a given BLE device, the App must call this method to ensure resources are
      * released properly.
      */
-    private void close() {
+    private void close(BluetoothGatt bleGatt) {
         if (bleGatt == null) {
             return;
         }
         bleGatt.close();
     }
 
-    public void sendInstructionsToConnectedDevice(String instructions) {
+    public void sendInstructionsToConnectedDevice(String deviceAddr, String instructions) {
+        BluetoothGatt bleGatt = multiBleGatt.get(deviceAddr);
         try {
             if (bleGatt != null) {
                 byte[] bytes = instructions.getBytes();
                 myWriteCharx.setValue(instructions);
-                writeBleCharacteristic();
+                writeBleCharacteristic(bleGatt);
             }
         }catch (NullPointerException e)
         {
@@ -441,7 +461,7 @@ public class BleGattService extends Service {
     /**
      * Request a write on a given {@code BluetoothGattCharacteristic}.
      */
-    private void writeBleCharacteristic() {
+    private void writeBleCharacteristic(BluetoothGatt bleGatt) {
         try{
             BleQueue.add(myWriteCharx);
             if (BleQueue.size() == 1) {
@@ -462,7 +482,7 @@ public class BleGattService extends Service {
     /**
      * This method is used to read the state of the LED from the device
      */
-    public void readBleCharacteristic() {
+    public void readBleCharacteristic(BluetoothGatt bleGatt) {
         if (bAdapter == null || bleGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
@@ -475,7 +495,7 @@ public class BleGattService extends Service {
      *
      * @param enabled        If true, enable notification.  False otherwise.
      */
-    private void setCharacteristicNotification(boolean enabled) {
+    private void setCharacteristicNotification(BluetoothGatt bleGatt, boolean enabled) {
         if (myNotifycharx!= null)
             bleGatt.setCharacteristicNotification(myNotifycharx, enabled);
     }

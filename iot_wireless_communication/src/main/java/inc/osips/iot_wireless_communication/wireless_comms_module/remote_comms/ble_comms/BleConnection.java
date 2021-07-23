@@ -47,7 +47,6 @@ public class BleConnection implements WirelessDeviceConnector {
 
     @Override
     public void connectToDeviceWithDeviceInfoFrom(Intent intent) {
-
     }
 
     @Override
@@ -57,9 +56,7 @@ public class BleConnection implements WirelessDeviceConnector {
 
     //API 21 and Above
     private void ConnectToBleDevice(){
-        if (tryBLEConnection()) {
-            return;
-        } else {
+        if (!tryBLEConnection()) {
             Util.message(context,"Cannot Connect to Device");
             context.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
         }
@@ -70,8 +67,7 @@ public class BleConnection implements WirelessDeviceConnector {
 
         if (gattService != null){
             if(gattService.init()){
-                final boolean result = gattService.connect(bleDevice, baseUUID, GATT_MAX_MTU_SIZE);
-                return result;
+                return gattService.connect(bleDevice, baseUUID, GATT_MAX_MTU_SIZE);
             }
             return false;
         }
@@ -82,16 +78,18 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void selectServiceUsingUUID(@NonNull String UUID) {
-        gattService.selectServiceFromUUID(UUID);
+    public void selectServiceUsingUUID(@Nullable String deviceAddress, @NonNull String UUID) {
+        assert deviceAddress != null;
+        gattService.selectServiceFromUUID(deviceAddress,UUID);
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(String instuctions) {
-        gattService.sendInstructionsToConnectedDevice(instuctions);
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instuctions)
+    {
+        gattService.sendInstructionsToConnectedDevice(deviceAddress, instuctions);
     }
 
-    private ServiceConnection mConnection =
+    private final ServiceConnection mConnection =
             /*
              * Defines callbacks for service binding, passed to bindService()
              */
