@@ -175,14 +175,8 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
 
     @Override
     public void removeUUIDPopUp(){
-        if (dialog!=null){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    dialog.dismiss();
-                }
-            });
-
+        if (dialog!=null && dialog.isVisible()|dialog.isAdded()){
+            runOnUiThread(() -> dialog.dismiss());
         }
     }
 
@@ -194,22 +188,12 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         bar.setDisplayHomeAsUpEnabled(false);
 
         ImageButton changeConfig = findViewById(R.id.buttonConfig);
-        changeConfig.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getButtonConfigPopUp();
-            }
-        });
+        changeConfig.setOnClickListener(view -> getButtonConfigPopUp());
         disconnectButton = findViewById(R.id.buttonDisconnect);
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tryToDisconnectFromDevice();
-                    }
-                });
+                runOnUiThread(() -> tryToDisconnectFromDevice());
             }
         });
         myDeviceName = findViewById(R.id.textViewDeviceName);
@@ -239,12 +223,9 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
                 }
                 dialog.dismiss();
             }
-        }).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                presenter.unbindBleService();
-                dialog.dismiss();
-            }
+        }).setPositiveButton("Yes", (dialog, which) -> {
+            presenter.unbindBleService();
+            dialog.dismiss();
         });
         alertDialog.show();
 

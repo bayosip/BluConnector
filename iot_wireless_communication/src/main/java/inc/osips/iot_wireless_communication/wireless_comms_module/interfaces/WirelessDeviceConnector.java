@@ -6,6 +6,8 @@ import android.content.ServiceConnection;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.UUID;
+
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 
 public interface WirelessDeviceConnector {
@@ -16,5 +18,7 @@ public interface WirelessDeviceConnector {
     ServiceConnection getServiceConnection();
     void selectServiceUsingUUID (@Nullable String deviceAddress, @NonNull String UUID);
     void connectToDeviceWithDeviceInfoFrom(@NonNull Intent intent);
-    void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instuctions);
+    void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions);
+    void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
+                                        @Nullable UUID charxDescriptor, @NonNull String instructions);
 }

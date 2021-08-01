@@ -1,5 +1,6 @@
 package inc.osips.bleproject.view.fragments.control_fragments;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.os.Build;
@@ -24,6 +25,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
 
 //public class VoiceControlFragment extends Fragment implements VCPopUpWindow {
 public class VoiceControlFragment extends Fragment implements SpeechInitCallBack {
@@ -73,14 +81,33 @@ public class VoiceControlFragment extends Fragment implements SpeechInitCallBack
                 ViewGroup.LayoutParams.WRAP_CONTENT, true);
         micImage = vcContainer.findViewById(R.id.imageViewMic);
 
-        buttonSpeak.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                fragListner.startListening();
-                initSpeechControlFeature(GeneralUtil.isNetworkConnected(getContext()));
-            }
+        buttonSpeak.setOnClickListener(v1 -> {
+            fragListner.startListening();
+            accessSpeechToText();
         });
     }
+
+    private void accessSpeechToText() {
+        Dexter.withActivity(requireActivity())
+                .withPermission(Manifest.permission.RECORD_AUDIO)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        initSpeechControlFeature(GeneralUtil.isNetworkConnected(getContext()));
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission,
+                                                                   PermissionToken token) {
+                        token.cancelPermissionRequest();
+                    }
+                }).check();
+    }
+
 
     public void closePopUp(){
         if (vcPopUp !=null){

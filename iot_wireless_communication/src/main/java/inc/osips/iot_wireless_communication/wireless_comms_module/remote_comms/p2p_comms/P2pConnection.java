@@ -1,6 +1,5 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +14,7 @@ import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.UUID;
 
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
@@ -72,10 +72,15 @@ public class P2pConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddr, String instuctions) {
-        p2pService.writeLEDInstructions(instuctions);
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddr, @NonNull String instructions) {
+        p2pService.writeInstructions(instructions);
     }
 
+    @Override
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
+                                               @Nullable UUID charxDescriptor, @NonNull String instructions) {
+        p2pService.writeInstructions(instructions);
+    }
 
     private ServiceConnection mConnection =
             /*

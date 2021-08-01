@@ -166,7 +166,7 @@ public class GeneralUtil {
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 v.getLayoutParams().height = interpolatedTime == 1
-                        ? ViewGroup.LayoutParams.WRAP_CONTENT
+                        ? 550
                         : (int)(targetHeight * interpolatedTime);
                 v.requestLayout();
             }

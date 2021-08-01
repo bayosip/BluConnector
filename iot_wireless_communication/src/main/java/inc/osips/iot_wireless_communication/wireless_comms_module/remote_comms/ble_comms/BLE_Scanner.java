@@ -117,12 +117,7 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
                 filters.add(myDevice);
             }
             //start scan for scan_time, then stop
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    scanStop();
-                }
-            }, SCAN_TIME);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> scanStop(), SCAN_TIME);
 
             scanState = true;
             bluetoothLeScanner.startScan(filters, settings, mScanCallback);
@@ -138,12 +133,7 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
     private void scanForAllBLEDevices(){
         if (!scanState){
             //start scan for scan_time, then stop
-            Util.getHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    scanStop();
-                }
-            }, SCAN_TIME);
+            Util.getHandler().postDelayed(() -> scanStop(), SCAN_TIME);
 
             scanState = true;
             bluetoothLeScanner.startScan(null, settings, mScanCallback);

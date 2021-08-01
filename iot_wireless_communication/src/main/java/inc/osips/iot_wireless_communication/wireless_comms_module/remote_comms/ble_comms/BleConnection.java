@@ -15,6 +15,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.UUID;
+
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
@@ -84,9 +86,15 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instuctions)
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions)
     {
-        gattService.sendInstructionsToConnectedDevice(deviceAddress, instuctions);
+        gattService.sendInstructionsToConnectedDevice(deviceAddress, null, instructions);
+    }
+
+    @Override
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
+                                               @Nullable UUID charxDescriptor, @NonNull String instructions) {
+        gattService.sendInstructionsToConnectedDevice(deviceAddress, charxDescriptor, instructions);
     }
 
     private final ServiceConnection mConnection =

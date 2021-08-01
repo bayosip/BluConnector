@@ -1,5 +1,6 @@
 package inc.osips.bleproject.view.fragments.home_fragments;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,6 +18,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -89,20 +97,38 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
         discoveredDevices.setLayoutManager(layoutManager);
         discoveredDevices.setAdapter(adapter);
 
-        searchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(!isFirstScan)
-                    resizeForSearch();
-                if(!activity.isAlreadyScanning()){
-                    launchRingDialog();
-                    if (remoteDevices.size()>0){
-                        remoteDevices.clear();
-                        adapter.notifyDataSetChanged();
-                    }
-                }
+        searchButton.setOnClickListener(v -> {
+            if(!isFirstScan)
+                resizeForSearch();
+            if(!activity.isAlreadyScanning()){
+                accessRemoteScanning();
             }
         });
+    }
+
+    private void accessRemoteScanning() {
+        Dexter.withActivity(requireActivity())
+                .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        launchRingDialog();
+                        if (remoteDevices.size()>0){
+                            remoteDevices.clear();
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission,
+                                                                   PermissionToken token) {
+                        token.cancelPermissionRequest();
+                    }
+                }).check();
     }
 
     private void resizeForIncomingListOfDevice(){
@@ -125,28 +151,20 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
         ringProgressDialog = ProgressDialog.show(activity,
                 "Please wait ...", "Connecting ...", true);
         ringProgressDialog.setCancelable(true);
-        ringProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialogInterface) {
-                activity.stopDeviceScanning();
-            }
-        });
+        ringProgressDialog.setOnCancelListener(dialogInterface -> activity.stopDeviceScanning());
 
         //Thread thread = new Thread();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    activity.startDeviceScanning();
-                } catch (Exception e) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            GeneralUtil.message(
-                                    "Cannot Scan for bluetooth Le device");
-                        }
-                    });
-                }
+        new Thread(() -> {
+            try {
+                activity.startDeviceScanning();
+            } catch (Exception e) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        GeneralUtil.message(
+                                "Cannot Scan for bluetooth Le device");
+                    }
+                });
             }
         }).start();
     }
@@ -161,21 +179,18 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
     }
 
     public void progressFromScan(final List<Devices> devices) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (ringProgressDialog!=null && ringProgressDialog.isShowing())
-                        ringProgressDialog.dismiss();
-                    activity.stopDeviceScanning();
-                    if (ringProgressDialog!= null && !ringProgressDialog.isShowing()) {
-                        if (devices.size() > 0) {
-                            isFirstScan = false;
-                            resizeForIncomingListOfDevice();
-                            remoteDevices.clear();
-                            remoteDevices.addAll(devices);
-                            adapter.notifyDataSetChanged();
-                            //discoveredDevices.
-                        }
+            activity.runOnUiThread(() -> {
+                if (ringProgressDialog!=null && ringProgressDialog.isShowing())
+                    ringProgressDialog.dismiss();
+                activity.stopDeviceScanning();
+                if (ringProgressDialog!= null && !ringProgressDialog.isShowing()) {
+                    if (devices.size() > 0) {
+                        isFirstScan = false;
+                        resizeForIncomingListOfDevice();
+                        remoteDevices.clear();
+                        remoteDevices.addAll(devices);
+                        adapter.notifyDataSetChanged();
+                        //discoveredDevices.
                     }
                 }
             });
