@@ -137,7 +137,15 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     }
 
     public String getDeviceName() {
-        return deviceName;
+        StringBuilder names = new StringBuilder();
+        if (type.equalsIgnoreCase(Constants.BLE)){
+            for (Parcelable p: listDevice){
+                BluetoothDevice device = (BluetoothDevice)p;
+                names.append(device.getName());
+                names.append(", ");
+            }
+        }else return deviceName;
+        return names.toString();
     }
 
     public void unbindBleService(){
