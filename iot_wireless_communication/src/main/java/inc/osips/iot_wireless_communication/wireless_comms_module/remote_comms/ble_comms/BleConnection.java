@@ -15,6 +15,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.UUID;
+
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
@@ -26,18 +28,16 @@ public class BleConnection implements WirelessDeviceConnector {
     private BluetoothDevice bleDevice;
     private final Context context;
     private String baseUUID;
-    private int GATT_MAX_MTU_SIZE = 0;
 
     private boolean mBound = false;
     private static final String TAG = "BLE Connection";
 
     public BleConnection(@NonNull Context context, @NonNull Parcelable bleDevice,
-                         @Nullable String baseUUID, int GATT_MAX_MTU_SIZE) {
+                         @Nullable String baseUUID) {
         if (!TextUtils.isEmpty(baseUUID))
             this.baseUUID = baseUUID;
         this.bleDevice = (BluetoothDevice) bleDevice;
         this.context = context;
-        this.GATT_MAX_MTU_SIZE = GATT_MAX_MTU_SIZE;
     }
 
     @Override
@@ -47,7 +47,6 @@ public class BleConnection implements WirelessDeviceConnector {
 
     @Override
     public void connectToDeviceWithDeviceInfoFrom(Intent intent) {
-
     }
 
     @Override
@@ -56,42 +55,55 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     //API 21 and Above
-    private void ConnectToBleDevice(){
-        if (tryBLEConnection()) {
-            return;
-        } else {
+    private void ConnectToFirstBleDevice(){
+        if (!tryBLEConnection(bleDevice, baseUUID)) {
             Util.message(context,"Cannot Connect to Device");
             context.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
         }
     }
 
+    @Override
+    public void connectAnotherDeviceSimultaneously(@NonNull Parcelable device,
+                                                   @Nullable String serviceUUID) {
+        if (!tryBLEConnection(device, serviceUUID)) {
+            Util.message(context,"Cannot Connect to Device -> " +((BluetoothDevice)device).getName());
+            context.sendBroadcast(new Intent(DeviceConnectionFactory.FAILED_DEVICE_CONNECTION));
+        }
+    }
 
-    private boolean tryBLEConnection() {
-
+    private boolean tryBLEConnection(@NonNull Parcelable device,
+                                     @Nullable String serviceUUID) {
         if (gattService != null){
             if(gattService.init()){
-                final boolean result = gattService.connect(bleDevice, baseUUID, GATT_MAX_MTU_SIZE);
-                return result;
+                return gattService.connect((BluetoothDevice) device, serviceUUID);
             }
             return false;
         }
         else{
-            Log.w(TAG, "no uuid");
+            Log.w(TAG, "No connection established");
             return false;
         }
     }
 
     @Override
-    public void selectServiceUsingUUID(@NonNull String UUID) {
-        gattService.selectServiceFromUUID(UUID);
+    public void selectServiceUsingUUID(@Nullable String deviceAddress, @NonNull String UUID) {
+        assert deviceAddress != null;
+        gattService.selectServiceFromUUID(deviceAddress,UUID);
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(String instuctions) {
-        gattService.sendInstructionsToConnectedDevice(instuctions);
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions)
+    {
+        gattService.sendInstructionsToConnectedDevice(deviceAddress, null, instructions);
     }
 
-    private ServiceConnection mConnection =
+    @Override
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
+                                               @Nullable UUID charxDescriptor, @NonNull String instructions) {
+        gattService.sendInstructionsToConnectedDevice(deviceAddress, charxDescriptor, instructions);
+    }
+
+    private final ServiceConnection mConnection =
             /*
              * Defines callbacks for service binding, passed to bindService()
              */
@@ -104,7 +116,7 @@ public class BleConnection implements WirelessDeviceConnector {
                     gattService = binder.getService();
                     mBound = true;
                     if (Build.VERSION.SDK_INT >= 21) {
-                        ConnectToBleDevice();
+                        ConnectToFirstBleDevice();
                     } else {
                         Util.message(context,"API too low for App!");
                     }

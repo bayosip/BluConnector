@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import at.markushi.ui.CircleButton;
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.utilities.Constants;
+import inc.osips.bleproject.utilities.GeneralUtil;
 
 public class CommChooserFragment extends BaseFragment {
 
@@ -33,30 +34,28 @@ public class CommChooserFragment extends BaseFragment {
     }
 
     public void initiateWidget(View v){
-        CircleButton selectWIFI, selectBLE;
+        CircleButton selectP2P, selectBLE;
         selectBLE = v.findViewById(R.id.buttonSelectBLE);
-        selectWIFI = v.findViewById(R.id.buttonSelectWLAN);
+        selectP2P = v.findViewById(R.id.buttonSelectP2P);
 
-        selectWIFI.setOnClickListener(listener);
+        selectP2P.setOnClickListener(listener);
         selectBLE.setOnClickListener(listener);
     }
 
-    private Button.OnClickListener listener =  new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            String commsType = null;
-            switch (view.getId()){
-                case R.id.buttonSelectBLE:
-                    commsType = Constants.BLE;
-                    break;
-                case R.id.buttonSelectP2P:
-                    commsType = Constants.P2P;
-                    break;
-                case  R.id.buttonSelectWLAN:
-                    commsType = Constants.WLAN;
-                    break;
-            }
-            activity.changeFragmentToScannerFrag(commsType);
+    private final Button.OnClickListener listener = view -> {
+        String commsType = null;
+        switch (view.getId()){
+            case R.id.buttonSelectBLE:
+                commsType = Constants.BLE;
+                break;
+            case R.id.buttonSelectP2P:
+                commsType = Constants.P2P;
+                break;
+            case  R.id.buttonSelectWLAN:
+                commsType = Constants.WLAN;
+                GeneralUtil.message("Coming soon...");
+                return;
         }
+        activity.changeFragmentToScannerFrag(commsType);
     };
 }

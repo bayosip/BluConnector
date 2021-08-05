@@ -64,7 +64,6 @@ public class DevicesViewHolderAdapter extends RecyclerView.Adapter<DevicesViewHo
     public void onBindViewHolder(@NonNull DevicesViewHolder holder, int position) {
         if(isListOfServices) {
             holder.setServiceItems(discoveredServices);
-
             Log.w(TAG, "onBindViewHolder: pos - " + position + " vs selectedPos - "+ selectedPos  );
             holder.changeItemBackground(position == selectedPos);
         }else {

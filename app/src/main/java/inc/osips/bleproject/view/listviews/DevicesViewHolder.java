@@ -47,11 +47,11 @@ public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.O
 
     public void setItems(List<Devices> discoveredDevices){
         this.devices = discoveredDevices;
-        deviceName.setText(discoveredDevices.get(getAdapterPosition()).getDeviceName());
-        deviceAddress.setText(discoveredDevices.get(getAdapterPosition()).getDeviceAddress());
+        deviceName.setText(discoveredDevices.get(getAbsoluteAdapterPosition()).getDeviceName());
+        deviceAddress.setText(discoveredDevices.get(getAbsoluteAdapterPosition()).getDeviceAddress());
     }
     public void setServiceItems(List<String> discoveredServices){
-        deviceName.setText(discoveredServices.get(getAdapterPosition()));
+        deviceName.setText(discoveredServices.get(getAbsoluteAdapterPosition()));
     }
 
     public void setDeviceListener(OnDiscoveredDevicesClickListener listener) {
@@ -86,18 +86,14 @@ public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.O
     @Override
     public void onClick(View view) {
         if(isRemoteServices){
-            refresh.setSelectedPosition(getAdapterPosition());
-            listener1.selectAServiceWith(getAdapterPosition());
+            refresh.setSelectedPosition(getAbsoluteAdapterPosition());
+            listener1.selectAServiceWith(getAbsoluteAdapterPosition());
         }else {
-            if (getAdapterPosition() < devices.size())
-                listener.selectDeviceToConnectTo(devices.get(getAdapterPosition()));
+            changeItemBackground(true);
+            if (getAbsoluteAdapterPosition() < devices.size())
+                listener.selectDevicesToConnectTo(devices.get(getAbsoluteAdapterPosition()));
 
-            GeneralUtil.getHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    deviceName.setTextColor(ContextCompat.getColor(context, R.color.title_color));
-                }
-            }, 200);
+            //GeneralUtil.getHandler().postDelayed(() -> deviceName.setTextColor(ContextCompat.getColor(context, R.color.title_color)), 200);
         }
     }
 }

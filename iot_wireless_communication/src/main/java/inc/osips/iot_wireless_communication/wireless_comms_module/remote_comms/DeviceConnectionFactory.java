@@ -32,7 +32,8 @@ public class DeviceConnectionFactory {
         }
         return factory_instance;
     }
-    public Builder getDeviceConnectionBuilder(@NonNull String connectionType, @NonNull Parcelable device) throws IoTCommException {
+    public Builder getDeviceConnectionBuilder(@NonNull String connectionType,
+                                              @NonNull Parcelable device) throws IoTCommException {
 
         if(TextUtils.isEmpty(connectionType))return null;
 
@@ -67,7 +68,6 @@ public class DeviceConnectionFactory {
             else throw  new IoTCommException("This Parcelable object is not recognised", "Error!");
         }
         abstract public Builder setConnectionTimeOut(int timeOut);
-        abstract public Builder setMaxTransmissionUnit(int size);
     }
 
     private class P2PDeviceConnectionBuilder extends Builder{
@@ -96,24 +96,18 @@ public class DeviceConnectionFactory {
             this.timeOut = timeOut;
             return this;
         }
-
-        @Override
-        public Builder setMaxTransmissionUnit(int size) {
-            return this;
-        }
     }
 
     private class BleDeviceConnectionBuilder extends Builder{
 
         String UUID_IP;
-        int ATT_MTU =0;
         private BleDeviceConnectionBuilder(Context activity, Parcelable device) {
             super(activity, device);
         }
 
         @Override
         public WirelessDeviceConnector build(){
-                return new BleConnection(context1, device, UUID_IP, ATT_MTU);
+                return new BleConnection(context1, device, UUID_IP);
         }
 
         @Override
@@ -127,11 +121,6 @@ public class DeviceConnectionFactory {
             return this;
         }
 
-        @Override
-        public Builder setMaxTransmissionUnit(int size) {
-            ATT_MTU = size;
-            return this;
-        }
     }
 
     private class LocalWiFiServiceConnectionBuilder extends Builder{
@@ -157,11 +146,6 @@ public class DeviceConnectionFactory {
 
         @Override
         public Builder setConnectionTimeOut(int timeOut) {
-            return null;
-        }
-
-        @Override
-        public Builder setMaxTransmissionUnit(int size) {
             return null;
         }
     }

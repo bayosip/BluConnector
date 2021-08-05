@@ -101,7 +101,7 @@ public class P2pDataTransferService extends Service {
         return  isP2pConnected;
     }
 
-    public void writeLEDInstructions(String instruct) {
+    public void writeInstructions(String instruct) {
         if(sendReceive!=null)
             sendReceive.write(instruct.getBytes());
     }

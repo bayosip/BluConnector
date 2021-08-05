@@ -34,7 +34,7 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     private boolean scanState = false;
     private WifiP2pManager.PeerListListener mPeerListListener = this;//default peerListener
 
-    private long SCAN_TIME = 6000; //default scan time
+    private long SCAN_TIME = 9000; //default scan time
 
     private static final String TAG = "P2p_Scanner";
 
@@ -130,24 +130,24 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
             if (p2pManager != null && wifiManager.isWifiEnabled()) {
                 if (ActivityCompat.checkSelfPermission(context,
                         Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    Util.message(context, "Please allow permission to all scanning for devices");
                     return;
                 }
                 p2pManager.discoverPeers(p2pChannel, this);
                 scanState = true;
             }
-        }
-        else{
+        } else {
             scanStop();
         }
     }
 
     private void scanStop() {
-        Util.message(context,"Scanning Stopped!");
+        Util.message(context, "Scanning Stopped!");
 
         if (scanState) {
             scanState = false;
             Log.w(TAG, "scanning stopped");
-            if (p2pManager!=null)
+            if (p2pManager != null)
                 p2pManager.stopPeerDiscovery(p2pChannel, this);
             context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
         }
@@ -156,7 +156,19 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     @Override
     public void showDiscoveredDevices() {
         scanState = false;
-        if (p2pManager!=null){
+        if (p2pManager != null) {
+            if (ActivityCompat.checkSelfPermission(context,
+                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                Util.message(context, "Requires FINE LOCATION PERMISSION");
+                return;
+            }
             p2pManager.requestPeers(p2pChannel, mPeerListListener);
         }
     }
