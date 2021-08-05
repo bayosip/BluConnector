@@ -77,8 +77,6 @@ public class ScannerPresenter implements PresenterInterface{
         activity.unregisterReceiver(commsReceiver);
     }
 
-
-
     private final BroadcastReceiver commsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {

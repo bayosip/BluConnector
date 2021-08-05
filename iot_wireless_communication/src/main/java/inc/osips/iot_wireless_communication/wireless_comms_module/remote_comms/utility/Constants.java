@@ -12,4 +12,5 @@ public class Constants {
     public final static String ACTION_BLE_SERVICES_DISCOVERED = "BleGattService.ACTION_BLE_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE ="BleGattService.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA = "BleGattService.EXTRA_DATA";
+    public final static String EXTRA_DATA_BATTERY = "Battery Data";
 }

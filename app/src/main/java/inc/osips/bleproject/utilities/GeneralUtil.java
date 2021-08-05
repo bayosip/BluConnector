@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.net.InetAddress;
@@ -166,7 +167,7 @@ public class GeneralUtil {
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 v.getLayoutParams().height = interpolatedTime == 1
-                        ? 550
+                        ? LinearLayout.LayoutParams.WRAP_CONTENT
                         : (int)(targetHeight * interpolatedTime);
                 v.requestLayout();
             }

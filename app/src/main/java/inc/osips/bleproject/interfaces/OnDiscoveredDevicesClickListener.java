@@ -6,7 +6,7 @@ import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.D
 
 public interface OnDiscoveredDevicesClickListener {
 
-    void selectDeviceToConnectTo(Devices device);
+    void selectDevicesToConnectTo(Devices device);
     Context getListenerContext();
 
 }

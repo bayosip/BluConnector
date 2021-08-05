@@ -58,8 +58,7 @@ public class VoiceControlFragment extends Fragment implements SpeechInitCallBack
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.voice_control, container, false);
-        return view;
+        return inflater.inflate(R.layout.voice_control, container, false);
     }
 
     @Override
@@ -134,13 +133,10 @@ public class VoiceControlFragment extends Fragment implements SpeechInitCallBack
 
                 micImage.setImageResource(R.drawable.ic_mic_on);
                 fragListner.speechInputCall();
-                vcContainer.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        vcPopUp.dismiss();
-                        fragListner.stopListening();
-                        return true;
-                    }
+                vcContainer.setOnTouchListener((v, event) -> {
+                    vcPopUp.dismiss();
+                    fragListner.stopListening();
+                    return true;
                 });
                 // startActivityForResult(SPT.speechInputCall(), 100);
             } catch (ActivityNotFoundException e) {

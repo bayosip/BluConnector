@@ -130,6 +130,7 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
             if (p2pManager != null && wifiManager.isWifiEnabled()) {
                 if (ActivityCompat.checkSelfPermission(context,
                         Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    Util.message(context, "Please allow permission to all scanning for devices");
                     return;
                 }
                 p2pManager.discoverPeers(p2pChannel, this);

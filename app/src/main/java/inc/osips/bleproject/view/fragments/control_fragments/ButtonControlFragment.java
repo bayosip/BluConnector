@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
@@ -43,7 +44,7 @@ public class ButtonControlFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         try {
             this.context = context;
@@ -59,14 +60,11 @@ public class ButtonControlFragment extends Fragment {
                 .setTitle("BLE ColorPicker")
                 .setPreferenceName("BLEColorPickerDialog")
                 .setPositiveButton(getString(R.string.confirm),
-                        new ColorEnvelopeListener() {
-                            @Override
-                            public void onColorSelected(ColorEnvelope envelope, boolean fromUser) {
-                                instruct = envelope.getHexCode();
-                                Log.i(TAG, instruct);
-                                String hexCode = "#" + envelope.getHexCode().substring(2);
-                                fragListner.sendInstructions(hexCode);
-                            }
+                        (ColorEnvelopeListener) (envelope, fromUser) -> {
+                            instruct = envelope.getHexCode();
+                            Log.i(TAG, instruct);
+                            String hexCode = "#" + envelope.getHexCode().substring(2);
+                            fragListner.sendInstructions(hexCode);
                         })
                 .setNegativeButton(getString(R.string.cancel),
                         new DialogInterface.OnClickListener() {
@@ -115,15 +113,12 @@ public class ButtonControlFragment extends Fragment {
             instruct = "";
             switch (v.getId()) {
                 case R.id.buttonColorWheel:
-                    fragListner.getFragmentactivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                createColorPickerDialog();
-                            }catch (Exception e){
-                                GeneralUtil.message("Color Picker Unavailable");
-                                e.printStackTrace();
-                            }
+                    fragListner.getFragmentactivity().runOnUiThread(() -> {
+                        try {
+                            createColorPickerDialog();
+                        }catch (Exception e){
+                            GeneralUtil.message("Color Picker Unavailable");
+                            e.printStackTrace();
                         }
                     });
                     break;

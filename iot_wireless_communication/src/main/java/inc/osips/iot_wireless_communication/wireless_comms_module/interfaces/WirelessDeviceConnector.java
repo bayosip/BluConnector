@@ -2,6 +2,7 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.interfaces;
 
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +17,7 @@ public interface WirelessDeviceConnector {
     String MTU_CHANGE_FAILURE = "Failure";
     boolean isConnected();
     ServiceConnection getServiceConnection();
+    void connectAnotherDeviceSimultaneously(@NonNull Parcelable device, @Nullable String serviceUUID) throws Exception;
     void selectServiceUsingUUID (@Nullable String deviceAddress, @NonNull String UUID);
     void connectToDeviceWithDeviceInfoFrom(@NonNull Intent intent);
     void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions);

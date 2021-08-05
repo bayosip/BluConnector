@@ -17,7 +17,9 @@ import android.widget.EditText;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
@@ -39,25 +41,32 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     private DeviceConnectionFactory.Builder builder;
     private Intent intent;
     private String deviceAddr =null;
-    private List<String> listOfRemoteServices = new ArrayList<>();
-    private boolean isServiceSelected = false;
+    private final List<String> listOfRemoteServices = new ArrayList<>();
+    private Map<Integer, Boolean> serviceMap = new HashMap<>();
+    private String type ="";
+    private int count = 1;
+    private final List<Parcelable> listDevice= new ArrayList<>();
 
     public List<String> getListOfRemoteServices() {
         return listOfRemoteServices;
     }
 
     public RemoteControllerPresenter(final ControllerViewInterface viewInterface, String type,
-                                     Parcelable device) {
+                                     List<Parcelable> devices) {
         super(viewInterface);
+        this.type = type;
         activity = viewInterface.getControlContext();
+        this.listDevice.clear();
+        listDevice.addAll(devices);
         DeviceConnectionFactory factory = DeviceConnectionFactory.withContext(viewInterface.getControlContext());
-
+        Parcelable device = devices.get(0);
         try {
             builder = factory.getDeviceConnectionBuilder(type, device);
             if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)){
                 Log.i("Connection type", builder.getDeviceType());
-                this.deviceAddr = ((BluetoothDevice) device).getAddress();
+                //this.deviceAddr = ((BluetoothDevice) device).getAddress();
                 this.deviceName = ((BluetoothDevice) device).getName();
+                serviceMap.put(count, false);
                 //viewInterface.getUUIDFromPopUp();
                 intent = new Intent(activity, BleGattService.class);
                 deviceConnector = builder.build();
@@ -80,6 +89,16 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         }
     }
 
+    private void connectToAnotherDevice(Parcelable device){
+        if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)){
+            try {
+                deviceConnector.connectAnotherDeviceSimultaneously(device, null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void setEditTextIfStringAvailable(EditText txt, String str){
         if(!TextUtils.isEmpty(str)){
             txt.setText(str);
@@ -94,8 +113,15 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         if (deviceConnector !=null){//"6e400001-b5a3-f393-e0a9-e50e24dcca9e"
             String str = uuid.toLowerCase();
             if (!TextUtils.isEmpty(str)) {
-                isServiceSelected = true;
-                deviceConnector.selectServiceUsingUUID(deviceAddr, str);
+                serviceMap.put(count, true);
+                int index = count-1;
+                BluetoothDevice device = (BluetoothDevice)listDevice.get(index);
+                deviceConnector.selectServiceUsingUUID(device.getAddress(), str);
+                if (type.equalsIgnoreCase(Constants.BLE) && count< listDevice.size()){
+                    connectToAnotherDevice(listDevice.get(count));
+                    count++;
+                    serviceMap.put(count, false);
+                }
             }else {
                 GeneralUtil.message("Please Select A Valid BaseUUID");
             }
@@ -151,7 +177,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     break;
                 case Constants.ACTION_BLE_SERVICES_DISCOVERED:
                     Log.w("BLE", "services discovered");
-                    if (!isServiceSelected) {
+                    if (!serviceMap.get(count)) {
                         listOfRemoteServices.clear();
                         listOfRemoteServices.addAll(intent.getStringArrayListExtra(Constants.SERVICE_UUID));
                         viewInterface.getUUIDFromPopUp(listOfRemoteServices);
@@ -167,16 +193,18 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     GeneralUtil.message(intent.getStringExtra(P2pDataTransferService.EXTRA_DATA));
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
-                    int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
-                    switch (state){
-                        case WifiP2pManager.WIFI_P2P_STATE_ENABLED:
-                            GeneralUtil.message("Wifi is Ok");
-                            break;
-                        case WifiP2pManager.WIFI_P2P_STATE_DISABLED:
-                            GeneralUtil.message("Wifi has been turned off, " +
-                                    "Please turn on to use this feature");
-                            GeneralUtil.transitionActivity(activity, Home.class);
-                            break;
+                    if(type.equalsIgnoreCase(Constants.P2P)) {
+                        int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
+                        switch (state) {
+                            case WifiP2pManager.WIFI_P2P_STATE_ENABLED:
+                                GeneralUtil.message("Wifi is Ok");
+                                break;
+                            case WifiP2pManager.WIFI_P2P_STATE_DISABLED:
+                                GeneralUtil.message("Wifi has been turned off, " +
+                                        "Please turn on to use this feature");
+                                GeneralUtil.transitionActivity(activity, Home.class);
+                                break;
+                        }
                     }
                     break;
                 case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
@@ -216,7 +244,13 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         return intentFilter;
     }
 
-    public void sendInstructionsToDevice(String instruct) {
+    private void sendInstructionsToDevice(String instruct) {
         deviceConnector.sendInstructionsToRemoteDevice(deviceAddr,null, instruct);
+    }
+
+    public void setDeviceAddressAndSendInstructions(String uuidAddr, String instructions) {
+        if (!TextUtils.isEmpty(uuidAddr))
+            this.deviceAddr = uuidAddr;
+        sendInstructionsToDevice(instructions);
     }
 }

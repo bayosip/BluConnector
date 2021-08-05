@@ -3,7 +3,7 @@ package inc.osips.bleproject.view.activities;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
+import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -11,8 +11,6 @@ import android.os.Build;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
 
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.ActionBar;
@@ -36,7 +34,6 @@ import inc.osips.bleproject.App;
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.R;
-import inc.osips.bleproject.model.UUID_IP_TextWatcher;
 import inc.osips.bleproject.utilities.Constants;
 import inc.osips.bleproject.utilities.GeneralUtil;
 import inc.osips.bleproject.utilities.ServiceUtil;
@@ -45,7 +42,6 @@ import inc.osips.bleproject.view.fragments.control_fragments.ButtonControlFragme
 import inc.osips.bleproject.view.fragments.control_fragments.ControlAdapter;
 import inc.osips.bleproject.view.fragments.control_fragments.ServiceSelectorDialog;
 import inc.osips.bleproject.view.fragments.control_fragments.VoiceControlFragment;
-import inc.osips.bleproject.view.listviews.DevicesViewHolderAdapter;
 
 public class ControllerActivity extends AppCompatActivity implements ControlFragmentListener, ControllerViewInterface {
 
@@ -60,6 +56,8 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     private RemoteControllerPresenter presenter;
     private List<Fragment> fragList;
     private String commType;
+    private List<Parcelable> listDevice= new ArrayList<>();
+    private String instructions ="";
 
     public static final String BUTTON_CONFIG = "button_config";
     public static final String ON_OFF = "on_off";
@@ -67,6 +65,10 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     public static final String RIGHT = "right";
     public static final String UP = "up";
     public static final String DOWN = "down";
+
+    private static final int UUID = 1;
+    private static final int ADDR = 0;
+
     private static final String TAG = ControllerActivity.class.getSimpleName();
 
     @Override
@@ -93,9 +95,18 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
 
         try {
             if (!commType.equals(Constants.ERROR)) {
-                Parcelable parcelDevice = data.getParcelable(Constants.DEVICE_DATA);
-                if (parcelDevice != null) {
-                    presenter = new RemoteControllerPresenter(this, commType, parcelDevice);
+                listDevice.clear();
+                listDevice.addAll(data.getParcelableArrayList(Constants.DEVICE_DATA));
+                if (!listDevice.isEmpty()) {
+                    presenter = new RemoteControllerPresenter(this, commType, listDevice);
+//                    if (ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(getApplicationContext()))
+//                    {
+//                        if (commType.equals(Constants.BLE)) {
+//                            for (int i = 1; i < listDevice.size(); i++) {
+//                                presenter.connectToAnotherDevice(listDevice.get(i));
+//                            }
+//                        }
+//                    }
                 }
                 else {
                     Log.e(TAG, "initialisePrequisite: ", new Exception("No device to connect with!"));
@@ -111,15 +122,33 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     public void getUUIDFromPopUp(List<String> listUUID){
         Log.d(TAG, "getUUIDFromPopUp:  was called");
         if (!listUUID.isEmpty()) {
-            ServiceSelectorDialog.setListUUID(listUUID);
+            ServiceSelectorDialog.setListUUID(listUUID, UUID);
             if (!dialog.isAdded())
                 dialog.show(getSupportFragmentManager(), "Service Selector");
         }
     }
 
     @Override
-    public void setSelectedServiceUUID(String uuid) {
-        presenter.setBaseUuidOfBLEDeviceAndConnect(uuid);
+    public void getDeviceAddressFromPopUp() {
+        if (listDevice.size()>1){
+            List<String> addresses = new ArrayList<>();
+            for (Parcelable p : listDevice){
+                BluetoothDevice bd = (BluetoothDevice)p;
+                addresses.add(bd.getAddress());
+            }
+            ServiceSelectorDialog.setListUUID(addresses, ADDR);
+            if (!dialog.isAdded())
+                dialog.show(getSupportFragmentManager(), "Device Selector");
+        }
+    }
+
+    @Override
+    public void setSelectedServiceUUID(String uuidAddr, int flag) {
+        if (flag==UUID)
+            presenter.setBaseUuidOfBLEDeviceAndConnect(uuidAddr);
+        else if(flag == ADDR){
+            presenter.setDeviceAddressAndSendInstructions(uuidAddr, instructions);
+        }
         dialog.dismiss();
     }
 
@@ -164,12 +193,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
             }
         });
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                buttonConfig.show();
-            }
-        });
+        runOnUiThread(buttonConfig::show);
 
     }
 
@@ -190,12 +214,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         ImageButton changeConfig = findViewById(R.id.buttonConfig);
         changeConfig.setOnClickListener(view -> getButtonConfigPopUp());
         disconnectButton = findViewById(R.id.buttonDisconnect);
-        disconnectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                runOnUiThread(() -> tryToDisconnectFromDevice());
-            }
-        });
+        disconnectButton.setOnClickListener(v -> runOnUiThread(this::tryToDisconnectFromDevice));
         myDeviceName = findViewById(R.id.textViewDeviceName);
         if (presenter!= null)
             myDeviceName.setText(presenter.getDeviceName());
@@ -265,7 +284,9 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
      */
     @Override
     public void sendInstructions(String instruct) {
-        presenter.sendInstructionsToDevice(instruct);
+        this.instructions = instruct;
+        getDeviceAddressFromPopUp();
+        //presenter.sendInstructionsToDevice(instruct);
     }
 
     @Override
@@ -307,12 +328,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
             sendInstructions("off");
         else sendInstructions(commands);
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                voiceFrag.showVoiceCommandAsText(commands);
-            }
-        });
+        runOnUiThread(() -> voiceFrag.showVoiceCommandAsText(commands));
 
         stopListening();
         voiceFrag.closePopUp();

@@ -9,5 +9,6 @@
     <string name="confirm">SELECT</string>
     <string name="cancel">CANCEL</string>
     <string name="enter_preferred_instruction">Enter Preferred Instruction</string>
+    <string name="connect_device_s">Connect %1$d Device(s)</string>
 
 </resources>

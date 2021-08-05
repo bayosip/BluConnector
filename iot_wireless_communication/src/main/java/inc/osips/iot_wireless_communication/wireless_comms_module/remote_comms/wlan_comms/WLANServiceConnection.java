@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 import java.util.UUID;
 
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
-
+/*
 public class WLANServiceConnection implements WirelessDeviceConnector {
     @Override
     public boolean isConnected() {
@@ -25,6 +25,7 @@ public class WLANServiceConnection implements WirelessDeviceConnector {
     public void selectServiceUsingUUID(@Nullable String deviceAddress, @NonNull String UUID) {
     }
 
+
     @Override
     public void connectToDeviceWithDeviceInfoFrom(Intent intent) {
     }
@@ -39,4 +40,4 @@ public class WLANServiceConnection implements WirelessDeviceConnector {
                                                @Nullable  UUID charxDescriptor, @NonNull String instructions) {
 
     }
-}
+}*/

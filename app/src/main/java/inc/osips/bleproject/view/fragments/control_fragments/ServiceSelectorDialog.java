@@ -1,6 +1,5 @@
 package inc.osips.bleproject.view.fragments.control_fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -24,21 +23,25 @@ import java.util.List;
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.interfaces.ServiceSelectorListener;
-import inc.osips.bleproject.view.activities.ControllerActivity;
 import inc.osips.bleproject.view.listviews.DevicesViewHolderAdapter;
 
+
+
 public class ServiceSelectorDialog extends DialogFragment implements ServiceSelectorListener {
+
 
     private static final String TAG = "ServiceSelectorDialog";
     ControlFragmentListener listener;
     private static List<String> listUUID;
+    private static int FLAG = -1;
 
     private RecyclerView listServices;
     private DevicesViewHolderAdapter adapter;
     private String selectedUUID;
 
-    public static void setListUUID(List<String> listUUID) {
+    public static void setListUUID(List<String> listUUID, int flag) {
         ServiceSelectorDialog.listUUID = listUUID;
+        FLAG = flag;
     }
 
     private ServiceSelectorDialog(){}
@@ -82,7 +85,7 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
         listServices.setLayoutManager(layoutManager);
         listServices.setAdapter(adapter);
         enterUUID.setOnClickListener(view1 ->
-                listener.setSelectedServiceUUID(selectedUUID));
+                listener.setSelectedServiceUUID(selectedUUID, FLAG));
     }
 
     @Override

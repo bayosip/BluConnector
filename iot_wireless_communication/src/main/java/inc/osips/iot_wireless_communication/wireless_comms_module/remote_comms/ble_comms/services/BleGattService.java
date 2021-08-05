@@ -20,6 +20,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -54,7 +55,7 @@ public class BleGattService extends Service {
 
     public  String EXTRA_UUID;
 
-    public String serviceUUID;// = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    //public String serviceUUID;// = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
     int mydata;
     String MyLogData;
 
@@ -66,6 +67,10 @@ public class BleGattService extends Service {
         public BleGattService getService(){
             return BleGattService.this;
         }
+    }
+
+    public HashMap<String, BluetoothGatt> getMultiBleGatt() {
+        return multiBleGatt;
     }
 
     @Override
@@ -186,7 +191,10 @@ public class BleGattService extends Service {
                                              BluetoothGattCharacteristic characteristic, int status) {
                 switch (status) {
                     case BluetoothGatt.GATT_SUCCESS:
-                        broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
+                        if (characteristic.getUuid() == UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb")){
+
+                        }
+                            broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
                         Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
                                 + characteristic.getStringValue(0));
                         break;
@@ -281,19 +289,22 @@ public class BleGattService extends Service {
         // parsing is carried out as per profile specifications.
         if (characteristic.getProperties() == BluetoothGattCharacteristic.PROPERTY_NOTIFY||
             characteristic.getProperties() == BluetoothGattCharacteristic.PROPERTY_INDICATE) {
-            final String received = characteristic.getStringValue(1);
-            Log.i(TAG, String.format("Received from ble device: %s", received));
-            intent.putExtra(Constants.EXTRA_DATA, String.valueOf(received));
+            final byte[] data = characteristic.getValue();
+            String s = String.format("%s ", data[0]);
+            Log.d(TAG, "broadcastUpdate: ->" + s);
+            intent.putExtra(Constants.EXTRA_DATA, (int)Integer.parseInt(s, 16));
         } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
-                    stringBuilder.append(String.format("%s ", byteChar));
+
+                for(byte byteChar : data) stringBuilder.append(String.format("%s ", byteChar));
+
                 Log.e(TAG, stringBuilder.toString());
-                intent.putExtra(Constants.EXTRA_DATA, new String(data) + "\n" +
-                        stringBuilder.toString());
+                String output = new String(data, StandardCharsets.UTF_8) + "\n" +
+                        stringBuilder.toString();
+                intent.putExtra(Constants.EXTRA_DATA, output);
             }
         }
         sendBroadcast(intent);
@@ -314,7 +325,9 @@ public class BleGattService extends Service {
                 return false;
             }
         }
-        bAdapter = bManager.getAdapter();
+        if(bAdapter==null)
+            bAdapter = bManager.getAdapter();
+
         if (bAdapter == null) {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
@@ -331,19 +344,17 @@ public class BleGattService extends Service {
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      * callback.
      */
-    public boolean connect(@NonNull final BluetoothDevice device, @Nullable String serviceUUID, int GATT_MAX_MTU_SIZE) {
+    public boolean connect(@NonNull final BluetoothDevice device, @Nullable String serviceUUID) {
 
-        if(GATT_MAX_MTU_SIZE>1){
-            this.GATT_MAX_MTU_SIZE = GATT_MAX_MTU_SIZE;
-        }
 
-        if(!TextUtils.isEmpty(serviceUUID))
-            this.serviceUUID = serviceUUID;
+//        if(!TextUtils.isEmpty(serviceUUID))
+//            this.serviceUUID = serviceUUID;
 
         if (bAdapter == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
+
         if(multiBleGatt.containsKey(device.getAddress())) {
             //try to reconnect to previously connected device
             Log.i(TAG, "Trying to use an existing mBluetoothGatt for connection.");
@@ -352,26 +363,51 @@ public class BleGattService extends Service {
             assert gatt != null;
             return gatt.connect();
         }
-        device.connectGatt(this,
-                false,
-                createGattCallBack(device.getAddress())).requestMtu(GATT_MAX_MTU_SIZE);;
 
+        BluetoothGatt gatt = device.connectGatt(this,
+                false,
+                createGattCallBack(device.getAddress()));
+
+        if(!TextUtils.isEmpty(serviceUUID)){
+            assert serviceUUID != null;
+            selectServiceFromUUID(device.getAddress(), serviceUUID);
+        }
         Log.i(TAG, "Trying to create a new connection.");
         MyLogData +="Trying to create a new connection.\n";
         return true;
     }
 
+    public void increaseGattMaxMtuSizeOfDeviceAddr(String addr, int size){
+        BluetoothGatt gatt = multiBleGatt.get(addr);
+        try {
+            assert gatt != null;
+            gatt.requestMtu(size);
+        }catch (NullPointerException | AssertionError ex){
+            ex.printStackTrace();
+        }
+    }
+
+    public void maxOutGattMtuSize(String addr){
+        BluetoothGatt gatt = multiBleGatt.get(addr);
+        try {
+            assert gatt != null;
+            gatt.requestMtu(this.GATT_MAX_MTU_SIZE);
+        }catch (NullPointerException | AssertionError ex){
+            ex.printStackTrace();
+        }
+    }
+
     public void selectServiceFromUUID (@NonNull String deviceAddr, @NonNull String UUID){
-        this.serviceUUID = UUID;
+        //this.serviceUUID = UUID;
         BluetoothGatt gatt = multiBleGatt.get(deviceAddr);
         assert gatt != null;
-        BluetoothGattService service = getGattServices(gatt);
+        BluetoothGattService service = getGattServices(gatt, UUID);
 
         if (service==null){
             Util.message(BleGattService.this, "No service with selected UUID!");
         }else {
             getGattServicesCharx(gatt, service);
-            Log.d(TAG, "selectServiceFromUUID: service uuid: " + serviceUUID + " connected");
+            Log.d(TAG, "selectServiceFromUUID: service uuid: " + UUID + " connected");
         }
     }
 
@@ -379,7 +415,7 @@ public class BleGattService extends Service {
      * Loop through the discovered ble services finds the service matching
      * */
 
-    private BluetoothGattService getGattServices(@NonNull BluetoothGatt gatt){
+    private BluetoothGattService getGattServices(@NonNull BluetoothGatt gatt, @NonNull String UUID){
         if ( gatt.getServices() == null ||gatt.getServices().isEmpty()){
             stopSelf();
             return null;
@@ -392,7 +428,7 @@ public class BleGattService extends Service {
 
             uuid = gattService.getUuid().toString();
             Log.d(TAG, "getGattServices: " + uuid);
-            if (uuid.equalsIgnoreCase(serviceUUID)) {
+            if (uuid.equalsIgnoreCase(UUID)) {
                 return gattService;
             }
         }
@@ -409,18 +445,21 @@ public class BleGattService extends Service {
         // Loops through available Characteristics.
         for (BluetoothGattCharacteristic gattCharacteristic :
                 gattCharacteristics) {
-            if (gattCharacteristic.getProperties()==BluetoothGattCharacteristic.PROPERTY_WRITE||
-            gattCharacteristic.getProperties()== BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE||
-            gattCharacteristic.getProperties()== BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) {
+            Log.d(TAG, "getGattServicesCharx: ->" + gattCharacteristic.getUuid().toString() +
+                    ", property: " + gattCharacteristic.getProperties());
+            int property = gattCharacteristic.getProperties();
+            if (property> BluetoothGattCharacteristic.PROPERTY_BROADCAST &&
+                    property != BluetoothGattCharacteristic.PROPERTY_READ &&
+                property != BluetoothGattCharacteristic.PROPERTY_NOTIFY &&
+                property != BluetoothGattCharacteristic.PROPERTY_INDICATE) {
                 //myWriteCharx = gattCharacteristic;
                 mServiceObj.getCharacteristics().add(gattCharacteristic);
                 gattServicesMap.put(gatt, mServiceObj);
-            }
-            else if (gattCharacteristic.getProperties()==BluetoothGattCharacteristic.PROPERTY_READ){
+            }else if(property >=BluetoothGattCharacteristic.PROPERTY_READ &&
+                    property<BluetoothGattCharacteristic.PROPERTY_NOTIFY){
                 readBleCharacteristic(gatt, gattCharacteristic);
-                Log.i(TAG, "getGattServices: Read charX discovered");
-            }else if (gattCharacteristic.getProperties() == BluetoothGattCharacteristic.PROPERTY_NOTIFY
-            || gattCharacteristic.getProperties()== BluetoothGattCharacteristic.PROPERTY_INDICATE){
+            }else if (property>= BluetoothGattCharacteristic.PROPERTY_NOTIFY
+            && property< BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE){
                 //myNotifycharx = gattCharacteristic;
                 setCharacteristicNotification(gatt, gattCharacteristic, true);
                 Log.i(TAG, "getGattServices: Notify charX discovered");
@@ -492,8 +531,6 @@ public class BleGattService extends Service {
             }
     }
 
-
-
     public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor,
                                                   String instructions) {
         BluetoothGatt bleGatt = multiBleGatt.get(deviceAddr);
@@ -523,7 +560,6 @@ public class BleGattService extends Service {
         }catch (Exception ex){
             Log.w(TAG, "Service is null: " + ex.toString());
             Util.getHandler().post(() -> Util.message( BleGattService.this, getString(R.string.ble_err_connection)));
-
         }
     }
 
@@ -531,7 +567,6 @@ public class BleGattService extends Service {
      * Request a write on a given {@code BluetoothGattCharacteristic}.
      */
     private void writeBleCharacteristic(BluetoothGatt bleGatt, BluetoothGattCharacteristic myWriteCharx) {
-
         try{
             BleQueue.add(myWriteCharx);
             if (BleQueue.size() == 1) {
@@ -540,12 +575,7 @@ public class BleGattService extends Service {
             }
         }catch (NullPointerException e){
             Log.w(TAG, "BluetoothAdapter not initialized: "+e.toString());
-            Util.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    Util.message( BleGattService.this,"Bluetooth error! Check Connection");
-                }
-            });
+            Util.getHandler().post(() -> Util.message( BleGattService.this,"Bluetooth error! Check Connection"));
         }
     }
 
@@ -559,8 +589,6 @@ public class BleGattService extends Service {
             return;
         }
         bleGatt.readCharacteristic(myReadCharx);
-
-
     }
 
     /**
@@ -568,34 +596,49 @@ public class BleGattService extends Service {
      *
      * @param enabled        If true, enable notification.  False otherwise.
      */
-    private void setCharacteristicNotification(BluetoothGatt bleGatt,
+    public boolean setCharacteristicNotification(BluetoothGatt bleGatt,
                                                BluetoothGattCharacteristic myNotifycharx,
                                                boolean enabled) {
         if (myNotifycharx!= null)
-            bleGatt.setCharacteristicNotification(myNotifycharx, enabled);
-
-        assert myNotifycharx != null;
+           return bleGatt.setCharacteristicNotification(myNotifycharx, enabled);
 
         // This is specific to Heart Rate Measurement.
-        writeToDescriptor(myNotifycharx, SampleGattAttributes.HEART_RATE_MEASUREMENT, bleGatt);
-
+        //writeToDescriptor(myNotifycharx, SampleGattAttributes.HEART_RATE_MEASUREMENT, bleGatt);
+        return false;
     }
 
-    public void writeToDescriptor(BluetoothGattCharacteristic charx, String uuidStr,
-                                   BluetoothGatt gatt){
-        UUID mUUID =
-                UUID.fromString(uuidStr);
+    public void writeToDescriptorToEnableNotifications(BluetoothGattCharacteristic charx, String uuidStr,
+                                                       String CCC_DESCRIPTOR_UUID, BluetoothGatt gatt){
+        if (setCharacteristicNotification(gatt, charx, true)) {
+            UUID mUUID =
+                    UUID.fromString(uuidStr);
 
-        if (mUUID.equals(charx.getUuid())) {
-            BluetoothGattDescriptor descriptor = charx.getDescriptor(
-                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            gatt.writeDescriptor(descriptor);
+            if (mUUID.equals(charx.getUuid())) {
+                BluetoothGattDescriptor descriptor = charx.getDescriptor(
+                        UUID.fromString(CCC_DESCRIPTOR_UUID));
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                gatt.writeDescriptor(descriptor);
+            }
+        }
+    }
+
+    public void writeToDescriptorToDisableNotifications(BluetoothGattCharacteristic charx, String uuidStr,
+                                                       String CCC_DESCRIPTOR_UUID, BluetoothGatt gatt){
+
+        if (setCharacteristicNotification(gatt, charx, false)) {
+            UUID mUUID =
+                    UUID.fromString(uuidStr);
+
+            if (mUUID.equals(charx.getUuid())) {
+                BluetoothGattDescriptor descriptor = charx.getDescriptor(
+                        UUID.fromString(CCC_DESCRIPTOR_UUID));
+                descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                gatt.writeDescriptor(descriptor);
+            }
         }
     }
 
     public String getMyLogData (){
         return MyLogData;
     }
-
 }

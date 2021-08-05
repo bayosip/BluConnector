@@ -68,6 +68,12 @@ public class P2pConnection implements WirelessDeviceConnector {
     }
 
     @Override
+    public void connectAnotherDeviceSimultaneously(@NonNull Parcelable device,
+                                                   @Nullable String serviceUUID) throws Exception {
+        throw new IllegalAccessException("P2p Does not allow multi-device connection yet!!!");
+    }
+
+    @Override
     public void selectServiceUsingUUID(@Nullable String deviceAddress, @NonNull String UUID) {
     }
 
