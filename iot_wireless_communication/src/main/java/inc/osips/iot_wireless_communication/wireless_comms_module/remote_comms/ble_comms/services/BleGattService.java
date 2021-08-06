@@ -541,6 +541,7 @@ public class BleGattService extends Service {
                 BluetoothGattCharacteristic gattCharacteristic =null;
                 BleWriteService wService = gattServicesMap.get(bleGatt);
                 assert wService != null;
+                //Checks for characteristic with particular descriptor
                 if(charxDescriptor!=null){
                     for (BluetoothGattCharacteristic charx: wService.getCharacteristics()){
                         if(charx.getDescriptor(charxDescriptor)!=null){

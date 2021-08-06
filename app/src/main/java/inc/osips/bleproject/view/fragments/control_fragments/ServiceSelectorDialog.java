@@ -18,11 +18,13 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import inc.osips.bleproject.R;
 import inc.osips.bleproject.interfaces.ControlFragmentListener;
 import inc.osips.bleproject.interfaces.ServiceSelectorListener;
+import inc.osips.bleproject.view.activities.ControllerActivity;
 import inc.osips.bleproject.view.listviews.DevicesViewHolderAdapter;
 
 
@@ -38,6 +40,7 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
     private RecyclerView listServices;
     private DevicesViewHolderAdapter adapter;
     private String selectedUUID;
+    private List<String> selected = new ArrayList<>();
 
     public static void setListUUID(List<String> listUUID, int flag) {
         ServiceSelectorDialog.listUUID = listUUID;
@@ -73,6 +76,7 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
         super.onViewCreated(view, savedInstanceState);
         //deviceAddr = requireArguments().getString(ADDRESS);
         initialiseWidgets(view);
+        selected.clear();
     }
 
     private void initialiseWidgets(View view){
@@ -84,8 +88,14 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
 
         listServices.setLayoutManager(layoutManager);
         listServices.setAdapter(adapter);
-        enterUUID.setOnClickListener(view1 ->
-                listener.setSelectedServiceUUID(selectedUUID, FLAG));
+        enterUUID.setOnClickListener(view1 ->{
+                    if(FLAG == ControllerActivity.UUID){
+                        listener.setSelectedServiceUUID(selectedUUID);
+                    }else {
+                        listener.setSelectedAddresses(selected);
+                    }
+                }
+        );
     }
 
     @Override
@@ -100,9 +110,13 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
 
     @Override
     public void selectAServiceWith(int pos) {
-        selectedUUID = listUUID.get(pos);
-        Log.d(TAG, "selectAServiceWith: " + selectedUUID);
-        adapter.notifyDataSetChanged();
+        if(FLAG == ControllerActivity.UUID) {
+            selectedUUID = listUUID.get(pos);
+            Log.d(TAG, "selectAServiceWith: " + selectedUUID);
+            adapter.notifyDataSetChanged();
+        }else {
+            selected.add(listUUID.get(pos));
+        }
     }
 
     @Override

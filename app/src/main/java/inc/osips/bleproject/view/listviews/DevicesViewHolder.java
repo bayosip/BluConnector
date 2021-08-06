@@ -28,6 +28,7 @@ public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.O
     private boolean isRemoteServices = false;
     private RefreshItem refresh;
     private Context context;
+    private boolean change = false;
 
     interface RefreshItem {
         void setSelectedPosition(int position);
@@ -86,6 +87,7 @@ public class DevicesViewHolder extends RecyclerView.ViewHolder implements View.O
     @Override
     public void onClick(View view) {
         if(isRemoteServices){
+            changeItemBackground(!change);
             refresh.setSelectedPosition(getAbsoluteAdapterPosition());
             listener1.selectAServiceWith(getAbsoluteAdapterPosition());
         }else {

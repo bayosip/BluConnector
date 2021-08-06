@@ -66,8 +66,8 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     public static final String UP = "up";
     public static final String DOWN = "down";
 
-    private static final int UUID = 1;
-    private static final int ADDR = 0;
+    public static final int UUID = 1;
+    public static final int ADDR = 0;
 
     private static final String TAG = ControllerActivity.class.getSimpleName();
 
@@ -143,13 +143,22 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     }
 
     @Override
-    public void setSelectedServiceUUID(String uuidAddr, int flag) {
-        if (flag==UUID)
-            presenter.setBaseUuidOfBLEDeviceAndConnect(uuidAddr);
-        else if(flag == ADDR){
-            presenter.setDeviceAddressAndSendInstructions(uuidAddr, instructions);
-        }
+    public void setSelectedServiceUUID(String uuidAddr) {
+        presenter.setBaseUuidOfBLEDeviceAndConnect(uuidAddr);
         dialog.dismiss();
+    }
+
+    @Override
+    public void setSelectedAddresses(List<String> addresses) {
+        dialog.dismiss();
+        for (String addr: addresses){
+            presenter.setDeviceAddressAndSendInstructions(addr, instructions);
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void getButtonConfigPopUp(){
@@ -176,21 +185,18 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         final EditText txtDown =  buttonConfig.findViewById(R.id.editArrowDown);
         presenter.setEditTextIfStringAvailable(txtDown, GeneralUtil.getAppPrefStoredStringWithName(DOWN));
 
-        saveConfig.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                presenter.setASharedPrefFromButtonConfig(ON_OFF, txtOnOff);
-                presenter.setASharedPrefFromButtonConfig(LEFT, txtLeft);
-                presenter.setASharedPrefFromButtonConfig(RIGHT, txtRight);
-                presenter.setASharedPrefFromButtonConfig(UP, txtUp);
-                presenter.setASharedPrefFromButtonConfig(DOWN, txtDown);
+        saveConfig.setOnClickListener(view -> {
+            presenter.setASharedPrefFromButtonConfig(ON_OFF, txtOnOff);
+            presenter.setASharedPrefFromButtonConfig(LEFT, txtLeft);
+            presenter.setASharedPrefFromButtonConfig(RIGHT, txtRight);
+            presenter.setASharedPrefFromButtonConfig(UP, txtUp);
+            presenter.setASharedPrefFromButtonConfig(DOWN, txtDown);
 
-                if(!GeneralUtil.getAppPref().contains(BUTTON_CONFIG))
-                    GeneralUtil.getEditor().putBoolean(BUTTON_CONFIG, true).commit();
+            if(!GeneralUtil.getAppPref().contains(BUTTON_CONFIG))
+                GeneralUtil.getEditor().putBoolean(BUTTON_CONFIG, true).commit();
 
-                manualFrag.shouldEnableButtons();
-                buttonConfig.dismiss();
-            }
+            manualFrag.shouldEnableButtons();
+            buttonConfig.dismiss();
         });
 
         runOnUiThread(buttonConfig::show);

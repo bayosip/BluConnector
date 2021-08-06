@@ -42,6 +42,16 @@ public class ServiceUtil {
         return false;
     }
 
+    private boolean isMyServiceRunning(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static Boolean isAnyRemoteConnectionServiceRunningAPI16(Context context){
         if (isServiceWiFiAlreadyRunningAPI16(context) || isServiceBLEAlreadyRunningAPI16(context))
             return true;

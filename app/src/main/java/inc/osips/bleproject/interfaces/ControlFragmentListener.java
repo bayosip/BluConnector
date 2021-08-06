@@ -2,6 +2,8 @@ package inc.osips.bleproject.interfaces;
 
 import android.app.Activity;
 
+import java.util.List;
+
 public interface ControlFragmentListener extends AppActivity {
 
     void sendInstructions (String instruct);//function takes string command and passes
@@ -9,7 +11,8 @@ public interface ControlFragmentListener extends AppActivity {
     void speechInputCall();
     void stopListening();
     void startListening();
-    void setSelectedServiceUUID ( String uuid, int flag);
+    void setSelectedServiceUUID ( String uuid);
+    void setSelectedAddresses(List<String> addresses);
     void getDeviceAddressFromPopUp();
     Activity getFragmentactivity();
 }
