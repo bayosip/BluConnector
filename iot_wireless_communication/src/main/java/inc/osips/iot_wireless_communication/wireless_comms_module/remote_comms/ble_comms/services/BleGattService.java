@@ -195,6 +195,7 @@ public class BleGattService extends Service {
 
                         }
                             broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
+                            broadcastUpdateRaw(Constants.ACTION_RAW_DATA_AVAILABLE, characteristic);
                         Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
                                 + characteristic.getStringValue(0));
                         break;
@@ -238,8 +239,11 @@ public class BleGattService extends Service {
                 // Get the UUID of the characteristic that changed
                 String uuid = characteristic.getUuid().toString();
                 mydata= characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT32,0);
+                Log.d(TAG, "onCharacteristicChanged: "+ mydata +
+                        ", hex: "+ characteristic.getStringValue(0));
                 // Tell the activity that new car data is available
-                broadcastUpdate(Constants.ACTION_DATA_AVAILABLE);
+                broadcastUpdate(Constants.ACTION_BLE_CHARX_DATA_CHANGE, characteristic);
+                broadcastUpdateRaw(Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW, characteristic);
             }
 
             @Override
@@ -284,7 +288,7 @@ public class BleGattService extends Service {
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
-
+        intent.putExtra(Constants.EXTRA_UUID, characteristic.getUuid().toString());
         // This is special handling for the Heart Rate Measurement profile. Data
         // parsing is carried out as per profile specifications.
         if (characteristic.getProperties() == BluetoothGattCharacteristic.PROPERTY_NOTIFY||
@@ -307,6 +311,16 @@ public class BleGattService extends Service {
                 intent.putExtra(Constants.EXTRA_DATA, output);
             }
         }
+        sendBroadcast(intent);
+    }
+
+    private void broadcastUpdateRaw(final String action,
+                                      final BluetoothGattCharacteristic characteristic){
+        final Intent intent = new Intent(action);
+        intent.putExtra(Constants.EXTRA_UUID, characteristic.getUuid().toString());
+
+        final byte[] data = characteristic.getValue();
+        intent.putExtra(Constants.EXTRA_DATA_RAW, data);
         sendBroadcast(intent);
     }
 
