@@ -37,11 +37,11 @@ public class DeviceConnectionFactory {
 
         if(TextUtils.isEmpty(connectionType))return null;
 
-        else if (connectionType.equals(Constants.BLE)){
+        else if (connectionType.equals(Constants.BLE) && device instanceof BluetoothDevice){
             return new BleDeviceConnectionBuilder(context, device);
         }
 
-        else if (connectionType.equals(Constants.P2P)){
+        else if (connectionType.equals(Constants.P2P) && device instanceof WifiP2pDevice){
             return new P2PDeviceConnectionBuilder(context, device);
         }
 

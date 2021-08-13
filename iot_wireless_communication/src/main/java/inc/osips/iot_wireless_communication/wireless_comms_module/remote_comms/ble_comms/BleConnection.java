@@ -92,8 +92,7 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions)
-    {
+    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions) {
         gattService.sendInstructionsToConnectedDevice(deviceAddress, null, instructions);
     }
 
