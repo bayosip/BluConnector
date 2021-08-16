@@ -123,7 +123,7 @@ public class BleGattService extends Service {
                                 bleGatt = gatt;
 
                                 multiBleGatt.put(address, gatt);
-                                broadcastUpdate(Constants.ACTION_CONNECTED);
+                                broadcastUpdate(Constants.ACTION_CONNECTED, address);
                                 MyLogData += "Connected to GATT server.\n";
                                 Log.i(TAG, "Connected to GATT server.");
                                 // Attempts to discover services after successful connection.
@@ -135,7 +135,7 @@ public class BleGattService extends Service {
                         case BluetoothProfile.STATE_DISCONNECTED:
                             Log.i(TAG, "Disconnected from GATT server.");
                             MyLogData += "Disconnected from GATT server.\n";
-                            broadcastUpdate(Constants.ACTION_DISCONNECTED);
+                            broadcastUpdate(Constants.ACTION_DISCONNECTED, address);
                             gatt.close();
                             break;
                         case BluetoothProfile.STATE_DISCONNECTING:
@@ -166,7 +166,8 @@ public class BleGattService extends Service {
                 myWriteCharx = myGattService.getCharacteristic(UUID.fromString(writeUUID));
                 myReadCharx = myGattService.getCharacteristic(UUID.fromString(readUUID));*/
                     Log.w(TAG, "Services Discovered");
-                    broadcastUpdate(Constants.ACTION_BLE_SERVICES_DISCOVERED, gatt.getServices());
+                    broadcastUpdate(Constants.ACTION_BLE_SERVICES_DISCOVERED, address,
+                            gatt.getServices());
                     //readBleCharacteristic();
                 } else {
                     Log.w(TAG, "onServicesDiscovered received: " + status);
@@ -189,17 +190,14 @@ public class BleGattService extends Service {
             @Override
             public void onCharacteristicRead(BluetoothGatt gatt,
                                              BluetoothGattCharacteristic characteristic, int status) {
-                switch (status) {
-                    case BluetoothGatt.GATT_SUCCESS:
-                        if (characteristic.getUuid() == UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb")){
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if (characteristic.getUuid() == UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb")) {
 
-                        }
-                            broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, characteristic);
-                            broadcastUpdateRaw(Constants.ACTION_RAW_DATA_AVAILABLE, characteristic);
-                        Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
-                                + characteristic.getStringValue(0));
-                        break;
-
+                    }
+                    broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, address, characteristic);
+                    broadcastUpdateRaw(Constants.ACTION_RAW_DATA_AVAILABLE, address, characteristic);
+                    Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
+                            + characteristic.getStringValue(0));
                 }
             }
 
@@ -242,8 +240,8 @@ public class BleGattService extends Service {
                 Log.d(TAG, "onCharacteristicChanged: "+ mydata +
                         ", hex: "+ characteristic.getStringValue(0));
                 // Tell the activity that new car data is available
-                broadcastUpdate(Constants.ACTION_BLE_CHARX_DATA_CHANGE, characteristic);
-                broadcastUpdateRaw(Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW, characteristic);
+                broadcastUpdate(Constants.ACTION_BLE_CHARX_DATA_CHANGE, address,characteristic);
+                broadcastUpdateRaw(Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW, address,characteristic);
             }
 
             @Override
@@ -263,12 +261,13 @@ public class BleGattService extends Service {
      * Sends a broadcast to the listener in the main activity.
      * @param action The type of action that occurred.
      */
-    private void broadcastUpdate(final String action) {
+    private void broadcastUpdate(final String action, final String deviceAddress) {
         final Intent intent = new Intent(action);
+        intent.putExtra(Constants.DEVICE_ADDRESS, deviceAddress);
         sendBroadcast(intent);
     }
 
-    private void broadcastUpdate(final String action,
+    private void broadcastUpdate(final String action, final String deviceAddress,
                                  final List<BluetoothGattService> availableServices){
         ArrayList<String> uuid_strings = new ArrayList<>();
         for(BluetoothGattService service: availableServices){
@@ -276,6 +275,7 @@ public class BleGattService extends Service {
         }
 
         final Intent intent = new Intent(action);
+        intent.putExtra(Constants.DEVICE_ADDRESS, deviceAddress);
         intent.putStringArrayListExtra(Constants.SERVICE_UUID, uuid_strings);
         sendBroadcast(intent);
     }
@@ -285,9 +285,10 @@ public class BleGattService extends Service {
      * @param action The type of action that occurred, and
      * @param characteristic the ble gatt charx active on broadcast call.
      */
-    private void broadcastUpdate(final String action,
+    private void broadcastUpdate(final String action, final String deviceAddress,
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
+        intent.putExtra(Constants.DEVICE_ADDRESS, deviceAddress);
         intent.putExtra(Constants.EXTRA_UUID, characteristic.getUuid().toString());
         // This is special handling for the Heart Rate Measurement profile. Data
         // parsing is carried out as per profile specifications.
@@ -314,9 +315,10 @@ public class BleGattService extends Service {
         sendBroadcast(intent);
     }
 
-    private void broadcastUpdateRaw(final String action,
+    private void broadcastUpdateRaw(final String action, final String deviceAddress,
                                       final BluetoothGattCharacteristic characteristic){
         final Intent intent = new Intent(action);
+        intent.putExtra(Constants.DEVICE_ADDRESS, deviceAddress);
         intent.putExtra(Constants.EXTRA_UUID, characteristic.getUuid().toString());
 
         final byte[] data = characteristic.getValue();
@@ -501,7 +503,7 @@ public class BleGattService extends Service {
         else {
             bleGatt.disconnect();
             close(bleGatt);
-            broadcastUpdate(Constants.ACTION_DISCONNECTED);
+            broadcastUpdate(Constants.ACTION_DISCONNECTED, bleGatt.getDevice().getAddress());
         }
     }
     /**
