@@ -400,6 +400,7 @@ public class BleGattService extends Service {
             gatt.requestMtu(size);
         }catch (NullPointerException | AssertionError ex){
             ex.printStackTrace();
+            Util.message(this, "Connect to a device first");
         }
     }
 
