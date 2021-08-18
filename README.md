@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/bayosip/BluConnector.svg)](https://jitpack.io/#bayosip/BluConnector)
+
 # BluConnector
 Client side IoT wireless communication using either BLE or WiFi P2P (WiFi Direct).
 
