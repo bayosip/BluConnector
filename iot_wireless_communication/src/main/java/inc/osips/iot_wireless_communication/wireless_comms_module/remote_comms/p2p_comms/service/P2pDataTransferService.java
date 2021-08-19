@@ -1,21 +1,22 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.service;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.Message;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
 public class P2pDataTransferService extends Service {
@@ -41,14 +43,13 @@ public class P2pDataTransferService extends Service {
     private static final int MESSAGE_READ = 1;
     private SendReceive sendReceive;
 
-    public final static String EXTRA_DATA = "P2pDataTransferService.EXTRA_DATA";
-    public final static String ACTION_DATA_AVAILABLE = "P2pDataTransferService.ACTION_DATA_AVAILABLE";
-
     private final IBinder mBinder = new P2pDataTransferService.P2pServiceBinder();
 
-    public class P2pServiceBinder extends Binder{
+    public class P2pServiceBinder extends Binder {
 
-        public P2pDataTransferService getService(){ return P2pDataTransferService.this; }
+        public P2pDataTransferService getService() {
+            return P2pDataTransferService.this;
+        }
     }
 
 
@@ -69,32 +70,42 @@ public class P2pDataTransferService extends Service {
     }
 
 
-    public boolean init(){
+    public boolean init() {
         p2pManager = (WifiP2pManager) getApplicationContext()
                 .getSystemService(Context.WIFI_P2P_SERVICE);
 
         p2pChannel = p2pManager.initialize(getApplicationContext(), Looper.getMainLooper(), null);
 
-        if (p2pManager!=null && p2pChannel!= null)return true;
+        if (p2pManager != null && p2pChannel != null) return true;
 
         return false;
     }
 
-    public boolean connect(@NonNull final WifiP2pDevice p2pDevice){
+    public boolean connect(@NonNull final WifiP2pDevice p2pDevice) {
         config = new WifiP2pConfig();
         config.deviceAddress = p2pDevice.deviceAddress;
 
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return false;
+        }
         p2pManager.connect(p2pChannel, config, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                Util.message(P2pDataTransferService.this,"Connected to " + p2pDevice.deviceName);
+                Util.message(P2pDataTransferService.this, "Connected to " + p2pDevice.deviceName);
                 isP2pConnected = true;
             }
 
             @Override
             public void onFailure(int i) {
-                Util.message(P2pDataTransferService.this,"Failed To Connect...");
+                Util.message(P2pDataTransferService.this, "Failed To Connect...");
                 onUnbind(serviceIntent);
             }
         });
@@ -129,31 +140,32 @@ public class P2pDataTransferService extends Service {
             //ConnectivityManager manager;
 
             if(info!=null && info.isConnected()){
-                p2pManager.requestConnectionInfo(p2pChannel, new WifiP2pManager.ConnectionInfoListener() {
-                    @Override
-                    public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
-                        final InetAddress hostAddress = wifiP2pInfo.groupOwnerAddress;
-                        if (wifiP2pInfo.groupFormed) {
-                            clientServiceThread = new Thread(){
-                                @Override
-                                public void run() {
-                                    try {
-                                        socket.connect(new InetSocketAddress(hostAddress, PORT), TIME_OUT);
-                                        sendReceive = new SendReceive(socket);
-                                        sendReceive.start();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
+                p2pManager.requestConnectionInfo(p2pChannel, wifiP2pInfo -> {
+                    final InetAddress hostAddress = wifiP2pInfo.groupOwnerAddress;
+                    if (wifiP2pInfo.groupFormed) {
+                        clientServiceThread = new Thread(){
+                            @Override
+                            public void run() {
+                                try {
+                                    socket.connect(new InetSocketAddress(hostAddress, PORT), TIME_OUT);
+                                    sendReceive = new SendReceive(socket);
+                                    sendReceive.start();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
                                 }
-                            };
-                            clientServiceThread.start();
-                        }else {
-                            ServerClass server= new ServerClass(PORT);
-                            server.start();
-                        }
+                            }
+                        };
+                        clientServiceThread.start();
+                    }else {
+                        ServerClass server= new ServerClass(PORT);
+                        server.start();
                     }
+                    broadcastUpdate(Constants.P2P_ACTION_CONNECTED);
                 });
-            }else Util.message(P2pDataTransferService.this,"Wifi Device is Not Connected!");
+            }else {
+                broadcastUpdate(Constants.P2P_ACTION_CONNECTION_FAILURE);
+                Util.message(P2pDataTransferService.this,"Wifi Device is Not Connected!");
+            }
         }
     }
 
@@ -164,24 +176,18 @@ public class P2pDataTransferService extends Service {
 
     private void broadcastUpdate(final String action, String data) {
         final Intent intent = new Intent(action);
-        intent.putExtra(EXTRA_DATA, data);
+        intent.putExtra(Constants.P2P_EXTRA_DATA, data);
         sendBroadcast(intent);
     }
 
 
-    Handler handler=new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message msg) {
-            switch (msg.what)
-            {
-                case MESSAGE_READ:
-                    byte[] readBuff= (byte[]) msg.obj;
-                    String tempMsg=new String(readBuff,0, msg.arg1);
-                    broadcastUpdate(ACTION_DATA_AVAILABLE, tempMsg);
-                    break;
-            }
-            return true;
+    Handler handler=new Handler(msg -> {
+        if (msg.what == MESSAGE_READ) {
+            byte[] readBuff = (byte[]) msg.obj;
+            String tempMsg = new String(readBuff, 0, msg.arg1);
+            broadcastUpdate(Constants.P2P_ACTION_DATA_AVAILABLE, tempMsg);
         }
+        return true;
     });
 
     private class SendReceive extends Thread{

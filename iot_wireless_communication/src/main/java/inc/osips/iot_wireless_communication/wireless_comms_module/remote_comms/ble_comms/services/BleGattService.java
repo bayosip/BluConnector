@@ -31,7 +31,6 @@ import java.util.UUID;
 import inc.osips.iot_wireless_communication.R;
 import inc.osips.iot_wireless_communication.wireless_comms_module.BleWriteService;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.SampleGattAttributes;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
@@ -86,7 +85,7 @@ public class BleGattService extends Service {
         // invoked when the UI is disconnected from the Service.
         //disconnect();
         for (String addr: multiBleGatt.keySet()){
-            disconnect(multiBleGatt.get(addr));
+            disconnect(addr);
         }
         return super.onUnbind(intent);
     }
@@ -123,7 +122,7 @@ public class BleGattService extends Service {
                                 bleGatt = gatt;
 
                                 multiBleGatt.put(address, gatt);
-                                broadcastUpdate(Constants.ACTION_CONNECTED, address);
+                                broadcastUpdate(Constants.BLE_ACTION_CONNECTED, address);
                                 MyLogData += "Connected to GATT server.\n";
                                 Log.i(TAG, "Connected to GATT server.");
                                 // Attempts to discover services after successful connection.
@@ -135,7 +134,7 @@ public class BleGattService extends Service {
                         case BluetoothProfile.STATE_DISCONNECTED:
                             Log.i(TAG, "Disconnected from GATT server.");
                             MyLogData += "Disconnected from GATT server.\n";
-                            broadcastUpdate(Constants.ACTION_DISCONNECTED, address);
+                            broadcastUpdate(Constants.BLE_ACTION_DISCONNECTED, address);
                             gatt.close();
                             break;
                         case BluetoothProfile.STATE_DISCONNECTING:
@@ -145,7 +144,7 @@ public class BleGattService extends Service {
                 }else {
                     Util.getHandler().post(()->Util.message(BleGattService.this,
                             "Connection rejected or device too far"));
-
+                    broadcastUpdate(Constants.BLE_ACTION_CONNECTION_FAILURE, address);
                     gatt.close();
                 }
             }
@@ -194,8 +193,8 @@ public class BleGattService extends Service {
                     if (characteristic.getUuid() == UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb")) {
 
                     }
-                    broadcastUpdate(Constants.ACTION_DATA_AVAILABLE, address, characteristic);
-                    broadcastUpdateRaw(Constants.ACTION_RAW_DATA_AVAILABLE, address, characteristic);
+                    broadcastUpdate(Constants.BLE_ACTION_DATA_AVAILABLE, address, characteristic);
+                    broadcastUpdateRaw(Constants.BLE_ACTION_RAW_DATA_AVAILABLE, address, characteristic);
                     Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
                             + characteristic.getStringValue(0));
                 }
@@ -297,7 +296,7 @@ public class BleGattService extends Service {
             final byte[] data = characteristic.getValue();
             String s = String.format("%s ", data[0]);
             Log.d(TAG, "broadcastUpdate: ->" + s);
-            intent.putExtra(Constants.EXTRA_DATA, (int)Integer.parseInt(s, 16));
+            intent.putExtra(Constants.BLE_EXTRA_DATA, (int)Integer.parseInt(s, 16));
         } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
@@ -309,7 +308,7 @@ public class BleGattService extends Service {
                 Log.e(TAG, stringBuilder.toString());
                 String output = new String(data, StandardCharsets.UTF_8) + "\n" +
                         stringBuilder.toString();
-                intent.putExtra(Constants.EXTRA_DATA, output);
+                intent.putExtra(Constants.BLE_EXTRA_DATA, output);
             }
         }
         sendBroadcast(intent);
@@ -322,7 +321,7 @@ public class BleGattService extends Service {
         intent.putExtra(Constants.EXTRA_UUID, characteristic.getUuid().toString());
 
         final byte[] data = characteristic.getValue();
-        intent.putExtra(Constants.EXTRA_DATA_RAW, data);
+        intent.putExtra(Constants.BLE_EXTRA_DATA_RAW, data);
         sendBroadcast(intent);
     }
 
@@ -496,15 +495,16 @@ public class BleGattService extends Service {
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      * callback.
      */
-    public void disconnect(BluetoothGatt bleGatt) {
+    public void disconnect(String address) {
+        BluetoothGatt bleGatt = multiBleGatt.get(address);
         if (bleGatt== null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
+            Log.w(TAG, "Bluetooth Gatt does not exist");
             Util.message( this,"No Device Connected!");
         }
         else {
             bleGatt.disconnect();
             close(bleGatt);
-            broadcastUpdate(Constants.ACTION_DISCONNECTED, bleGatt.getDevice().getAddress());
+            broadcastUpdate(Constants.BLE_ACTION_DISCONNECTED, bleGatt.getDevice().getAddress());
         }
     }
     /**

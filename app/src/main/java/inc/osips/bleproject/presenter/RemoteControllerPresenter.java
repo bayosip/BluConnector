@@ -14,8 +14,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.EditText;
 
-import androidx.annotation.Nullable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +22,6 @@ import java.util.Map;
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.DeviceConnectionFactory;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.Devices;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.services.BleGattService;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.service.P2pDataTransferService;
 import inc.osips.bleproject.utilities.Constants;
@@ -171,13 +168,14 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         public void onReceive(Context context, Intent intent) {
             Log.i(TAG, "Action Received");
             final String action = intent.getAction();
+            assert action != null;
             Log.w(TAG, action);
             switch (action) {
-                case Constants.ACTION_CONNECTED:
+                case Constants.BLE_ACTION_CONNECTED: case Constants.P2P_ACTION_CONNECTED:
                     // No need to do anything here. Service discovery is started by the service.
                     Log.i(TAG, "Connected to GATT server.");
                     break;
-                case Constants.ACTION_DISCONNECTED:
+                case Constants.BLE_ACTION_DISCONNECTED:case Constants.P2P_ACTION_DISCONNECTED:
                     Log.i(TAG, "Service Disconnected");
                     GeneralUtil.message("Device Disconnected");
                     //if (App.getCurrentActivity() instanceof ControllerActivity)
@@ -185,6 +183,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     break;
                 case Constants.ACTION_BLE_SERVICES_DISCOVERED:
                     Log.w("BLE", "services discovered");
+                    assert serviceMap.get(count)!=null;
                     if (!serviceMap.get(count)) {
                         listOfRemoteServices.clear();
                         listOfRemoteServices.addAll(intent.getStringArrayListExtra(Constants.SERVICE_UUID));
@@ -192,13 +191,16 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                         Log.w("BLE", "All services found : " + listOfRemoteServices.get(0));
                     }
                     break;
-                case Constants.ACTION_DATA_AVAILABLE:
-                    Log.w("BLE DATA", "" + intent.getStringExtra(Constants.EXTRA_DATA));
-                    break;
-                case P2pDataTransferService.ACTION_DATA_AVAILABLE:
-                    Log.w("DATA", intent.getStringExtra(P2pDataTransferService.EXTRA_DATA));
+                case Constants.BLE_ACTION_DATA_AVAILABLE:
+                    Log.w("DATA", ""+intent.getStringExtra(Constants.BLE_EXTRA_DATA));
                     // This is called after a Notify completes
-                    GeneralUtil.message(intent.getStringExtra(P2pDataTransferService.EXTRA_DATA));
+                    GeneralUtil.message(intent.getStringExtra(Constants.BLE_EXTRA_DATA));
+                    break;
+                case Constants.P2P_ACTION_DATA_AVAILABLE:
+                    String s = intent.getStringExtra(Constants.P2P_EXTRA_DATA);
+                    Log.w("DATA", s);
+                    // This is called after a Notify completes
+                    GeneralUtil.message(s);
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     if(type.equalsIgnoreCase(Constants.P2P)) {
@@ -242,10 +244,10 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
      */
     private IntentFilter commsUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.ACTION_CONNECTED);
-        intentFilter.addAction(Constants.ACTION_DISCONNECTED);
+        intentFilter.addAction(Constants.BLE_ACTION_CONNECTED);
+        intentFilter.addAction(Constants.BLE_ACTION_DISCONNECTED);
         intentFilter.addAction(Constants.ACTION_BLE_SERVICES_DISCOVERED);
-        intentFilter.addAction(Constants.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(Constants.BLE_ACTION_DATA_AVAILABLE);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
