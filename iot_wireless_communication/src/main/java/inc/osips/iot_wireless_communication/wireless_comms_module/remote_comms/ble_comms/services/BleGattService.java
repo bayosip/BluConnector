@@ -625,38 +625,34 @@ public class BleGattService extends Service {
         return false;
     }
 
-    public void writeToDescriptorToEnableNotifications(BluetoothGattCharacteristic charx, String uuidStr,
-                                                       String CCC_DESCRIPTOR_UUID, String deviceAddr){
-        BluetoothGatt gatt = multiBleGatt.get(deviceAddr);
-        assert gatt!=null;
-        if (setCharacteristicNotification(gatt, charx, true)) {
-            UUID mUUID =
-                    UUID.fromString(uuidStr);
-
-            if (mUUID.equals(charx.getUuid())) {
-                BluetoothGattDescriptor descriptor = charx.getDescriptor(
-                        UUID.fromString(CCC_DESCRIPTOR_UUID));
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                gatt.writeDescriptor(descriptor);
-            }
-        }
-    }
-
-    public void writeToDescriptorToDisableNotifications(BluetoothGattCharacteristic charx, String uuidStr,
+    public void writeToDescriptorToEnableNotifications(String serviceUUID, String charxUUID,
                                                        String CCC_DESCRIPTOR_UUID, String deviceAddress){
 
         BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
         assert gatt!= null;
+        BluetoothGattCharacteristic charx =gatt.getService(UUID.fromString(serviceUUID))
+                .getCharacteristic(UUID.fromString(charxUUID));
         if (setCharacteristicNotification(gatt, charx, false)) {
-            UUID mUUID =
-                    UUID.fromString(uuidStr);
+                BluetoothGattDescriptor descriptor = charx.getDescriptor(
+                        UUID.fromString(CCC_DESCRIPTOR_UUID));
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                gatt.writeDescriptor(descriptor);
+        }
+    }
 
-            if (mUUID.equals(charx.getUuid())) {
+    public void writeToDescriptorToDisableNotifications(String serviceUUID, String charxUUID,
+                                                       String CCC_DESCRIPTOR_UUID, String deviceAddress){
+
+        BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
+        assert gatt!= null;
+        BluetoothGattCharacteristic charx =gatt.getService(UUID.fromString(serviceUUID))
+                .getCharacteristic(UUID.fromString(charxUUID));
+        if (setCharacteristicNotification(gatt, charx, false)) {
+
                 BluetoothGattDescriptor descriptor = charx.getDescriptor(
                         UUID.fromString(CCC_DESCRIPTOR_UUID));
                 descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
                 gatt.writeDescriptor(descriptor);
-            }
         }
     }
 

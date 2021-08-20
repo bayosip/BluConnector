@@ -48,17 +48,17 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void enableNotificationsFor(Parcelable attribute,
-                                       String uuid_ip, String descriptor, String deviceAddress) {
-        gattService.writeToDescriptorToEnableNotifications((BluetoothGattCharacteristic) attribute,
-                uuid_ip, descriptor, deviceAddress);
+    public void enableNotificationsFor(String serviceUuid, String attrId,
+                                       String descriptor, String deviceAddress) {
+        gattService.writeToDescriptorToEnableNotifications(serviceUuid,
+                attrId, descriptor, deviceAddress);
     }
 
     @Override
-    public void disableNotificationsFor(Parcelable attribute,
-                                        String uuid_ip, String descriptor, String deviceAddress) {
-        gattService.writeToDescriptorToDisableNotifications((BluetoothGattCharacteristic) attribute,
-                uuid_ip, descriptor, deviceAddress);
+    public void disableNotificationsFor(String serviceUuid, String attrId,
+                                        String descriptor, String deviceAddress) {
+        gattService.writeToDescriptorToDisableNotifications(serviceUuid,
+                attrId, descriptor, deviceAddress);
     }
 
     @Override
