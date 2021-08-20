@@ -1,5 +1,6 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms;
 
+import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -65,6 +66,16 @@ public class P2pConnection implements WirelessDeviceConnector {
     @Override
     public ServiceConnection getServiceConnection() {
         return mConnection;
+    }
+
+    @Override
+    public <T extends Service> T getService() {
+        try {
+            return (T) p2pService;
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return null;
+        }
     }
 
     @Override
