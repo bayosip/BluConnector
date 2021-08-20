@@ -18,7 +18,8 @@ public interface WirelessDeviceConnector {
     String MTU_CHANGE_FAILURE = "Failure";
     boolean isConnected();
     ServiceConnection getServiceConnection();
-    <T extends Service> T getService();
+    void enableNotificationsFor(Parcelable attribute, String uuid_ip, String descriptor, String deviceAddress);
+    void disableNotificationsFor(Parcelable attribute, String uuid_ip, String descriptor, String deviceAddress);
     void connectAnotherDeviceSimultaneously(@NonNull Parcelable device, @Nullable String serviceUUID) throws Exception;
     void selectServiceUsingUUID (@Nullable String deviceAddress, @NonNull String UUID);
     void connectToDeviceWithDeviceInfoFrom(@NonNull Intent intent);

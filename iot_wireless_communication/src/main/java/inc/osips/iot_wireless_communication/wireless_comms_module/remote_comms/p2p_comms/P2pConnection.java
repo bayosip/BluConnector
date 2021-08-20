@@ -69,13 +69,13 @@ public class P2pConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public <T extends Service> T getService() {
-        try {
-            return (T) p2pService;
-        }catch (Exception ex){
-            ex.printStackTrace();
-            return null;
-        }
+    public void enableNotificationsFor(Parcelable attribute, String uuid_ip, String descriptor, String deviceAddress) {
+
+    }
+
+    @Override
+    public void disableNotificationsFor(Parcelable attribute, String uuid_ip, String descriptor, String deviceAddress) {
+
     }
 
     @Override

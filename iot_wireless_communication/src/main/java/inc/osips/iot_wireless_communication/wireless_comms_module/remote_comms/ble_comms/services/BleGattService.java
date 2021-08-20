@@ -614,7 +614,7 @@ public class BleGattService extends Service {
      *
      * @param enabled        If true, enable notification.  False otherwise.
      */
-    public boolean setCharacteristicNotification(BluetoothGatt bleGatt,
+    private boolean setCharacteristicNotification(BluetoothGatt bleGatt,
                                                BluetoothGattCharacteristic myNotifycharx,
                                                boolean enabled) {
         if (myNotifycharx!= null)
@@ -626,7 +626,9 @@ public class BleGattService extends Service {
     }
 
     public void writeToDescriptorToEnableNotifications(BluetoothGattCharacteristic charx, String uuidStr,
-                                                       String CCC_DESCRIPTOR_UUID, BluetoothGatt gatt){
+                                                       String CCC_DESCRIPTOR_UUID, String deviceAddr){
+        BluetoothGatt gatt = multiBleGatt.get(deviceAddr);
+        assert gatt!=null;
         if (setCharacteristicNotification(gatt, charx, true)) {
             UUID mUUID =
                     UUID.fromString(uuidStr);
@@ -641,8 +643,10 @@ public class BleGattService extends Service {
     }
 
     public void writeToDescriptorToDisableNotifications(BluetoothGattCharacteristic charx, String uuidStr,
-                                                       String CCC_DESCRIPTOR_UUID, BluetoothGatt gatt){
+                                                       String CCC_DESCRIPTOR_UUID, String deviceAddress){
 
+        BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
+        assert gatt!= null;
         if (setCharacteristicNotification(gatt, charx, false)) {
             UUID mUUID =
                     UUID.fromString(uuidStr);

@@ -3,6 +3,7 @@ package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.
 import android.app.Activity;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -47,13 +48,17 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public <T extends Service> T getService() {
-        try {
-            return (T) gattService;
-        } catch (Exception ex){
-            ex.printStackTrace();
-            return  null;
-        }
+    public void enableNotificationsFor(Parcelable attribute,
+                                       String uuid_ip, String descriptor, String deviceAddress) {
+        gattService.writeToDescriptorToEnableNotifications((BluetoothGattCharacteristic) attribute,
+                uuid_ip, descriptor, deviceAddress);
+    }
+
+    @Override
+    public void disableNotificationsFor(Parcelable attribute,
+                                        String uuid_ip, String descriptor, String deviceAddress) {
+        gattService.writeToDescriptorToDisableNotifications((BluetoothGattCharacteristic) attribute,
+                uuid_ip, descriptor, deviceAddress);
     }
 
     @Override
