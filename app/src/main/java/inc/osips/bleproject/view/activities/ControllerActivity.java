@@ -130,7 +130,6 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
 
     @Override
     public void getDeviceAddressFromPopUp() {
-        if (listDevice.size()>1){
             List<String> addresses = new ArrayList<>();
             for (Parcelable p : listDevice){
                 BluetoothDevice bd = (BluetoothDevice)p;
@@ -139,7 +138,6 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
             ServiceSelectorDialog.setListUUID(addresses, ADDR);
             if (!dialog.isAdded())
                 dialog.show(getSupportFragmentManager(), "Device Selector");
-        }
     }
 
     @Override
