@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.UUID;
 
@@ -47,9 +49,9 @@ public class BleGattService extends Service {
     private BluetoothAdapter bAdapter;
     private boolean isHasService = false;
 
-    //  Queue for BLE events
-    //  This is needed so that rapid BLE events don't get dropped
-    private static final Queue<Object> BleQueue = new LinkedList<>();
+    private Map<String, Queue<Object>> writeQueueMap = new HashMap<>();
+    private Map<String, Queue<Object>> readQueueMap = new HashMap<>();
+
     private int GATT_MAX_MTU_SIZE = 517;// default ATT MTU size
 
     public  String EXTRA_UUID;
@@ -113,6 +115,8 @@ public class BleGattService extends Service {
              * @param newState New state (connected or disconnected)
              */
             private BluetoothGatt bleGatt;
+
+
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                 if(status == BluetoothGatt.GATT_SUCCESS){
@@ -121,7 +125,14 @@ public class BleGattService extends Service {
                             if (gatt!=null) {
                                 bleGatt = gatt;
 
+                                //  Queue for BLE events
+                                //  This is needed so that rapid BLE events don't get dropped
+                                Queue<Object> BleReadQueue = new LinkedList<>();
+                                Queue<Object> BleWriteQueue = new LinkedList<>();
+
                                 multiBleGatt.put(address, gatt);
+                                readQueueMap.put(address, BleReadQueue);
+                                writeQueueMap.put(address, BleWriteQueue);
                                 broadcastUpdate(Constants.BLE_ACTION_CONNECTED, address);
                                 MyLogData += "Connected to GATT server.\n";
                                 Log.i(TAG, "Connected to GATT server.");
@@ -175,13 +186,28 @@ public class BleGattService extends Service {
             }
 
 
-            private void handleBleQueue() {
-                if(BleQueue.size() > 0) {
+            private void handleBleWriteQueue() {
+                Queue<Object> BleWriteQueue = writeQueueMap.get(address);
+                assert BleWriteQueue!=null;
+                if(writeQueueMap.size() > 0) {
                     // Determine which type of event is next and fire it off
-                    if (BleQueue.element() instanceof BluetoothGattDescriptor) {
-                        bleGatt.writeDescriptor((BluetoothGattDescriptor) BleQueue.element());
-                    } else if (BleQueue.element() instanceof BluetoothGattCharacteristic) {
-                        bleGatt.writeCharacteristic((BluetoothGattCharacteristic) BleQueue.element());
+                    if (BleWriteQueue.element() instanceof BluetoothGattDescriptor) {
+                        bleGatt.writeDescriptor((BluetoothGattDescriptor) BleWriteQueue.element());
+                    } else if (BleWriteQueue.element() instanceof BluetoothGattCharacteristic) {
+                        bleGatt.writeCharacteristic((BluetoothGattCharacteristic) BleWriteQueue.element());
+                    }
+                }
+            }
+
+            private void handleBleReadQueue() {
+                Queue<Object> BleReadQueue = readQueueMap.get(address);
+                assert BleReadQueue != null;
+                if(BleReadQueue.size() > 0) {
+                    // Determine which type of event is next and fire it off
+                    if (BleReadQueue.element() instanceof BluetoothGattDescriptor) {
+                        bleGatt.readDescriptor((BluetoothGattDescriptor) BleReadQueue.element());
+                    } else if (BleReadQueue.element() instanceof BluetoothGattCharacteristic) {
+                        bleGatt.readCharacteristic((BluetoothGattCharacteristic) BleReadQueue.element());
                     }
                 }
             }
@@ -193,6 +219,12 @@ public class BleGattService extends Service {
                     if (characteristic.getUuid() == UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb")) {
 
                     }
+                    // Pop the item that was written from the queue
+                    Queue<Object> BleReadQueue = readQueueMap.get(address);
+                    Objects.requireNonNull(BleReadQueue).remove();
+                    readQueueMap.put(address, BleReadQueue);
+                    // See if there are more items in the BLE queues
+                    handleBleReadQueue();
                     broadcastUpdate(Constants.BLE_ACTION_DATA_AVAILABLE, address, characteristic);
                     broadcastUpdateRaw(Constants.BLE_ACTION_RAW_DATA_AVAILABLE, address, characteristic);
                     Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
@@ -213,9 +245,11 @@ public class BleGattService extends Service {
                                               int status) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     // Pop the item that was written from the queue
-                    BleQueue.remove();
+                    Queue<Object> BleWriteQueue = writeQueueMap.get(address);
+                    Objects.requireNonNull(BleWriteQueue).remove();
+                    writeQueueMap.put(address, BleWriteQueue);
                     // See if there are more items in the BLE queues
-                    handleBleQueue();
+                    handleBleWriteQueue();
                 }else {
                     boolean flag =status==BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH;
                     Log.e(TAG, "onCharacteristicWrite: Failed with GATT_INVALID_ATTRIBUTE_LENGTH ="
@@ -241,6 +275,47 @@ public class BleGattService extends Service {
                 // Tell the activity that new car data is available
                 broadcastUpdate(Constants.ACTION_BLE_CHARX_DATA_CHANGE, address,characteristic);
                 broadcastUpdateRaw(Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW, address,characteristic);
+            }
+
+            @Override
+            public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+
+                    // Pop the item that was written from the queue
+                    // Pop the item that was written from the queue
+                    Queue<Object> BleReadQueue = readQueueMap.get(address);
+                    Objects.requireNonNull(BleReadQueue).remove();
+                    readQueueMap.put(address, BleReadQueue);
+                    // See if there are more items in the BLE queues
+                    handleBleReadQueue();
+                    BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
+                    broadcastUpdate(Constants.BLE_ACTION_DATA_AVAILABLE, address, characteristic);
+                    broadcastUpdateRaw(Constants.BLE_ACTION_RAW_DATA_AVAILABLE, address, characteristic);
+                    Log.i(TAG, "onCharacteristicRead: xchar: " + characteristic.getUuid() + ", read:"
+                            + characteristic.getStringValue(0));
+                }
+            }
+
+            @Override
+            public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    // Pop the item that was written from the queue
+                    Queue<Object> BleWriteQueue = writeQueueMap.get(address);
+                    Objects.requireNonNull(BleWriteQueue).remove();
+                    writeQueueMap.put(address, BleWriteQueue);
+                    // See if there are more items in the BLE queues
+                    handleBleWriteQueue();
+                }else {
+                    boolean flag =status==BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH;
+                    Log.e(TAG, "onCharacteristicWrite: Failed with GATT_INVALID_ATTRIBUTE_LENGTH ="
+                            + flag);
+                    Util.message(BleGattService.this, "Write failed! Send smaller bytes");
+                }
+            }
+
+            @Override
+            public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+                //TODO: broadcast rssi value
             }
 
             @Override
@@ -589,8 +664,10 @@ public class BleGattService extends Service {
      */
     private void writeBleCharacteristic(BluetoothGatt bleGatt, BluetoothGattCharacteristic myWriteCharx) {
         try{
-            BleQueue.add(myWriteCharx);
-            if (BleQueue.size() == 1) {
+            Queue<Object> BleWriteQueue = writeQueueMap.get(bleGatt.getDevice().getAddress());
+            Objects.requireNonNull(BleWriteQueue).add(myWriteCharx);
+            writeQueueMap.put(bleGatt.getDevice().getAddress(), BleWriteQueue);
+            if (BleWriteQueue.size() == 1) {
                 bleGatt.writeCharacteristic(myWriteCharx);
                 Log.i(TAG, "Writing Characteristic");
             }
@@ -601,7 +678,7 @@ public class BleGattService extends Service {
     }
 
     /**
-     * This method is used to read the state of the LED from the device
+     * This method is used to read the state ble gatt charx from the device
      */
     public void readBleCharacteristic(BluetoothGatt bleGatt,
                                       BluetoothGattCharacteristic myReadCharx) {
@@ -609,7 +686,36 @@ public class BleGattService extends Service {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        bleGatt.readCharacteristic(myReadCharx);
+        Queue<Object> BleReadQueue = readQueueMap.get(bleGatt.getDevice().getAddress());
+        Objects.requireNonNull(BleReadQueue).add(myReadCharx);
+        readQueueMap.put(bleGatt.getDevice().getAddress(), BleReadQueue);
+        if(BleReadQueue.size() ==1)
+            bleGatt.readCharacteristic(myReadCharx);
+    }
+
+    /**
+     * Request a read on a given ble gatt charx descriptor. The read result is reported
+     * asynchronously through the {@code BluetoothGattCallback#onDescriptorRead(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, int)}
+     * callback.
+     *
+     */
+
+    public void readDescriptor(String serviceUUID, String charxUUID,
+                               String CCC_DESCRIPTOR_UUID, String deviceAddress) {
+        BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
+        assert gatt!= null;
+        BluetoothGattCharacteristic charx =gatt.getService(UUID.fromString(serviceUUID))
+                .getCharacteristic(UUID.fromString(charxUUID));
+            BluetoothGattDescriptor descriptor = charx.getDescriptor(
+                    UUID.fromString(CCC_DESCRIPTOR_UUID));
+        Log.d(TAG, String.format("readDescriptor(%s)", descriptor));
+
+        Queue<Object> BleReadQueue = readQueueMap.get(deviceAddress);
+        Objects.requireNonNull(BleReadQueue).add(descriptor);
+        readQueueMap.put(deviceAddress, BleReadQueue);
+        if (BleReadQueue.size() == 1){
+            gatt.readDescriptor(descriptor);
+        }
     }
 
     /**
@@ -639,7 +745,12 @@ public class BleGattService extends Service {
                 BluetoothGattDescriptor descriptor = charx.getDescriptor(
                         UUID.fromString(CCC_DESCRIPTOR_UUID));
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                gatt.writeDescriptor(descriptor);
+
+            Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
+            Objects.requireNonNull(BleWriteQueue).add(descriptor);
+            writeQueueMap.put(deviceAddress, BleWriteQueue);
+                if(BleWriteQueue.size()==1)
+                    gatt.writeDescriptor(descriptor);
         }
     }
 
@@ -655,6 +766,10 @@ public class BleGattService extends Service {
                 BluetoothGattDescriptor descriptor = charx.getDescriptor(
                         UUID.fromString(CCC_DESCRIPTOR_UUID));
                 descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+            Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
+            Objects.requireNonNull(BleWriteQueue).add(descriptor);
+            writeQueueMap.put(deviceAddress, BleWriteQueue);
+            if(BleWriteQueue.size()==1)
                 gatt.writeDescriptor(descriptor);
         }
     }
