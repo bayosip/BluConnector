@@ -102,6 +102,11 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
+    public void disconnectDevice(@NonNull String address) {
+        gattService.disconnect(address);
+    }
+
+    @Override
     public void selectServiceUsingUUID(@Nullable String deviceAddress, @NonNull String UUID) {
         assert deviceAddress != null;
         gattService.selectServiceFromUUID(deviceAddress,UUID);

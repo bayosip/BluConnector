@@ -70,12 +70,14 @@ public class P2pConnection implements WirelessDeviceConnector {
 
     @Override
     public void enableNotificationsFor(String serviceUuid, String attrId, String descriptor, String deviceAddress) {
-
     }
 
     @Override
     public void disableNotificationsFor(String serviceUuid, String attrId, String descriptor, String deviceAddress) {
+    }
 
+    @Override
+    public void disconnectDevice(@NonNull String address) {
     }
 
     @Override

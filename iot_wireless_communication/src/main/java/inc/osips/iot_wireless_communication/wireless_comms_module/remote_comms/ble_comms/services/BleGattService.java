@@ -539,22 +539,19 @@ public class BleGattService extends Service {
             Log.d(TAG, "getGattServicesCharx: ->" + gattCharacteristic.getUuid().toString() +
                     ", property: " + gattCharacteristic.getProperties());
             int property = gattCharacteristic.getProperties();
-            if (property> BluetoothGattCharacteristic.PROPERTY_BROADCAST &&
-                    property != BluetoothGattCharacteristic.PROPERTY_READ &&
-                property != BluetoothGattCharacteristic.PROPERTY_NOTIFY &&
-                property != BluetoothGattCharacteristic.PROPERTY_INDICATE) {
+            if ((property| BluetoothGattCharacteristic.PROPERTY_WRITE)>0 ||
+                    (property| BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)>0
+            || (property|BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE)>0) {
                 //myWriteCharx = gattCharacteristic;
                 mServiceObj.getCharacteristics().add(gattCharacteristic);
                 gattServicesMap.put(gatt, mServiceObj);
             }
-            if(property >=BluetoothGattCharacteristic.PROPERTY_READ &&
-                    property<BluetoothGattCharacteristic.PROPERTY_NOTIFY){
+            if((property | BluetoothGattCharacteristic.PROPERTY_READ) >0){
                 readBleCharacteristic(gatt, gattCharacteristic);
             }
-            if (property>= BluetoothGattCharacteristic.PROPERTY_NOTIFY
-            && property!= BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE){
+            if ((property| BluetoothGattCharacteristic.PROPERTY_NOTIFY)>0
+            || (property| BluetoothGattCharacteristic.PROPERTY_INDICATE)>0){
                 //myNotifycharx = gattCharacteristic;
-                readBleCharacteristic(gatt, gattCharacteristic);
                 setCharacteristicNotification(gatt, gattCharacteristic, true);
                 Log.i(TAG, "getGattServices: Notify charX discovered");
             }
