@@ -15,9 +15,11 @@ import android.util.Log;
 import android.widget.EditText;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
@@ -196,9 +198,24 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                     // This is called after a Notify completes
                     GeneralUtil.message(intent.getStringExtra(Constants.BLE_EXTRA_DATA));
                     break;
+                case Constants.BLE_ACTION_RAW_DATA_AVAILABLE:
+                    Log.w("DATA", ""+ Arrays.toString(intent.getByteArrayExtra(Constants.BLE_EXTRA_DATA_RAW)));
+                    // This is called after a Notify completes
+                    GeneralUtil.message(""+ Arrays.toString(intent.getByteArrayExtra(Constants.BLE_EXTRA_DATA_RAW)));
+                    break;
+                case Constants.ACTION_BLE_CHARX_DATA_CHANGE:
+                    Log.w("DATA", ""+intent.getStringExtra(Constants.BLE_EXTRA_DATA_RAW));
+                    // This is called after a Notify completes
+                    GeneralUtil.message(intent.getStringExtra(Constants.BLE_EXTRA_DATA_RAW));
+                    break;
+                case Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW:
+                    Log.w("DATA", "onReceive: ->" +
+                            Arrays.toString(intent.getByteArrayExtra(inc.osips.iot_wireless_communication
+                                    .wireless_comms_module.remote_comms.utility.Constants.BLE_EXTRA_DATA_RAW)));
                 case Constants.P2P_ACTION_DATA_AVAILABLE:
                     String s = intent.getStringExtra(Constants.P2P_EXTRA_DATA);
-                    Log.w("DATA", s);
+                    if(s != null)
+                        Log.w("DATA", s);
                     // This is called after a Notify completes
                     GeneralUtil.message(s);
                     break;
@@ -248,6 +265,9 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
         intentFilter.addAction(Constants.BLE_ACTION_DISCONNECTED);
         intentFilter.addAction(Constants.ACTION_BLE_SERVICES_DISCOVERED);
         intentFilter.addAction(Constants.BLE_ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(Constants.BLE_ACTION_RAW_DATA_AVAILABLE);
+        intentFilter.addAction(Constants.ACTION_BLE_CHARX_DATA_CHANGE);
+        intentFilter.addAction(Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
