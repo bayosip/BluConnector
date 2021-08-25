@@ -155,6 +155,7 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
 
         if (scanState) {
             scanState = false;
+            deviceAddresses.clear();
             Log.w(TAG, "scanning stopped");
             if(bluetoothLeScanner != null)
                 bluetoothLeScanner.stopScan(mScanCallback);
