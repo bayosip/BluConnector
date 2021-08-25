@@ -91,7 +91,6 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
             Util.message(activity, "Please allow permission to all scanning for devices");
             return;
         }
-
         if (uuidParcel== null){
             scanForAllBLEDevices();
         }
@@ -101,6 +100,7 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
     public void onStop() {
         if (scanState) {
             scanStop();
+            deviceAddresses.clear();
         }
     }
 
@@ -141,6 +141,7 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
             Util.getHandler().postDelayed(this::scanStop, SCAN_TIME);
 
             scanState = true;
+
             bluetoothLeScanner.startScan(null, settings, mScanCallback);
         }
         else{
