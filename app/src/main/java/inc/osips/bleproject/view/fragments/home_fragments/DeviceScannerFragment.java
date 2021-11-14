@@ -85,15 +85,17 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
 
         searchButton = view.findViewById(R.id.buttonConnect);
         if (type.equals(Constants.BLE)){
-            searchButton.setImageDrawable(GeneralUtil.setADrawable(activity, R.drawable.ic_bluetooth_searching_24dp));
+            searchButton.setImageDrawable(GeneralUtil.setADrawable(requireActivity(),
+                    R.drawable.ic_bluetooth_searching_24dp));
         }else {
-            searchButton.setImageDrawable(GeneralUtil.setADrawable(activity, R.drawable.ic_wifi_24dp));
+            searchButton.setImageDrawable(GeneralUtil.setADrawable(requireActivity(),
+                    R.drawable.ic_wifi_24dp));
         }
         layoutSearch = view.findViewById(R.id.layoutSearch);
         discoveredDevices = view.findViewById(R.id.peerListView);
 
         discoveredDevices = view.findViewById(R.id.peerListView);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(activity,
+        LinearLayoutManager layoutManager = new LinearLayoutManager(requireActivity(),
                 RecyclerView.VERTICAL, false);
 
         discoveredDevices.setLayoutManager(layoutManager);
@@ -120,7 +122,7 @@ public class DeviceScannerFragment extends BaseFragment implements OnDiscoveredD
     }
 
     private void accessRemoteScanning() {
-        Dexter.withActivity(requireActivity())
+        Dexter.withContext(requireContext())
                 .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
                 .withListener(new PermissionListener() {
                     @Override

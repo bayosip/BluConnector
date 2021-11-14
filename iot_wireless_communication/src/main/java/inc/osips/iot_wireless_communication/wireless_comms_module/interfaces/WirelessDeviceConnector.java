@@ -19,6 +19,8 @@ public interface WirelessDeviceConnector {
     boolean isConnected();
     ServiceConnection getServiceConnection();
     void disconnectDevice(@NonNull String address);
+    void increaseMessagingByteLimit(@NonNull String address, int size);
+    void maxOutMessagingByteLimit(@NonNull String address);
     void enableNotificationsFor(String serviceUuid, String attrId, String descriptor, String deviceAddress);
     void disableNotificationsFor(String serviceUuid, String attrId, String descriptor, String deviceAddress);
     void connectAnotherDeviceSimultaneously(@NonNull Parcelable device, @Nullable String serviceUUID) throws Exception;
@@ -27,4 +29,7 @@ public interface WirelessDeviceConnector {
     void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions);
     void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
                                         @Nullable UUID charxDescriptor, @NonNull String instructions);
+    void sendInstructionsToConnectedDevice(String deviceAddr,
+                                           @Nullable UUID charxDescriptor, byte[] data);
+    void sendInstructionsToConnectedDevice(String deviceAddr, byte[] data);
 }

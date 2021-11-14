@@ -275,7 +275,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     }
 
     private void sendInstructionsToDevice(String instruct) {
-        deviceConnector.sendInstructionsToRemoteDevice(deviceAddr,null, instruct);
+        deviceConnector.sendInstructionsToRemoteDevice(deviceAddr, instruct);
     }
 
     public void setDeviceAddressAndSendInstructions(String uuidAddr, String instructions) {

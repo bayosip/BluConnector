@@ -33,7 +33,7 @@
         <activity
             android:name=".view.activities.AppFinish"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Splash"></activity>
+            android:theme="@style/AppTheme.Splash" />
         <activity
             android:name=".view.activities.ErrorActivity"
             android:process=":error_activity"

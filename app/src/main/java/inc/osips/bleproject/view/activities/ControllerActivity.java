@@ -238,15 +238,12 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
         alertDialog.setCancelable(false)
                 .setIcon(R.mipmap.ic_launcher).setMessage(getApplicationContext()
                 .getString(R.string.disconnect_warning))
-                .setTitle("Notice").setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(ControllerActivity.this)){
-                    getUUIDFromPopUp(presenter.getListOfRemoteServices());
-                }
-                dialog.dismiss();
-            }
-        }).setPositiveButton("Yes", (dialog, which) -> {
+                .setTitle("Notice").setNegativeButton("No", (dialog, which) -> {
+                    if (!ServiceUtil.isAnyRemoteConnectionServiceRunningAPI16(ControllerActivity.this)){
+                        getUUIDFromPopUp(presenter.getListOfRemoteServices());
+                    }
+                    dialog.dismiss();
+                }).setPositiveButton("Yes", (dialog, which) -> {
             presenter.unbindBleService();
             dialog.dismiss();
         });

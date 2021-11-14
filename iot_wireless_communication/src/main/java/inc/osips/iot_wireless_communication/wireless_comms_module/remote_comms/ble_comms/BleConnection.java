@@ -102,6 +102,16 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
+    public void increaseMessagingByteLimit(@NonNull String address, int size) {
+        gattService.increaseGattMaxMtuSizeOfDeviceAddr(address, size);
+    }
+
+    @Override
+    public void maxOutMessagingByteLimit(@NonNull String address) {
+        gattService.maxOutGattMtuSize(address);
+    }
+
+    @Override
     public void disconnectDevice(@NonNull String address) {
         gattService.disconnect(address);
     }
@@ -114,13 +124,24 @@ public class BleConnection implements WirelessDeviceConnector {
 
     @Override
     public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions) {
-        gattService.sendInstructionsToConnectedDevice(deviceAddress, null, instructions);
+        sendInstructionsToRemoteDevice(deviceAddress, null, instructions);
     }
 
     @Override
     public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
                                                @Nullable UUID charxDescriptor, @NonNull String instructions) {
         gattService.sendInstructionsToConnectedDevice(deviceAddress, charxDescriptor, instructions);
+    }
+
+    @Override
+    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor,
+                                                  byte[] data) {
+        gattService.sendInstructionsToConnectedDevice(deviceAddr, charxDescriptor, data);
+    }
+
+    @Override
+    public void sendInstructionsToConnectedDevice(String deviceAddr, byte[] data) {
+        gattService.sendInstructionsToConnectedDevice(deviceAddr, null, data);
     }
 
     private final ServiceConnection mConnection =

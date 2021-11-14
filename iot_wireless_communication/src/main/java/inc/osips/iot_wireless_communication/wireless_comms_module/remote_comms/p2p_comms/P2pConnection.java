@@ -59,6 +59,14 @@ public class P2pConnection implements WirelessDeviceConnector {
     }
 
     @Override
+    public void increaseMessagingByteLimit(@NonNull String address, int size) {
+    }
+
+    @Override
+    public void maxOutMessagingByteLimit(@NonNull String address) {
+    }
+
+    @Override
     public boolean isConnected() {
         return mBound;
     }

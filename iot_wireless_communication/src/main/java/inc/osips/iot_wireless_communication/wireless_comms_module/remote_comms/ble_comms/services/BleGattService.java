@@ -586,7 +586,7 @@ public class BleGattService extends Service {
      * callback.
      */
     public void disconnect(String address) {
-        BluetoothGatt bleGatt = multiBleGatt.get(address);
+        BluetoothGatt bleGatt = multiBleGatt.remove(address);
         if (bleGatt== null) {
             Log.w(TAG, "Bluetooth Gatt does not exist");
             Util.message( this,"No Device Connected!");
@@ -606,7 +606,6 @@ public class BleGattService extends Service {
             return;
         }
         bleGatt.close();
-        bleGatt = null;
     }
 
     public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor, byte[] data){
