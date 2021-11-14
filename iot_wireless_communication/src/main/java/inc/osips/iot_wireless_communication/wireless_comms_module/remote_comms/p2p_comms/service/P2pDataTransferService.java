@@ -117,6 +117,11 @@ public class P2pDataTransferService extends Service {
             sendReceive.write(instruct.getBytes());
     }
 
+    public void writeInstructions(byte[] data) {
+        if(sendReceive!=null)
+            sendReceive.write(data);
+    }
+
     private void disconnect() {
         p2pManager.cancelConnect(p2pChannel, new WifiP2pManager.ActionListener() {
             @Override

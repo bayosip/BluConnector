@@ -109,7 +109,17 @@ public class P2pConnection implements WirelessDeviceConnector {
         p2pService.writeInstructions(instructions);
     }
 
-    private ServiceConnection mConnection =
+    @Override
+    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor, byte[] data) {
+        p2pService.writeInstructions(data);
+    }
+
+    @Override
+    public void sendInstructionsToConnectedDevice(String deviceAddr, byte[] data) {
+        p2pService.writeInstructions(data);
+    }
+
+    private final ServiceConnection mConnection =
             /*
              * Defines callbacks for p2pService binding, passed to bindService()
              */
