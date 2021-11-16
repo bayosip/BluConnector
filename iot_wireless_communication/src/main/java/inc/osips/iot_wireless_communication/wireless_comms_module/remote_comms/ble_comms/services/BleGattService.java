@@ -796,30 +796,36 @@ public class BleGattService extends Service {
 
     private void writeToDescriptorToEnableNotifications(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt){
         if (setCharacteristicNotification(gatt, characteristic, true)) {
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptors().get(0);
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            List<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
+            if(descriptors!=null && !descriptors.isEmpty()) {
+                BluetoothGattDescriptor descriptor = descriptors.get(0);
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 
-            String deviceAddress = gatt.getDevice().getAddress();
-            Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
-            Objects.requireNonNull(BleWriteQueue).add(descriptor);
-            writeQueueMap.put(deviceAddress, BleWriteQueue);
-            if(BleWriteQueue.size()==1)
-                Log.d(TAG, "writeToDescriptorToEnableNotifications: ->" +gatt.writeDescriptor(descriptor));
+                String deviceAddress = gatt.getDevice().getAddress();
+                Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
+                Objects.requireNonNull(BleWriteQueue).add(descriptor);
+                writeQueueMap.put(deviceAddress, BleWriteQueue);
+                if (BleWriteQueue.size() == 1)
+                    Log.d(TAG, "writeToDescriptorToEnableNotifications: ->" + gatt.writeDescriptor(descriptor));
+            }
         }
     }
 
     private void writeToDescriptorToEnableIndicator(BluetoothGattCharacteristic characteristic,
                                                     BluetoothGatt gatt){
         if (setCharacteristicNotification(gatt, characteristic, true)) {
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptors().get(0);
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+            List<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
+            if (descriptors != null && !descriptors.isEmpty()) {
+                BluetoothGattDescriptor descriptor = descriptors.get(0);
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 
-            String deviceAddress = gatt.getDevice().getAddress();
-            Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
-            Objects.requireNonNull(BleWriteQueue).add(descriptor);
-            writeQueueMap.put(deviceAddress, BleWriteQueue);
-            if(BleWriteQueue.size()==1)
-                Log.d(TAG, "writeToDescriptorToEnableNotifications: ->" +gatt.writeDescriptor(descriptor));
+                String deviceAddress = gatt.getDevice().getAddress();
+                Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
+                Objects.requireNonNull(BleWriteQueue).add(descriptor);
+                writeQueueMap.put(deviceAddress, BleWriteQueue);
+                if (BleWriteQueue.size() == 1)
+                    Log.d(TAG, "writeToDescriptorToEnableNotifications: ->" + gatt.writeDescriptor(descriptor));
+            }
         }
     }
 

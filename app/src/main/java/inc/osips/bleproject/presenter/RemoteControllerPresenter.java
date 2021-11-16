@@ -206,7 +206,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                 case Constants.ACTION_BLE_CHARX_DATA_CHANGE:
                     Log.w("DATA", ""+intent.getStringExtra(Constants.BLE_EXTRA_DATA_RAW));
                     // This is called after a Notify completes
-                    GeneralUtil.message(intent.getStringExtra(Constants.BLE_EXTRA_DATA_RAW));
+                    //GeneralUtil.message(intent.getStringExtra(Constants.BLE_EXTRA_DATA_RAW));
                     break;
                 case Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW:
                     Log.w("DATA", "onReceive: ->" +
@@ -214,10 +214,11 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
                                     .wireless_comms_module.remote_comms.utility.Constants.BLE_EXTRA_DATA_RAW)));
                 case Constants.P2P_ACTION_DATA_AVAILABLE:
                     String s = intent.getStringExtra(Constants.P2P_EXTRA_DATA);
-                    if(s != null)
+                    if(s != null) {
                         Log.w("DATA", s);
-                    // This is called after a Notify completes
-                    GeneralUtil.message(s);
+                        // This is called after a Notify completes
+                        GeneralUtil.message(s);
+                    }
                     break;
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                     if(type.equalsIgnoreCase(Constants.P2P)) {
