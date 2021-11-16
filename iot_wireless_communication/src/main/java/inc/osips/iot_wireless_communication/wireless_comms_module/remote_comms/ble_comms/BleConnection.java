@@ -62,7 +62,7 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void connectToDeviceWithDeviceInfoFrom(Intent intent) {
+    public void connectToDeviceWithDeviceInfoFrom(@NonNull Intent intent) {
     }
 
     @Override

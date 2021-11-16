@@ -781,21 +781,22 @@ public class BleGattService extends Service {
         if (setCharacteristicNotification(gatt, charx, false)) {
             BluetoothGattDescriptor descriptor = charx.getDescriptor(
                     UUID.fromString(CCC_DESCRIPTOR_UUID));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+            if(descriptor!=null) {
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 
-            Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
-            Objects.requireNonNull(BleWriteQueue).add(descriptor);
-            writeQueueMap.put(deviceAddress, BleWriteQueue);
-            if(BleWriteQueue.size()==1)
-                Log.d(TAG, "writeToDescriptorToEnableNotifications: ->"
-                        +gatt.writeDescriptor(descriptor));
+                Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
+                Objects.requireNonNull(BleWriteQueue).add(descriptor);
+                writeQueueMap.put(deviceAddress, BleWriteQueue);
+                if (BleWriteQueue.size() == 1)
+                    Log.d(TAG, "writeToDescriptorToEnableNotifications: ->"
+                            + gatt.writeDescriptor(descriptor));
+            }
         }
     }
 
     private void writeToDescriptorToEnableNotifications(BluetoothGattCharacteristic characteristic, BluetoothGatt gatt){
         if (setCharacteristicNotification(gatt, characteristic, true)) {
-            UUID descUuid = UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG);
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descUuid);
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptors().get(0);
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 
             String deviceAddress = gatt.getDevice().getAddress();
@@ -810,8 +811,7 @@ public class BleGattService extends Service {
     private void writeToDescriptorToEnableIndicator(BluetoothGattCharacteristic characteristic,
                                                     BluetoothGatt gatt){
         if (setCharacteristicNotification(gatt, characteristic, true)) {
-            UUID descUuid = UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG);
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descUuid);
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptors().get(0);
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 
             String deviceAddress = gatt.getDevice().getAddress();
@@ -835,13 +835,15 @@ public class BleGattService extends Service {
 
                 BluetoothGattDescriptor descriptor = charx.getDescriptor(
                         UUID.fromString(CCC_DESCRIPTOR_UUID));
-                descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-            Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
-            Objects.requireNonNull(BleWriteQueue).add(descriptor);
-            writeQueueMap.put(deviceAddress, BleWriteQueue);
-            if(BleWriteQueue.size()==1)
-                Log.d(TAG, "writeToDescriptorToDisableNotifications: "
-                        +gatt.writeDescriptor(descriptor));
+                if(descriptor!=null) {
+                    descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                    Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
+                    Objects.requireNonNull(BleWriteQueue).add(descriptor);
+                    writeQueueMap.put(deviceAddress, BleWriteQueue);
+                    if (BleWriteQueue.size() == 1)
+                        Log.d(TAG, "writeToDescriptorToDisableNotifications: "
+                                + gatt.writeDescriptor(descriptor));
+                }
         }
     }
 
