@@ -189,30 +189,40 @@ public class BleGattService extends Service {
 
 
             private void handleBleWriteQueue() {
-
-                Queue<Object> BleWriteQueue = writeQueueMap.get(address);
-                assert BleWriteQueue!=null;
-                if(BleWriteQueue.size() > 0) {
-                    // Determine which type of event is next and fire it off
-                    if (BleWriteQueue.element() instanceof BluetoothGattDescriptor) {
-                        bleGatt.writeDescriptor((BluetoothGattDescriptor) BleWriteQueue.element());
-                    } else if (BleWriteQueue.element() instanceof BluetoothGattCharacteristic) {
-                        bleGatt.writeCharacteristic((BluetoothGattCharacteristic) BleWriteQueue.element());
+                try {
+                    Queue<Object> BleWriteQueue = writeQueueMap.get(address);
+                    assert BleWriteQueue != null;
+                    if (BleWriteQueue.size() > 0) {
+                        // Determine which type of event is next and fire it off
+                        if (BleWriteQueue.element() instanceof BluetoothGattDescriptor) {
+                            bleGatt.writeDescriptor((BluetoothGattDescriptor) BleWriteQueue.element());
+                        } else if (BleWriteQueue.element() instanceof BluetoothGattCharacteristic) {
+                            bleGatt.writeCharacteristic((BluetoothGattCharacteristic) BleWriteQueue.element());
+                        }
                     }
+                }catch (AssertionError ae){
+                    Log.w(TAG, "Characteristic|Descriptor is null: " + ae.toString());
+                    Util.getHandler().post(() -> Util.message( BleGattService.this,
+                            getString(R.string.ble_err_connection)));
                 }
             }
 
             private void handleBleReadQueue() {
-
-                Queue<Object> BleReadQueue = readQueueMap.get(address);
-                assert BleReadQueue != null;
-                if(BleReadQueue.size() > 0) {
-                    // Determine which type of event is next and fire it off
-                    if (BleReadQueue.element() instanceof BluetoothGattDescriptor) {
-                        bleGatt.readDescriptor((BluetoothGattDescriptor) BleReadQueue.element());
-                    } else if (BleReadQueue.element() instanceof BluetoothGattCharacteristic) {
-                        bleGatt.readCharacteristic((BluetoothGattCharacteristic) BleReadQueue.element());
+                try {
+                    Queue<Object> BleReadQueue = readQueueMap.get(address);
+                    assert BleReadQueue != null;
+                    if (BleReadQueue.size() > 0) {
+                        // Determine which type of event is next and fire it off
+                        if (BleReadQueue.element() instanceof BluetoothGattDescriptor) {
+                            bleGatt.readDescriptor((BluetoothGattDescriptor) BleReadQueue.element());
+                        } else if (BleReadQueue.element() instanceof BluetoothGattCharacteristic) {
+                            bleGatt.readCharacteristic((BluetoothGattCharacteristic) BleReadQueue.element());
+                        }
                     }
+                }catch (AssertionError ae){
+                    Log.w(TAG, "Characteristic|Descriptor is null: " + ae.toString());
+                    Util.getHandler().post(() -> Util.message( BleGattService.this,
+                            getString(R.string.ble_err_connection)));
                 }
             }
 
@@ -462,20 +472,31 @@ public class BleGattService extends Service {
 
         if(multiBleGatt.containsKey(device.getAddress())) {
             //try to reconnect to previously connected device
-            Log.i(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-            MyLogData += "Trying to use an existing mBluetoothGatt for connection.\n";
-            BluetoothGatt gatt = multiBleGatt.get(device.getAddress());
-            assert gatt != null;
-            return gatt.connect();
+            try {
+                Log.i(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+                MyLogData += "Trying to use an existing mBluetoothGatt for connection.\n";
+                BluetoothGatt gatt = multiBleGatt.get(device.getAddress());
+                assert gatt != null;
+                return gatt.connect();
+            } catch (AssertionError ae) {
+                Log.w(TAG, "Gatt is null: " + ae.toString());
+                Util.getHandler().post(() -> Util.message(BleGattService.this,
+                        getString(R.string.ble_err_connection)));
+            }
         }
 
         BluetoothGatt gatt = device.connectGatt(this,
                 false,
                 createGattCallBack(device.getAddress()));
-
-        if(!TextUtils.isEmpty(serviceUUID)){
-            assert serviceUUID != null;
-            selectServiceFromUUID(device.getAddress(), serviceUUID);
+        try {
+            if (!TextUtils.isEmpty(serviceUUID)) {
+                assert serviceUUID != null;
+                selectServiceFromUUID(device.getAddress(), serviceUUID);
+            }
+        }catch (AssertionError ae){
+            Log.w(TAG, "UUID is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
         }
         Log.i(TAG, "Trying to create a new connection.");
         MyLogData +="Trying to create a new connection.\n";
@@ -506,14 +527,21 @@ public class BleGattService extends Service {
     public void selectServiceFromUUID (@NonNull String deviceAddr, @NonNull String UUID){
         //this.serviceUUID = UUID;
         BluetoothGatt gatt = multiBleGatt.get(deviceAddr);
-        assert gatt != null;
-        BluetoothGattService service = getGattServices(gatt, UUID);
+        try {
 
-        if (service==null){
-            Util.message(BleGattService.this, "No service with selected UUID!");
-        }else {
-            getGattServicesCharx(gatt, service);
-            Log.d(TAG, "selectServiceFromUUID: service uuid: " + UUID + " connected");
+            assert gatt != null;
+            BluetoothGattService service = getGattServices(gatt, UUID);
+
+            if (service == null) {
+                Util.message(BleGattService.this, "No service with selected UUID!");
+            } else {
+                getGattServicesCharx(gatt, service);
+                Log.d(TAG, "selectServiceFromUUID: service uuid: " + UUID + " connected");
+            }
+        }catch (AssertionError ae){
+            Log.w(TAG, "Gatt is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
         }
     }
 
@@ -630,11 +658,15 @@ public class BleGattService extends Service {
                 gattCharacteristic.setValue(data);
                 writeBleCharacteristic(bleGatt, gattCharacteristic);
             }
-        }catch (NullPointerException e)
-            {
+        }catch (NullPointerException e) {
                 Log.w(TAG, "Characteristic is null: " + e.toString());
-                Util.getHandler().post(() -> Util.message( BleGattService.this, getString(R.string.ble_err_connection)));
-            }
+                Util.getHandler().post(() -> Util.message( BleGattService.this,
+                        getString(R.string.ble_err_connection)));
+        }catch (AssertionError ae){
+            Log.w(TAG, "Characteristic is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
+        }
     }
 
     public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor,
@@ -667,6 +699,10 @@ public class BleGattService extends Service {
         }catch (Exception ex){
             Log.w(TAG, "Service is null: " + ex.toString());
             Util.getHandler().post(() -> Util.message( BleGattService.this, getString(R.string.ble_err_connection)));
+        }catch (AssertionError ae){
+            Log.w(TAG, "Characteristic is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
         }
     }
 
@@ -718,19 +754,25 @@ public class BleGattService extends Service {
 
     public void readDescriptor(String serviceUUID, String charxUUID,
                                String CCC_DESCRIPTOR_UUID, String deviceAddress) {
-        BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
-        assert gatt!= null;
-        BluetoothGattCharacteristic charx =gatt.getService(UUID.fromString(serviceUUID))
-                .getCharacteristic(UUID.fromString(charxUUID));
+        try {
+            BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
+            assert gatt != null;
+            BluetoothGattCharacteristic charx = gatt.getService(UUID.fromString(serviceUUID))
+                    .getCharacteristic(UUID.fromString(charxUUID));
             BluetoothGattDescriptor descriptor = charx.getDescriptor(
                     UUID.fromString(CCC_DESCRIPTOR_UUID));
-        Log.d(TAG, String.format("readDescriptor(%s)", descriptor));
+            Log.d(TAG, String.format("readDescriptor(%s)", descriptor));
 
-        Queue<Object> BleReadQueue = readQueueMap.get(deviceAddress);
-        Objects.requireNonNull(BleReadQueue).add(descriptor);
-        readQueueMap.put(deviceAddress, BleReadQueue);
-        if (BleReadQueue.size() == 1){
-            gatt.readDescriptor(descriptor);
+            Queue<Object> BleReadQueue = readQueueMap.get(deviceAddress);
+            Objects.requireNonNull(BleReadQueue).add(descriptor);
+            readQueueMap.put(deviceAddress, BleReadQueue);
+            if (BleReadQueue.size() == 1) {
+                gatt.readDescriptor(descriptor);
+            }
+        }catch (AssertionError ae){
+            Log.w(TAG, "Gatt is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
         }
     }
 
@@ -753,36 +795,15 @@ public class BleGattService extends Service {
     public void writeToDescriptorToEnableNotifications(String serviceUUID, String charxUUID,
                                                        String CCC_DESCRIPTOR_UUID, String deviceAddress){
 
-        BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
-        assert gatt!= null;
-        BluetoothGattCharacteristic charx =gatt.getService(UUID.fromString(serviceUUID))
-                .getCharacteristic(UUID.fromString(charxUUID));
-        if (setCharacteristicNotification(gatt, charx, false)) {
+        try {
+            BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
+            assert gatt != null;
+            BluetoothGattCharacteristic charx = gatt.getService(UUID.fromString(serviceUUID))
+                    .getCharacteristic(UUID.fromString(charxUUID));
+            if (setCharacteristicNotification(gatt, charx, false)) {
                 BluetoothGattDescriptor descriptor = charx.getDescriptor(
                         UUID.fromString(CCC_DESCRIPTOR_UUID));
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-
-            Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
-            Objects.requireNonNull(BleWriteQueue).add(descriptor);
-            writeQueueMap.put(deviceAddress, BleWriteQueue);
-            if(BleWriteQueue.size()==1)
-                Log.d(TAG, "writeToDescriptorToEnableNotifications: ->"
-                    +gatt.writeDescriptor(descriptor));
-        }
-    }
-
-    public void writeToDescriptorToEnableIndicator(String serviceUUID, String charxUUID,
-                                                       String CCC_DESCRIPTOR_UUID, String deviceAddress){
-
-        BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
-        assert gatt!= null;
-        BluetoothGattCharacteristic charx =gatt.getService(UUID.fromString(serviceUUID))
-                .getCharacteristic(UUID.fromString(charxUUID));
-        if (setCharacteristicNotification(gatt, charx, false)) {
-            BluetoothGattDescriptor descriptor = charx.getDescriptor(
-                    UUID.fromString(CCC_DESCRIPTOR_UUID));
-            if(descriptor!=null) {
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 
                 Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
                 Objects.requireNonNull(BleWriteQueue).add(descriptor);
@@ -791,6 +812,40 @@ public class BleGattService extends Service {
                     Log.d(TAG, "writeToDescriptorToEnableNotifications: ->"
                             + gatt.writeDescriptor(descriptor));
             }
+        }catch (AssertionError ae){
+            Log.w(TAG, "Gatt is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
+        }
+    }
+
+    public void writeToDescriptorToEnableIndicator(String serviceUUID, String charxUUID,
+                                                       String CCC_DESCRIPTOR_UUID, String deviceAddress){
+
+        try {
+
+            BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
+            assert gatt != null;
+            BluetoothGattCharacteristic charx = gatt.getService(UUID.fromString(serviceUUID))
+                    .getCharacteristic(UUID.fromString(charxUUID));
+            if (setCharacteristicNotification(gatt, charx, false)) {
+                BluetoothGattDescriptor descriptor = charx.getDescriptor(
+                        UUID.fromString(CCC_DESCRIPTOR_UUID));
+                if (descriptor != null) {
+                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+
+                    Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
+                    Objects.requireNonNull(BleWriteQueue).add(descriptor);
+                    writeQueueMap.put(deviceAddress, BleWriteQueue);
+                    if (BleWriteQueue.size() == 1)
+                        Log.d(TAG, "writeToDescriptorToEnableNotifications: ->"
+                                + gatt.writeDescriptor(descriptor));
+                }
+            }
+        }catch (AssertionError ae){
+            Log.w(TAG, "Gatt is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
         }
     }
 
@@ -832,16 +887,16 @@ public class BleGattService extends Service {
 
     public void writeToDescriptorToDisableNotifications(String serviceUUID, String charxUUID,
                                                        String CCC_DESCRIPTOR_UUID, String deviceAddress){
-
-        BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
-        assert gatt!= null;
-        BluetoothGattCharacteristic charx =gatt.getService(UUID.fromString(serviceUUID))
-                .getCharacteristic(UUID.fromString(charxUUID));
-        if (setCharacteristicNotification(gatt, charx, false)) {
+        try {
+            BluetoothGatt gatt = multiBleGatt.get(deviceAddress);
+            assert gatt != null;
+            BluetoothGattCharacteristic charx = gatt.getService(UUID.fromString(serviceUUID))
+                    .getCharacteristic(UUID.fromString(charxUUID));
+            if (setCharacteristicNotification(gatt, charx, false)) {
 
                 BluetoothGattDescriptor descriptor = charx.getDescriptor(
                         UUID.fromString(CCC_DESCRIPTOR_UUID));
-                if(descriptor!=null) {
+                if (descriptor != null) {
                     descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
                     Queue<Object> BleWriteQueue = writeQueueMap.get(deviceAddress);
                     Objects.requireNonNull(BleWriteQueue).add(descriptor);
@@ -850,6 +905,11 @@ public class BleGattService extends Service {
                         Log.d(TAG, "writeToDescriptorToDisableNotifications: "
                                 + gatt.writeDescriptor(descriptor));
                 }
+            }
+        }catch (AssertionError ae){
+            Log.w(TAG, "Gatt is null: " + ae.toString());
+            Util.getHandler().post(() -> Util.message( BleGattService.this,
+                    getString(R.string.ble_err_connection)));
         }
     }
 
