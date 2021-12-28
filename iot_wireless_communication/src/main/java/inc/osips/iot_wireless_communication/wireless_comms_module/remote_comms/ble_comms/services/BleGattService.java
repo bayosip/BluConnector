@@ -647,7 +647,7 @@ public class BleGattService extends Service {
                 assert wService != null;
                 if (charxUuid != null) {
                     for (BluetoothGattCharacteristic charx : wService.getCharacteristics()) {
-                        if (charx.getUuid() != charxUuid) {
+                        if (charx.getUuid().equals(charxUuid)) {
                             gattCharacteristic = charx;
                             break;
                         }
@@ -683,7 +683,7 @@ public class BleGattService extends Service {
                 //Checks for characteristic with particular descriptor
                 if(charxUuid!=null){
                     for (BluetoothGattCharacteristic charx: wService.getCharacteristics()){
-                        if (charx.getUuid() != charxUuid) {
+                        if (charx.getUuid().equals(charxUuid)) {
                             gattCharacteristic = charx;
                             break;
                         }
