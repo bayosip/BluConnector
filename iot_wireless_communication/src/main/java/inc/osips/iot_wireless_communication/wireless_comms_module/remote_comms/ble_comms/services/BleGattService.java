@@ -636,7 +636,7 @@ public class BleGattService extends Service {
         bleGatt.close();
     }
 
-    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor, byte[] data){
+    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid, byte[] data){
         BluetoothGatt bleGatt = multiBleGatt.get(deviceAddr);
         try {
             if (bleGatt != null) {
@@ -644,9 +644,9 @@ public class BleGattService extends Service {
                 BluetoothGattCharacteristic gattCharacteristic = null;
                 BleWriteService wService = gattServicesMap.get(bleGatt);
                 assert wService != null;
-                if (charxDescriptor != null) {
+                if (charxUuid != null) {
                     for (BluetoothGattCharacteristic charx : wService.getCharacteristics()) {
-                        if (charx.getDescriptor(charxDescriptor) != null) {
+                        if (charx.getUuid() != charxUuid) {
                             gattCharacteristic = charx;
                             break;
                         }
@@ -669,7 +669,7 @@ public class BleGattService extends Service {
         }
     }
 
-    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor,
+    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid,
                                                   String instructions) {
         BluetoothGatt bleGatt = multiBleGatt.get(deviceAddr);
         Log.d(TAG, "sendInstructionsToConnectedDevice: -> device address: " + deviceAddr );
@@ -680,9 +680,9 @@ public class BleGattService extends Service {
                 BleWriteService wService = gattServicesMap.get(bleGatt);
                 assert wService != null;
                 //Checks for characteristic with particular descriptor
-                if(charxDescriptor!=null){
+                if(charxUuid!=null){
                     for (BluetoothGattCharacteristic charx: wService.getCharacteristics()){
-                        if(charx.getDescriptor(charxDescriptor)!=null){
+                        if (charx.getUuid() != charxUuid) {
                             gattCharacteristic = charx;
                             break;
                         }

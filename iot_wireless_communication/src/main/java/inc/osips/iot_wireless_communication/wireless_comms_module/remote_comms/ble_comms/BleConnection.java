@@ -129,14 +129,14 @@ public class BleConnection implements WirelessDeviceConnector {
 
     @Override
     public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
-                                               @Nullable UUID charxDescriptor, @NonNull String instructions) {
-        gattService.sendInstructionsToConnectedDevice(deviceAddress, charxDescriptor, instructions);
+                                               @Nullable UUID charxUuid, @NonNull String instructions) {
+        gattService.sendInstructionsToConnectedDevice(deviceAddress, charxUuid, instructions);
     }
 
     @Override
-    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxDescriptor,
+    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid,
                                                   byte[] data) {
-        gattService.sendInstructionsToConnectedDevice(deviceAddr, charxDescriptor, data);
+        gattService.sendInstructionsToConnectedDevice(deviceAddr, charxUuid, data);
     }
 
     @Override

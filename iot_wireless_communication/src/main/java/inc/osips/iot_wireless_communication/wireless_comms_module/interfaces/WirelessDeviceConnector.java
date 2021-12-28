@@ -28,8 +28,8 @@ public interface WirelessDeviceConnector {
     void connectToDeviceWithDeviceInfoFrom(@NonNull Intent intent);
     void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions);
     void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
-                                        @Nullable UUID charxDescriptor, @NonNull String instructions);
+                                        @Nullable UUID charxUuid, @NonNull String instructions);
     void sendInstructionsToConnectedDevice(String deviceAddr,
-                                           @Nullable UUID charxDescriptor, byte[] data);
+                                           @Nullable UUID charxUuid, byte[] data);
     void sendInstructionsToConnectedDevice(String deviceAddr, byte[] data);
 }

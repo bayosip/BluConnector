@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,8 +33,9 @@ public class ServiceUtil {
         return false;
     }
 
-    @SuppressWarnings("deprecation")
-    private static Boolean isServiceBLEAlreadyRunningAPI16(Context activity) {
+
+    @NonNull
+    private static Boolean isServiceBLEAlreadyRunningAPI16(@NonNull Context activity) {
         ActivityManager activityManager = (ActivityManager) activity.getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo serviceInfo : activityManager
                 .getRunningServices(Integer.MAX_VALUE)) {
@@ -42,7 +45,7 @@ public class ServiceUtil {
         return false;
     }
 
-    private boolean isMyServiceRunning(Context context, Class<?> serviceClass) {
+    private boolean isMyServiceRunning(@NonNull Context context, Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equals(service.service.getClassName())) {
