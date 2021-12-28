@@ -636,7 +636,8 @@ public class BleGattService extends Service {
         bleGatt.close();
     }
 
-    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid, byte[] data){
+    public void sendBytesInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid,
+                                                       byte[] data){
         BluetoothGatt bleGatt = multiBleGatt.get(deviceAddr);
         try {
             if (bleGatt != null) {
@@ -669,8 +670,8 @@ public class BleGattService extends Service {
         }
     }
 
-    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid,
-                                                  String instructions) {
+    public void sendStringInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid,
+                                                       String instructions) {
         BluetoothGatt bleGatt = multiBleGatt.get(deviceAddr);
         Log.d(TAG, "sendInstructionsToConnectedDevice: -> device address: " + deviceAddr );
         try {

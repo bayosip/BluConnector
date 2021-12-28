@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnector;
@@ -276,7 +275,7 @@ public class RemoteControllerPresenter extends VoiceControlPresenter {
     }
 
     private void sendInstructionsToDevice(String instruct) {
-        deviceConnector.sendInstructionsToRemoteDevice(deviceAddr, instruct);
+        deviceConnector.sendStringInstructionsToRemoteDevice(deviceAddr, instruct);
     }
 
     public void setDeviceAddressAndSendInstructions(String uuidAddr, String instructions) {

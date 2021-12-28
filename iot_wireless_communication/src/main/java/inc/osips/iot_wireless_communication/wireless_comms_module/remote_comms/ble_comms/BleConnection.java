@@ -1,9 +1,6 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms;
 
-import android.app.Activity;
-import android.app.Service;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -123,25 +120,25 @@ public class BleConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions) {
-        sendInstructionsToRemoteDevice(deviceAddress, null, instructions);
+    public void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions) {
+        sendStringInstructionsToRemoteDevice(deviceAddress, null, instructions);
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
-                                               @Nullable UUID charxUuid, @NonNull String instructions) {
-        gattService.sendInstructionsToConnectedDevice(deviceAddress, charxUuid, instructions);
+    public void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddress,
+                                                     @Nullable UUID charxUuid, @NonNull String instructions) {
+        gattService.sendStringInstructionsToConnectedDevice(deviceAddress, charxUuid, instructions);
     }
 
     @Override
-    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid,
-                                                  byte[] data) {
-        gattService.sendInstructionsToConnectedDevice(deviceAddr, charxUuid, data);
+    public void sendBytesInstructionsToRemoteDevice(String deviceAddr, @Nullable UUID charxUuid,
+                                                    byte[] data) {
+        gattService.sendBytesInstructionsToConnectedDevice(deviceAddr, charxUuid, data);
     }
 
     @Override
-    public void sendInstructionsToConnectedDevice(String deviceAddr, byte[] data) {
-        gattService.sendInstructionsToConnectedDevice(deviceAddr, null, data);
+    public void sendBytesInstructionsToRemoteDevice(String deviceAddr, byte[] data) {
+        sendBytesInstructionsToRemoteDevice(deviceAddr, null, data);
     }
 
     private final ServiceConnection mConnection =

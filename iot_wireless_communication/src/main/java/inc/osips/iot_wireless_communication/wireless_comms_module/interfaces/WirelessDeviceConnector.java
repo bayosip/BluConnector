@@ -26,10 +26,10 @@ public interface WirelessDeviceConnector {
     void connectAnotherDeviceSimultaneously(@NonNull Parcelable device, @Nullable String serviceUUID) throws Exception;
     void selectServiceUsingUUID (@Nullable String deviceAddress, @NonNull String UUID);
     void connectToDeviceWithDeviceInfoFrom(@NonNull Intent intent);
-    void sendInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions);
-    void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
-                                        @Nullable UUID charxUuid, @NonNull String instructions);
-    void sendInstructionsToConnectedDevice(String deviceAddr,
-                                           @Nullable UUID charxUuid, byte[] data);
-    void sendInstructionsToConnectedDevice(String deviceAddr, byte[] data);
+    void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions);
+    void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddress,
+                                              @Nullable UUID charxUuid, @NonNull String instructions);
+    void sendBytesInstructionsToRemoteDevice(String deviceAddr,
+                                             @Nullable UUID charxUuid, byte[] data);
+    void sendBytesInstructionsToRemoteDevice(String deviceAddr, byte[] data);
 }

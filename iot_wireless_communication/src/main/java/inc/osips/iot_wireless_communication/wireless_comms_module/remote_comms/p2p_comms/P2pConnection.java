@@ -99,23 +99,23 @@ public class P2pConnection implements WirelessDeviceConnector {
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddr, @NonNull String instructions) {
+    public void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddr, @NonNull String instructions) {
         p2pService.writeInstructions(instructions);
     }
 
     @Override
-    public void sendInstructionsToRemoteDevice(@Nullable String deviceAddress,
-                                               @Nullable UUID charxUuid, @NonNull String instructions) {
+    public void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddress,
+                                                     @Nullable UUID charxUuid, @NonNull String instructions) {
         p2pService.writeInstructions(instructions);
     }
 
     @Override
-    public void sendInstructionsToConnectedDevice(String deviceAddr, @Nullable UUID charxUuid, byte[] data) {
+    public void sendBytesInstructionsToRemoteDevice(String deviceAddr, @Nullable UUID charxUuid, byte[] data) {
         p2pService.writeInstructions(data);
     }
 
     @Override
-    public void sendInstructionsToConnectedDevice(String deviceAddr, byte[] data) {
+    public void sendBytesInstructionsToRemoteDevice(String deviceAddr, byte[] data) {
         p2pService.writeInstructions(data);
     }
 
