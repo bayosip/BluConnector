@@ -83,7 +83,7 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
         Button enterUUID = view.findViewById(R.id.buttonUUID);
         listServices = view.findViewById(R.id.listServiceUUID);
         adapter = new DevicesViewHolderAdapter(listUUID, this);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(listener.getFragmentactivity(),
+        LinearLayoutManager layoutManager = new LinearLayoutManager(listener.getFragmentActivity(),
                 RecyclerView.VERTICAL, false);
 
         listServices.setLayoutManager(layoutManager);
@@ -121,6 +121,6 @@ public class ServiceSelectorDialog extends DialogFragment implements ServiceSele
 
     @Override
     public Context getListenerContext() {
-        return listener.getFragmentactivity();
+        return listener.getFragmentActivity();
     }
 }

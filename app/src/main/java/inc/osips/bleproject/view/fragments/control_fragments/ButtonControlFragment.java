@@ -16,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 
-import com.skydoves.colorpickerview.ColorEnvelope;
 import com.skydoves.colorpickerview.ColorPickerDialog;
 import com.skydoves.colorpickerview.ColorPickerView;
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
@@ -113,7 +112,7 @@ public class ButtonControlFragment extends Fragment {
             instruct = "";
             switch (v.getId()) {
                 case R.id.buttonColorWheel:
-                    fragListner.getFragmentactivity().runOnUiThread(() -> {
+                    fragListner.getFragmentActivity().runOnUiThread(() -> {
                         try {
                             createColorPickerDialog();
                         }catch (Exception e){

@@ -228,12 +228,8 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
 
 
     private void tryToDisconnectFromDevice() {
-        final AlertDialog.Builder alertDialog;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            alertDialog = new AlertDialog.Builder(this,
-                    android.R.style.Theme_DeviceDefault_Dialog);
-        else
-            alertDialog = new AlertDialog.Builder(ControllerActivity.this);
+        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this,
+                android.R.style.Theme_DeviceDefault_Dialog);
 
         alertDialog.setCancelable(false)
                 .setIcon(R.mipmap.ic_launcher).setMessage(getApplicationContext()
@@ -306,7 +302,7 @@ public class ControllerActivity extends AppCompatActivity implements ControlFrag
     }
 
     @Override
-    public Activity getFragmentactivity() {
+    public Activity getFragmentActivity() {
         return getControlContext();
     }
 

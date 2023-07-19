@@ -11,7 +11,7 @@ import inc.osips.bleproject.utilities.GeneralUtil;
 
 public abstract class VoiceRecognitionImpl  implements VoiceRecognition{
 
-    String TAG = VoiceRecognitionImpl.class.getSimpleName();
+    private String TAG = VoiceRecognitionImpl.class.getSimpleName();
     private Intent voiceIntent;
     protected SpeechRecognizer sr;
 
@@ -23,7 +23,7 @@ public abstract class VoiceRecognitionImpl  implements VoiceRecognition{
                     RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             voiceIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
             if(voiceIntent!=null)
-            sr.startListening(voiceIntent);
+                sr.startListening(voiceIntent);
             else GeneralUtil.message( "cannot start recognizer");
         } catch (Exception e){
             e.printStackTrace();

@@ -1,8 +1,6 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms;
 
 import android.Manifest;
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -33,47 +31,45 @@ import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.Wir
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Util;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectionScanner {
 
     private long SCAN_TIME = 6000; //default scan time
-    private BluetoothAdapter bleAdapter;
-    private BluetoothLeScanner bluetoothLeScanner;
-    private Activity activity;
+    private final BluetoothAdapter bleAdapter;
+    private final BluetoothLeScanner bluetoothLeScanner;
+    private final Context context;
 
     private final List<ScanFilter> filters=new ArrayList<>();//filters for specified devices
     private ScanCallback mScanCallback = this;
     private boolean scanState = false;
-    private String deviceName = null;
     private static final String TAG = "BLE_Scanner";
     private final List<String> deviceAddresses= new ArrayList<>();
     //private
-    private ScanSettings settings;
+    private final ScanSettings settings;
     private ParcelUuid uuidParcel = null;
     //UUID uuid;
 
-    public BLE_Scanner(@NonNull Activity activity, @Nullable ScanCallback mScanCallback,
+    public BLE_Scanner(@NonNull Context context, @Nullable ScanCallback mScanCallback,
                        @NonNull String baseUUID, long scanTime){
-        if (scanTime >=1000)SCAN_TIME = scanTime;
+        if (scanTime >= 0)SCAN_TIME = scanTime;
 
-        this.activity = activity;
+        this.context = context;
         if (mScanCallback != null)
             this.mScanCallback = mScanCallback;
-        final BluetoothManager manager = (BluetoothManager) activity
+        final BluetoothManager manager = (BluetoothManager) context
                 .getSystemService(Context.BLUETOOTH_SERVICE);
 
         bleAdapter = manager.getAdapter();
         if (!TextUtils.isEmpty(baseUUID))
             uuidParcel = new ParcelUuid(UUID.fromString(baseUUID));
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bluetoothLeScanner = bleAdapter.getBluetoothLeScanner();
-            settings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                    .build();
-        }
+        bluetoothLeScanner = bleAdapter.getBluetoothLeScanner();
+        settings = new ScanSettings.Builder()
+                .setReportDelay(SCAN_TIME)
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build();
     }
 
+    @Override
     public boolean isScanning() {
         return scanState;
     }
@@ -81,22 +77,24 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
     /*
     * Start scanning for BLE devices, after checking the device is Bluetooth is on
     * */
-    public void onStart() {
+    @Override
+    public void onStart(@Nullable String deviceName) {
         if (!HW_Compatibility_Checker.checkBluetooth(bleAdapter)) {
-            HW_Compatibility_Checker.requestUserBluetooth(activity);
+            context.sendBroadcast(new Intent(Constants.BLE_ACTION_TURN_ON_BLUETOOTH));
+//            HW_Compatibility_Checker.requestUserBluetooth(context);
         }
 
-        if (ActivityCompat.checkSelfPermission(activity,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Util.message(activity, "Please allow permission to all scanning for devices");
+        if (!checkNecessaryPermissions()) {
+            Util.message(context, "Please allow Bluetooth permission to all scanning for devices");
             return;
         }
         if (uuidParcel== null){
             scanForAllBLEDevices();
         }
-        else scanForSpecificBLEDevices();
+        else scanForSpecificBLEDevices(deviceName);
     }
 
+    @Override
     public void onStop() {
         if (scanState) {
             scanStop();
@@ -104,10 +102,21 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
         }
     }
 
+
+    private boolean checkNecessaryPermissions(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        return (ActivityCompat.checkSelfPermission(context,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) &&
+                ( ActivityCompat.checkSelfPermission(context,
+                        Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED);
+        else return (ActivityCompat.checkSelfPermission(context,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+    }
+
     /*
     * Scan for BLE with a specific uuid
     * */
-    private void scanForSpecificBLEDevices() {
+    private void scanForSpecificBLEDevices(String deviceName) {
         if (!scanState) {
             ScanFilter myDevice = new ScanFilter.Builder()
                     .setServiceUuid(uuidParcel).build();
@@ -125,7 +134,7 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
             new Handler(Looper.getMainLooper()).postDelayed(this::scanStop, SCAN_TIME);
 
             scanState = true;
-            bluetoothLeScanner.startScan(filters, settings, mScanCallback);
+           if(checkNecessaryPermissions()) bluetoothLeScanner.startScan(filters, settings, mScanCallback);
         }
         else{
             scanStop();
@@ -141,8 +150,8 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
             Util.getHandler().postDelayed(this::scanStop, SCAN_TIME);
 
             scanState = true;
-
-            bluetoothLeScanner.startScan(null, settings, mScanCallback);
+            if(checkNecessaryPermissions())
+                bluetoothLeScanner.startScan(null, settings, mScanCallback);
         }
         else{
             scanStop();
@@ -151,23 +160,22 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
 
     //
     private void scanStop() {
-        Util.message(activity,"Scanning Stopped!");
+        Util.message(context,"Scanning Stopped!");
 
         if (scanState) {
             scanState = false;
             deviceAddresses.clear();
             Log.w(TAG, "scanning stopped");
-            if(bluetoothLeScanner != null)
+            if(bluetoothLeScanner != null && checkNecessaryPermissions())
                 bluetoothLeScanner.stopScan(mScanCallback);
 
-            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
+            context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
         }
     }
 
     @Override
     public void showDiscoveredDevices() {}
 
-    @TargetApi(21)
     @Override
     public void onScanResult(int callbackType, final ScanResult result) {
         Log.i("callbackType", String.valueOf(callbackType));
@@ -175,13 +183,12 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
         final int RSSI = result.getRssi();
         BluetoothDevice ble = result.getDevice();
         if (RSSI>=-105 && !deviceAddresses.contains(ble.getAddress())) {
-            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
+            context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
                     .putExtra(Constants.DEVICE_DATA, ble));
             deviceAddresses.add(ble.getAddress());
         }
     }
 
-    @TargetApi(21)
     @Override
     public void onBatchScanResults(List<ScanResult> results) {
         for (ScanResult sr : results) {
@@ -189,14 +196,14 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
         }
     }
 
-    @TargetApi(21)
     @Override
     public void onScanFailed(int errorCode) {
         Log.e("Scan Failed", "Error Code: " + errorCode);
 
         if (errorCode == ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED){
-            Util.message(activity, "Please Disable And Re-enable Bluetooth, or Restart Device");
+            Util.message(context, "Please Disable And Re-enable Bluetooth, or Restart Device");
         }
     }
+
 
 }

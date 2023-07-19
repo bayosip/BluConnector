@@ -14,5 +14,5 @@ public interface ControlFragmentListener extends AppActivity {
     void setSelectedServiceUUID ( String uuid);
     void setSelectedAddresses(List<String> addresses);
     void getDeviceAddressFromPopUp();
-    Activity getFragmentactivity();
+    Activity getFragmentActivity();
 }

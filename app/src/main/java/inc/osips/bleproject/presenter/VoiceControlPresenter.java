@@ -6,16 +6,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.speech.RecognitionListener;
 import android.speech.RecognitionService;
+import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import androidx.core.app.ActivityCompat;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 
 import inc.osips.bleproject.interfaces.ControllerViewInterface;
 import inc.osips.bleproject.model.VoiceRecognitionImpl;
@@ -28,74 +32,84 @@ public class VoiceControlPresenter extends VoiceRecognitionImpl implements Recog
     protected ControllerViewInterface viewInterface;
     protected ArrayList<String> instructions;
     protected static String TAG;
-    protected boolean micCheck =false;
+    protected boolean micCheck = false;
     private static final String GOOGLE_RECOGNITION_SERVICE_NAME =
             "com.google.android.googlequicksearchbox/com.google.android.voicesearch.serviceapi.GoogleRecognitionService";
-
 
 
     static {
         TAG = ControllerActivity.class.getSimpleName();
     }
 
-    public VoiceControlPresenter(ControllerViewInterface viewInterface){
+    public VoiceControlPresenter(ControllerViewInterface viewInterface) {
         this.viewInterface = viewInterface;
     }
 
     public void initSpeech() {
-        if(ActivityCompat.checkSelfPermission(viewInterface.getControlContext(),
+        if (ActivityCompat.checkSelfPermission(viewInterface.getControlContext(),
                 Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             micCheck = true;
             try {
 
                 if (!isSpeechRecognizerAvailable()) {
                     GeneralUtil.message("Cannot reach Recognizer");
-                }
-                else {
-                    sr = SpeechRecognizer.createSpeechRecognizer(viewInterface.getControlContext(),
+                } else {
+                    sr = SpeechRecognizer.createSpeechRecognizer(
+                            viewInterface.getControlContext(),
                             ComponentName.unflattenFromString(GOOGLE_RECOGNITION_SERVICE_NAME));
                     sr.setRecognitionListener(this);
                 }
             } catch (NullPointerException e) {
-                Log.i(TAG, e.getMessage());
+                Log.i(TAG, Objects.requireNonNull(e.getMessage()));
                 e.printStackTrace();
                 GeneralUtil.message("Failed to Initialise Speech Module");
             }
-        }else GeneralUtil.message("Speech Permission Not Granted");
+        } else checkPermission();
     }
 
-    private  boolean isSpeechRecognizerAvailable() {
-        Boolean sIsSpeechRecognizerAvailable = null;
-        if (sIsSpeechRecognizerAvailable == null) {
-            boolean isRecognitionAvailable =  this.viewInterface.getControlContext().getPackageManager() != null
-                    && SpeechRecognizer.isRecognitionAvailable(viewInterface.getControlContext());
-            if (isRecognitionAvailable) {
-                ServiceConnection connection = new ServiceConnection() {
-                    @Override
-                    public void onServiceConnected(ComponentName name, IBinder service) {
+    private void checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-                    }
+            ActivityCompat.requestPermissions(
+                    viewInterface.getControlContext(),
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    500
+            );
+        }
+    }
 
-                    @Override
-                    public void onServiceDisconnected(ComponentName name) {
-
-                    }
-                };
-                Intent serviceIntent = new Intent(RecognitionService.SERVICE_INTERFACE);
-                ComponentName recognizerServiceComponent = ComponentName.unflattenFromString(GOOGLE_RECOGNITION_SERVICE_NAME);
-                if (recognizerServiceComponent == null) {
-                    return false;
+    private boolean isSpeechRecognizerAvailable() {
+        boolean sIsSpeechRecognizerAvailable;
+        boolean isRecognitionAvailable = this.viewInterface.getControlContext().getPackageManager() != null
+                && SpeechRecognizer.isRecognitionAvailable(viewInterface.getControlContext());
+        if (isRecognitionAvailable) {
+            ServiceConnection connection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
                 }
 
-                serviceIntent.setComponent(recognizerServiceComponent);
-                boolean isServiceAvailableToBind = this.viewInterface.getControlContext().bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
-                if (isServiceAvailableToBind) {
-                    this.viewInterface.getControlContext().unbindService(connection);
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
                 }
-                sIsSpeechRecognizerAvailable = isServiceAvailableToBind;
-            } else {
-                sIsSpeechRecognizerAvailable = false;
+            };
+            Intent serviceIntent = new Intent(RecognitionService.SERVICE_INTERFACE);
+            ComponentName recognizerServiceComponent = ComponentName.unflattenFromString(GOOGLE_RECOGNITION_SERVICE_NAME);
+            if (recognizerServiceComponent == null) {
+                return false;
             }
+
+            serviceIntent.setComponent(recognizerServiceComponent);
+            boolean isServiceAvailableToBind = this.viewInterface
+                    .getControlContext()
+                    .bindService(serviceIntent,
+                            connection,
+                            Context.BIND_AUTO_CREATE);
+            if (isServiceAvailableToBind) {
+                this.viewInterface.getControlContext().unbindService(connection);
+            }
+            sIsSpeechRecognizerAvailable = isServiceAvailableToBind;
+        } else {
+            sIsSpeechRecognizerAvailable = false;
         }
         return sIsSpeechRecognizerAvailable;
     }
@@ -117,12 +131,12 @@ public class VoiceControlPresenter extends VoiceRecognitionImpl implements Recog
         //micImage.setImageResource(R.drawable.ic_mic_off);
         instructions = results.getStringArrayList(
                 SpeechRecognizer.RESULTS_RECOGNITION);
-        String command = instructions.get(0).toLowerCase(Locale.getDefault());
-        Log.i(TAG, command);
-        System.out.println(command);
-        processInstructions(command);
+        if (instructions != null) {
+            String command = instructions.get(0).toLowerCase(Locale.getDefault());
+            Log.i(TAG, command);
+            processInstructions(command);
+        }
     }
-
 
 
     @Override

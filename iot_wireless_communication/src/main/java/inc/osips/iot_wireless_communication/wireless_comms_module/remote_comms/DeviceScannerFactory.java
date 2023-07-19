@@ -1,7 +1,9 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.le.ScanCallback;
+import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.text.TextUtils;
@@ -11,19 +13,20 @@ import androidx.annotation.Nullable;
 
 import inc.osips.iot_wireless_communication.wireless_comms_module.interfaces.WirelessDeviceConnectionScanner;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.ble_comms.BLE_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.P2p_Scanner;
+import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.IoTCommException;
 import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wlan_comms.WLANServiceScanner;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.utility.Constants;
-import inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.p2p_comms.P2p_Scanner;
 
 public class DeviceScannerFactory {
 
 
-    private Activity activity;
+    private final Context context;
+    @SuppressLint("StaticFieldLeak")
     private volatile static DeviceScannerFactory factory_instance = null;
 
-    private DeviceScannerFactory(@NonNull Activity activity) {
-        this.activity = activity;
+    private DeviceScannerFactory(@NonNull Context context) {
+        this.context = context;
     }
 
     public synchronized static DeviceScannerFactory withActivity(@NonNull Activity activity){
@@ -37,26 +40,26 @@ public class DeviceScannerFactory {
         if(TextUtils.isEmpty(connectionType))return null;
 
         else if (connectionType.equals(Constants.BLE)){
-            return new BLEScanBuilder(activity);
+            return new BLEScanBuilder(context);
         }
 
         else if (connectionType.equals(Constants.P2P)){
-            return new WifiP2pScanBuilder(activity);
+            return new WifiP2pScanBuilder(context);
         }
 
         else if(connectionType.equals(Constants.WLAN)){
-            return new WlanServiceScanBuilder(activity);
+            return new WlanServiceScanBuilder(context);
         }
 
         else throw new IoTCommException("Invalid, or Unsupported Remote Communication Type", connectionType);
     }
 
     abstract public static class Builder{
-        protected Activity activity;
+        protected Context mContext;
         protected long milliSecs = 0;
 
-        private Builder(Activity activity) {
-            this.activity = activity;
+        private Builder(Context mContext) {
+            this.mContext = mContext;
         }
 
         abstract public WirelessDeviceConnectionScanner build();
@@ -73,7 +76,7 @@ public class DeviceScannerFactory {
         private String baseUUID = null;
 
 
-        private BLEScanBuilder(Activity activity) {
+        private BLEScanBuilder(Context activity) {
             super(activity);
         }
 
@@ -106,7 +109,7 @@ public class DeviceScannerFactory {
         }
 
         public WirelessDeviceConnectionScanner build() throws NullPointerException{
-                return new BLE_Scanner(activity, mScanCallback, baseUUID, milliSecs);
+                return new BLE_Scanner(mContext, mScanCallback, baseUUID, milliSecs);
         }
     }
 
@@ -115,8 +118,8 @@ public class DeviceScannerFactory {
         private WifiP2pManager.PeerListListener mPeerListListener;
         private String address = null;
 
-        private WifiP2pScanBuilder(Activity activity) {
-            super(activity);
+        private WifiP2pScanBuilder(Context context) {
+            super(context);
         }
 
         @Override
@@ -145,7 +148,7 @@ public class DeviceScannerFactory {
 
         @Override
         public WirelessDeviceConnectionScanner build(){
-                return new P2p_Scanner(activity, mPeerListListener, milliSecs);
+                return new P2p_Scanner(mContext, mPeerListListener, milliSecs);
         }
 
         @Override
@@ -159,8 +162,8 @@ public class DeviceScannerFactory {
         NsdManager.DiscoveryListener mDiscoveryListener;
         String serviceType;
 
-        private WlanServiceScanBuilder(Activity activity) {
-            super(activity);
+        private WlanServiceScanBuilder(Context context) {
+            super(context);
         }
 
         @Override
@@ -169,7 +172,7 @@ public class DeviceScannerFactory {
                 throw new NullPointerException("Specify The Service Type to Scan ");
             }
 
-           return new WLANServiceScanner(activity, milliSecs, mDiscoveryListener, serviceType);
+           return new WLANServiceScanner(mContext, milliSecs, mDiscoveryListener, serviceType);
         }
 
         @Override

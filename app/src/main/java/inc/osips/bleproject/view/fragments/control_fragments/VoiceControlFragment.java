@@ -87,7 +87,7 @@ public class VoiceControlFragment extends Fragment implements SpeechInitCallBack
     }
 
     private void accessSpeechToText() {
-        Dexter.withActivity(requireActivity())
+        Dexter.withContext(requireActivity())
                 .withPermission(Manifest.permission.RECORD_AUDIO)
                 .withListener(new PermissionListener() {
                     @Override
@@ -127,9 +127,7 @@ public class VoiceControlFragment extends Fragment implements SpeechInitCallBack
                 vcPopUp.showAtLocation(containerView, Gravity.CENTER, 0, 0);
                 // Set an elevation value for popup window
                 // Call requires API level 21
-                if (Build.VERSION.SDK_INT >= 21) {
-                    vcPopUp.setElevation(10.0f);
-                }
+                vcPopUp.setElevation(10.0f);
 
                 micImage.setImageResource(R.drawable.ic_mic_on);
                 fragListner.speechInputCall();

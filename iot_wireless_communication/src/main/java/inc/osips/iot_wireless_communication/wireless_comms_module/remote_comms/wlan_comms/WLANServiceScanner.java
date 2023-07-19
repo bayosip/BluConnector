@@ -1,7 +1,6 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms.wlan_comms;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -29,18 +28,18 @@ public class WLANServiceScanner implements WirelessDeviceConnectionScanner, NsdM
     private WifiManager wifiManager;
     private NsdManager nsdManager;
     private boolean scanState = false;
-    private Activity activity;
+    private Context context;
     private long SCAN_TIME = 6000; //default scan time
     private NsdManager.DiscoveryListener listener = this;
     private List<NsdServiceInfo> discoveredServices = new LinkedList<>();
 
     private static final String TAG = "WLANServiceScanner";
 
-    public WLANServiceScanner(@NonNull Activity activity, long scanTime,
+    public WLANServiceScanner(@NonNull Context context, long scanTime,
                               @Nullable NsdManager.DiscoveryListener listener, @NonNull String serviceType) {
-        this.activity = activity;
+        this.context = context;
         if (scanTime >=1000)SCAN_TIME = scanTime;
-        this.activity = activity;
+        this.context = context;
 
         if (listener != null)
             this.listener = listener;
@@ -56,16 +55,16 @@ public class WLANServiceScanner implements WirelessDeviceConnectionScanner, NsdM
 
     private void initialisePrequisites() {
         if (wifiManager == null)
-            wifiManager = (WifiManager) activity.getApplicationContext().
+            wifiManager = (WifiManager) context.getApplicationContext().
                     getSystemService(Context.WIFI_SERVICE);
 
-        nsdManager = (NsdManager)activity.getApplicationContext().
+        nsdManager = (NsdManager) context.getApplicationContext().
                 getSystemService(Context.NSD_SERVICE);
 
     }
 
     private void askUserToTurnWifiOn(){
-        final AlertDialog wifiAsk = new AlertDialog.Builder(activity)
+        final AlertDialog wifiAsk = new AlertDialog.Builder(context)
                 .setCancelable(true)
                 .setTitle(R.string.enable_wifi_title)
                 .setMessage(R.string.enable_wifi_msg)
@@ -87,7 +86,7 @@ public class WLANServiceScanner implements WirelessDeviceConnectionScanner, NsdM
     @TargetApi(29)
     private void askUserToTurnWifiOn29(){
 
-        final AlertDialog wifiAsk = new AlertDialog.Builder(activity)
+        final AlertDialog wifiAsk = new AlertDialog.Builder(context)
                 .setCancelable(true)
                 .setTitle(R.string.enable_wifi_title)
                 .setMessage(R.string.enable_wifi_msg)
@@ -102,18 +101,16 @@ public class WLANServiceScanner implements WirelessDeviceConnectionScanner, NsdM
     }
 
     private void scanStop() {
-        Util.message(activity, "Scanning Stopped!");
+        Util.message(context, "Scanning Stopped!");
 
         if (scanState) {
             nsdManager.stopServiceDiscovery(this);
             scanState = false;
-            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
+            context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.SCANNING_STOPPED));
         }
     }
 
     private void scanForWLANServices(){
-
-
     }
 
     @Override
@@ -123,10 +120,10 @@ public class WLANServiceScanner implements WirelessDeviceConnectionScanner, NsdM
 
 
     @Override
-    public void onStart() {
-        if(wifiManager.isWifiEnabled()){
-
-        }
+    public void onStart(@Nullable String deviceName) {
+//        if(wifiManager.isWifiEnabled()){
+//
+//        }
     }
 
 
@@ -140,7 +137,7 @@ public class WLANServiceScanner implements WirelessDeviceConnectionScanner, NsdM
     public void showDiscoveredDevices() {
         scanState = false;
         for(NsdServiceInfo service: discoveredServices){
-            activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
+            context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
                     .putExtra(Constants.DEVICE_DATA, service));
         }
     }
@@ -155,7 +152,7 @@ public class WLANServiceScanner implements WirelessDeviceConnectionScanner, NsdM
         // A service was found! Do something with it.
         Log.d(TAG, "Service discovery success" + service);
         discoveredServices.add(service);
-        activity.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
+        context.sendBroadcast(new Intent(WirelessDeviceConnectionScanner.DEVICE_DISCOVERED)
                 .putExtra(Constants.DEVICE_DATA, service));
         //nsdManager.resolveService(service, resolveListener);
     }

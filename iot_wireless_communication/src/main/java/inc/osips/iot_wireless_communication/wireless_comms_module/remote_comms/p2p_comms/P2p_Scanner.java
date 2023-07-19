@@ -112,7 +112,7 @@ public class P2p_Scanner implements WirelessDeviceConnectionScanner, WifiP2pMana
     }
 
     @Override
-    public void onStart() {
+    public void onStart(@Nullable String deviceName) {
         if (wifiManager.isWifiEnabled())
             scanForWifiP2pDevices();
     }
