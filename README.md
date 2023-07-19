@@ -141,8 +141,9 @@ This factory is responsible for creating builders for the different types of con
 selected connection types.
 
 ```
-DeviceConnectionFactory.Builder builder = factory.getDeviceConnectionBuilder(type, device);//Bluetooth Low Energy, Peer2Peer
+DeviceConnectionFactory.Builder builder = factory.getDeviceConnectionBuilder(type, device);//Bluetooth Low Energy, Peer2Peer device object
 buildr.build();
+the builder requires as arguement the first device data (for BLE especially) to connect to.
 ```
 Other builder options available include:
 * `builder.setDeviceUniqueID(String UUID_IP);` this function take a value that is either a Service
@@ -155,6 +156,127 @@ to devices and also communication with connected devices.
 The service class are:
 * `BleGattService.class` for BLE communication
 * `P2pDataTransferService.class` for WiFi P2p Communication.
+
+To connect to either of these bound service:
+```try {
+            DeviceConnectionFactory.Builder builder = factory.getDeviceConnectionBuilder(type, device);
+            if (device instanceof BluetoothDevice && type.equalsIgnoreCase(Constants.BLE)) {
+                Log.i("Connection type", builder.getDeviceType());
+                //this.deviceAddr = ((BluetoothDevice) device).getAddress();
+                this.deviceName = device.getName();//requires permision BLUETOOTH_CONNECT
+                intent = new Intent(activity, BleGattService.class);
+                deviceConnector = builder.build();
+                bindBleService();
+            } else if (device instanceof WifiP2pDevice && type.equalsIgnoreCase(Constants.P2P)) {
+                Log.i("Connection", builder.getDeviceType());
+                deviceConnector = builder.build();
+
+                intent = new Intent(activity, P2pDataTransferService.class);
+                bindBleService();
+                this.deviceName = ((WifiP2pDevice) device).deviceName;
+            }
+        } catch (IoTCommException e) {
+            Log.e(TAG, "Service Connection error", e);
+            e.printStackTrace();
+        }
+```
+
+For BLE, once an activity/context is bound to the BleGattService class, one can connect to more devices simultaneously by calling:
+`deviceConnector.connectAnotherDeviceSimultaneously(device, serviceUUID);\\service UUID is nullable`
+
+To receive updates from both service classes requires a registered broadcast receiver, that listens to the following actions:
+
+```
+private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "Action Received");
+            final String action = intent.getAction();
+            assert action != null;
+            String Deviceaddr = intent.getStringExtra(Constants.DEVICE_ADDRESS)
+            Log.w(TAG, action);
+            switch (action) {
+                case Constants.BLE_ACTION_CONNECTED:
+                case Constants.P2P_ACTION_CONNECTED:
+                    // No need to do anything here. Service discovery is started by the service.
+                    Log.i(TAG, "Connected to GATT server.");
+                    break;
+                case Constants.BLE_ACTION_DISCONNECTED:
+                case Constants.P2P_ACTION_DISCONNECTED:
+                    Log.i(TAG, "Service Disconnected");
+                    break;
+                case Constants.ACTION_BLE_SERVICES_DISCOVERED:
+                    Log.w("BLE", "services discovered");
+
+                    if (serviceMap.get(count) != null && !serviceMap.get(count)) {
+                        listOfRemoteServices.clear();
+                        listOfRemoteServices.addAll(Objects
+                                .requireNonNull(intent
+                                        .getStringArrayListExtra(Constants.SERVICE_UUID)));
+                        viewInterface.getUUIDFromPopUp(listOfRemoteServices);
+                        Log.w("BLE", "All services found : " + listOfRemoteServices.get(0));
+                    }
+                    break;
+                case Constants.BLE_ACTION_DATA_AVAILABLE:
+                    Log.w("DATA", "" + intent.getStringExtra(Constants.BLE_EXTRA_DATA));
+                    // This is called after a Notify completes
+                    break;
+                case Constants.BLE_ACTION_RAW_DATA_AVAILABLE:
+                    Log.w("DATA", "" + Arrays.toString(intent.getByteArrayExtra(Constants.BLE_EXTRA_DATA_RAW)));
+                    // This is called after a Notify completes
+                    break;
+                case Constants.ACTION_BLE_CHARX_DATA_CHANGE:
+                    Log.i("DATA", "" + intent.getStringExtra(Constants.BLE_EXTRA_DATA_RAW));
+                    // This is called after a Notify completes
+                    break;
+                case Constants.ACTION_BLE_CHARX_DATA_CHANGE_RAW:
+                    Log.i("DATA", "onReceive: ->" +
+                            Arrays.toString(intent.getByteArrayExtra(inc.osips.iot_wireless_communication
+                                    .wireless_comms_module.remote_comms.utility.Constants.BLE_EXTRA_DATA_RAW)));
+                case Constants.P2P_ACTION_DATA_AVAILABLE:
+                    String s = intent.getStringExtra(Constants.P2P_EXTRA_DATA);
+                    if (s != null) {
+                        Log.w("DATA", s);
+                        // This is called after a Notify completes
+                    }
+                    break;
+                case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
+                    if (type.equalsIgnoreCase(Constants.P2P)) {
+                        int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
+                        switch (state) {
+                            case WifiP2pManager.WIFI_P2P_STATE_ENABLED:
+                                GeneralUtil.message("Wifi is Ok");
+                                break;
+                            case WifiP2pManager.WIFI_P2P_STATE_DISABLED:
+                                Log.i("Wifi has been turned off, " +
+                                        "Please turn on to use this feature");
+                                break;
+                        }
+                    }
+                    break;
+                case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
+                    if (deviceConnector != null)
+                        deviceConnector.connectToDeviceWithDeviceInfoFrom(intent);
+                    break;
+
+                case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
+                    break;
+                case DeviceConnectionFactory.DEVICE_CONNECTION_SERVICE_STOPPED:
+                case DeviceConnectionFactory.FAILED_DEVICE_CONNECTION:
+                    Log.i("DATA", "Connection Failed)
+                    break;
+            }
+        }
+
+        @Override
+        public IBinder peekService(Context myContext, Intent service) {
+            return super.peekService(myContext, service);
+        }
+    };
+```
+
+With BLE, when connecting to multiple devices, Use a Map to keep track of devices and their available service UUID:
+`final Map deviceServiceMap = HashMap<String, List<String>>();`
 
 
 
