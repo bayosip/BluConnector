@@ -40,7 +40,7 @@ public class ScannerPresenter implements PresenterInterface {
 
     public ScannerPresenter(@NonNull ScannerViewInterface viewInterface, @NonNull String commsType) {
         this.viewInterface = viewInterface;
-        DeviceScannerFactory factory = DeviceScannerFactory.withActivity(viewInterface.getCurrentActivity());
+        DeviceScannerFactory factory = DeviceScannerFactory.withContext(viewInterface.getCurrentActivity());
         DeviceScannerFactory.Builder builder = null;
         try {
             builder = factory.getRemoteDeviceBuilderScannerOfType(commsType);

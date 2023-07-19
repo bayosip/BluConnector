@@ -1,7 +1,6 @@
 package inc.osips.iot_wireless_communication.wireless_comms_module.remote_comms;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.net.nsd.NsdManager;
@@ -29,9 +28,9 @@ public class DeviceScannerFactory {
         this.context = context;
     }
 
-    public synchronized static DeviceScannerFactory withActivity(@NonNull Activity activity){
+    public synchronized static DeviceScannerFactory withContext(@NonNull Context context){
         if(factory_instance ==null)
-            factory_instance = new DeviceScannerFactory(activity);
+            factory_instance = new DeviceScannerFactory(context);
         return factory_instance;
     }
 
