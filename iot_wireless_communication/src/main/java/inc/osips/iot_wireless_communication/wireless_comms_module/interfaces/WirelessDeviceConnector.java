@@ -24,7 +24,7 @@ public interface WirelessDeviceConnector {
     void enableNotificationsFor(String serviceUuid, String attrId, String descriptor, String deviceAddress);
     void disableNotificationsFor(String serviceUuid, String attrId, String descriptor, String deviceAddress);
     void connectAnotherDeviceSimultaneously(@NonNull Parcelable device, @Nullable String serviceUUID) throws Exception;
-    void selectServiceUsingUUID (@Nullable String deviceAddress, @NonNull String UUID);
+    void selectServiceUsingUUID (@NonNull String deviceAddress, @NonNull String UUID);
     void connectToDeviceWithDeviceInfoFrom(@NonNull Intent intent);
     void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddress, @NonNull String instructions);
     void sendStringInstructionsToRemoteDevice(@Nullable String deviceAddress,
