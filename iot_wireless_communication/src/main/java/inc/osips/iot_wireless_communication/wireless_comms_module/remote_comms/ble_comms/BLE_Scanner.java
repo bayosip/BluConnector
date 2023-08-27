@@ -64,7 +64,6 @@ public class BLE_Scanner extends ScanCallback implements WirelessDeviceConnectio
 
         bluetoothLeScanner = bleAdapter.getBluetoothLeScanner();
         settings = new ScanSettings.Builder()
-                .setReportDelay(SCAN_TIME)
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
     }
